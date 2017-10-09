@@ -49,6 +49,17 @@
 #' @format a list of 10 contingency matrix.
 "CM_list"
 
+#' deseq.result
+#'
+#' Used to run examples. part of a DESeqResults object.
+#'
+#' @docType data
+#' @keywords datasets
+#' @name deseq.result
+#' @usage data("deseq.result")
+#' @format DESeqResult object with 10 elements
+"deseq.result"
+
 #' DHS databse
 #'
 #' Used to run examples. Part of a DHS database storing 32 sites for the human genome in GenomicRanges format.

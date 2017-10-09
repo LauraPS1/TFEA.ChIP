@@ -346,6 +346,50 @@ set_user_data<-function(metadata,binary_matrix){
     assign("Mat01",binary_matrix,envir = .GlobalEnv)
 }
 
+deseq2table<-function(deseq.result){
+    #' @title Extracts data from a DESeq2 results object.
+    #' @description Function to extract Gene IDs, logFoldChange, and p-val
+    #' values from a DESeqResults object
+    #' @param deseq.result DESeqResults object. Must include gene IDs
+    #' @return A table containing Entrez Gene IDs, LogFoldChange and p-val
+    #' values.
+    #' @export deseq2table
+    #' @examples
+    #' data("deseq.result",package="TFEA.ChIP")
+    #' deseq2table(deseq.result)
+
+    if(!requireNamespace("DESeq2", quietly = TRUE)){
+        stop("DESeq2 package needed for this function to work. ",
+             "Please install it.", call. = FALSE)
+    }
+    requireNamespace("DESeq2")
+
+    # check the gene ids and translate if needed
+    if(grepl("^\\d*$",rownames(deseq.result)[1])==FALSE){
+        genes<-suppressWarnings(
+            GeneID2entrez(rownames(deseq.result),return.Matrix = T))
+        genes<-genes[!is.na(genes$ENTREZ.ID),]
+        deseq.result<-deseq.result[rownames(deseq.result)%in%genes$GENE.ID,]
+        genes<-genes$ENTREZ.ID
+    }else{
+        genes<-rownames(deseq.result)
+    }
+    # get the rest of the variables
+    log2FoldChange<-deseq.result@listData$log2FoldChange
+    pvalue<-deseq.result@listData$pvalue
+    pval.adj<-p.adjust(pvalue,"fdr")
+
+    Table<-data_frame(
+        Genes=genes,
+        log2FoldChange=log2FoldChange,
+        pvalue=pvalue,
+        pval.adj=pval.adj
+    )
+    Table$Genes<-as.character(Table$Genes)
+    Table<-Table[!is.na(Table$log2FoldChange),]
+    return(Table)
+}
+
 GeneID2entrez<-function(gene.IDs,return.Matrix = FALSE){
 
     #' @title Translates gene IDs from Gene Symbol or Ensemble ID to Entrez ID.
