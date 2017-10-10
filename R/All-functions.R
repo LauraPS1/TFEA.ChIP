@@ -352,7 +352,7 @@ deseq2table<-function(deseq.result){
     #' values from a DESeqResults object
     #' @param deseq.result DESeqResults object. Must include gene IDs
     #' @return A table containing Entrez Gene IDs, LogFoldChange and p-val
-    #' values.
+    #' values, sorted by log2FoldChange
     #' @export deseq2table
     #' @examples
     #' data("deseq.result",package="TFEA.ChIP")
@@ -387,6 +387,7 @@ deseq2table<-function(deseq.result){
     )
     Table$Genes<-as.character(Table$Genes)
     Table<-Table[!is.na(Table$log2FoldChange),]
+    Table<-Table[order(Table$log2FoldChange,decreasing = TRUE),]
     return(Table)
 }
 

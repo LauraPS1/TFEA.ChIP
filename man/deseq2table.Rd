@@ -11,7 +11,7 @@ deseq2table(deseq.result)
 }
 \value{
 A table containing Entrez Gene IDs, LogFoldChange and p-val
-values.
+values, sorted by log2FoldChange
 }
 \description{
 Function to extract Gene IDs, logFoldChange, and p-val
