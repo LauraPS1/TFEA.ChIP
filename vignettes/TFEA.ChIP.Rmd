@@ -29,6 +29,7 @@ For illustration purposes we will derive the input required for both analysis fr
 
 The output of popular packages, such as DESeq2, for detection of differentially expressed genes from the analysis of count data from RNA-seq experiments produce tables with this information. To extract the information from a DESeqResults object the function *deseq2table* is available:
 ```{r eval=TRUE,echo=TRUE}
+library(TFEA.ChIP)
 data("deseq.result",package="TFEA.ChIP") # load toy example of a DESeqResults object
 dataTable<-deseq2table(deseq.result)
 head(dataTable)
@@ -55,7 +56,6 @@ Genes.Control <- hypoxia[which(abs(hypoxia$log2FoldChange) < 0.25 & hypoxia$padj
 
 Note that, in this particular case, genes are represented using their HGNC symbol. However, internally TFEA.ChIP works with ENTREZ gene IDs, thus other types of gene IDs must be translated into the corresponding ENTREZ IDs. To that end we use the *GeneID2entrez* function:
 ```{r eval=TRUE,echo=TRUE,message=FALSE}
-library(TFEA.ChIP)
 #Conversion of hgnc to ENTREZ IDs
 Genes.Upreg <- GeneID2entrez(Genes.Upreg)
 Genes.Control <- GeneID2entrez(Genes.Control)
