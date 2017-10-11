@@ -28,7 +28,7 @@ For illustration purposes we will derive the input required for both analysis fr
 - Adjusted p-value (*padj*) for the difference in gene expression between the two conditions.
 
 The output of popular packages, such as DESeq2, for detection of differentially expressed genes from the analysis of count data from RNA-seq experiments produce tables with this information. To extract the information from a DESeqResults object the function *deseq2table* is available:
-```{r eval=TRUE,echo=TRUE,message=FALSE,}
+```{r eval=TRUE,echo=TRUE,message=FALSE}
 library(TFEA.ChIP)
 data("deseq.result",package="TFEA.ChIP") # load toy example of a DESeqResults object
 dataTable<-deseq2table(deseq.result)
