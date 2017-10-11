@@ -6,10 +6,12 @@
 \title{RNA-Seq experiment}
 \format{a DESeqResults objtec}
 \usage{
-data("hypoxia_DESeq")
+hypoxia_DESeq
 }
 \description{
-A DESeqResults objetc containing information of of an RNA-Seq experiment on newly transcripted RNA in HUVEC cells during
-two conditions, 8h of normoxia and 8h of hypoxia (deposited at GEO as GSE89831).
+A DESeqResults objetc containing information of of an RNA-Seq
+experiment on newly transcripted RNA in HUVEC cells during
+two conditions, 8h of normoxia and 8h of hypoxia (deposited
+at GEO as GSE89831).
 }
 \keyword{datasets}

@@ -9,6 +9,7 @@
 data("Entrez.gene.IDs")
 }
 \description{
-Used to run examples. Array of 2754 Entrez Gene IDs extracted from an RNA-Seq experiment sorted by log(Fold Change).
+Used to run examples. Array of 2754 Entrez Gene IDs extracted
+from an RNA-Seq experiment sorted by log(Fold Change).
 }
 \keyword{datasets}

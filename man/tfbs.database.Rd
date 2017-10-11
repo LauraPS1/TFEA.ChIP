@@ -9,7 +9,8 @@
 data("tfbs.database")
 }
 \description{
-Used to run examples. Output of the function GR2tfbs_db from the TFEA.ChIP package.
-Contains a list of three vectors of Entrez Gene IDs assoctiated to three ChIP-Seq experiments
+Used to run examples. Output of the function GR2tfbs_db from the
+TFEA.ChIP package. Contains a list of three vectors of Entrez Gene
+IDs assoctiated to three ChIP-Seq experiments
 }
 \keyword{datasets}

@@ -4,12 +4,14 @@
 \name{GSEA.result}
 \alias{GSEA.result}
 \title{Output of the function GSEA.run from the TFEA.ChIP package}
-\format{list of three elements, an erihcment table (data frame), an two list of arrays.}
+\format{list of three elements, an erihcment table (data frame), and two list of arrays.}
 \usage{
 data("GSEA.result")
 }
 \description{
-Used to run examples. Output of the function GSEA.run from the TFEA.ChIP package, contains an enrichment table and
-two lists, one storing runnign enrichment scores and the other, matches/missmatches along a gene list.
+Used to run examples. Output of the function GSEA.run from the
+TFEA.ChIP package, contains an enrichment table and two lists,
+one storing runnign enrichment scores and the other,
+matches/missmatches along a gene list.
 }
 \keyword{datasets}

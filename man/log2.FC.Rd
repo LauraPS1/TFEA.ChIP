@@ -9,6 +9,7 @@
 data("log2.FC")
 }
 \description{
-Used to run examples. Array of 2754 log2(Fold Change) values extracted from an RNA-Seq experiment.
+Used to run examples. Array of 2754 log2(Fold Change) values
+extracted from an RNA-Seq experiment.
 }
 \keyword{datasets}

@@ -1,6 +1,7 @@
 #' Metadata data frame
 #'
-#' Used to run examples. Data frame containing metadata information for the ChIP-Seq GSM2390643.
+#' Used to run examples. Data frame containing metadata information
+#' for the ChIP-Seq GSM2390643.
 #' Fields in the data frame:
 #' \itemize{
 #'   \item Name: Name of the file.
@@ -21,7 +22,8 @@
 
 #' ChIP-Seq dataset
 #'
-#' Used to run examples. Data frame containing peak information from the ChIP-Seq GSM2390643.
+#' Used to run examples. Data frame containing peak information
+#' from the ChIP-Seq GSM2390643.
 #' Fields in the data frame:
 #' \itemize{
 #'   \item Name: Name of the file.
@@ -40,7 +42,8 @@
 
 #' List of contingency matrix
 #'
-#' Used to run examples. List of 10 contingency matrix, output of the function "contingency_matrix" from the TFEA.ChIP package.
+#' Used to run examples. List of 10 contingency matrix, output of
+#' the function "contingency_matrix" from the TFEA.ChIP package.
 #'
 #' @docType data
 #' @keywords datasets
@@ -51,7 +54,8 @@
 
 #' DHS databse
 #'
-#' Used to run examples. Part of a DHS database storing 32 sites for the human genome in GenomicRanges format.
+#' Used to run examples. Part of a DHS database storing 32 sites
+#' for the human genome in GenomicRanges format.
 #'
 #' @docType data
 #' @keywords datasets
@@ -62,7 +66,8 @@
 
 #' List of Entrez Gene IDs
 #'
-#' Used to run examples. Array of 2754 Entrez Gene IDs extracted from an RNA-Seq experiment sorted by log(Fold Change).
+#' Used to run examples. Array of 2754 Entrez Gene IDs extracted
+#' from an RNA-Seq experiment sorted by log(Fold Change).
 #'
 #' @docType data
 #' @keywords datasets
@@ -73,7 +78,8 @@
 
 #' List of Entrez Gene IDs
 #'
-#' Used to run examples. Array of 342 Entrez Gene IDs extracted from upregulated genes in an RNA-Seq experiment.
+#' Used to run examples. Array of 342 Entrez Gene IDs extracted from
+#' upregulated genes in an RNA-Seq experiment.
 #'
 #' @docType data
 #' @keywords datasets
@@ -84,7 +90,8 @@
 
 #' List of one ChIP-Seq dataset
 #'
-#' Used to run examples. List of one ChIP-Seq dataset (from GSM2390643) in GenomicRanges format with 2140 peaks.
+#' Used to run examples. List of one ChIP-Seq dataset (from GSM2390643)
+#' in GenomicRanges format with 2140 peaks.
 #'
 #' @docType data
 #' @keywords datasets
@@ -95,20 +102,24 @@
 
 #' Output of the function GSEA.run from the TFEA.ChIP package
 #'
-#' Used to run examples. Output of the function GSEA.run from the TFEA.ChIP package, contains an enrichment table and
-#' two lists, one storing runnign enrichment scores and the other, matches/missmatches along a gene list.
+#' Used to run examples. Output of the function GSEA.run from the
+#' TFEA.ChIP package, contains an enrichment table and two lists,
+#' one storing runnign enrichment scores and the other,
+#' matches/missmatches along a gene list.
 #'
 #' @docType data
 #' @keywords datasets
 #' @name GSEA.result
 #' @usage data("GSEA.result")
-#' @format list of three elements, an erihcment table (data frame), an two list of arrays.
+#' @format list of three elements, an erihcment table (data frame), and two list of arrays.
 "GSEA.result"
 
 #' RNA-Seq experiment
 #'
-#' A data frame containing information of of an RNA-Seq experiment on newly transcripted RNA in HUVEC cells during
-#' two conditions, 8h of normoxia and 8h of hypoxia (deposited at GEO as GSE89831). The data frame contains the following fields:
+#' A data frame containing information of of an RNA-Seq experiment
+#' on newly transcripted RNA in HUVEC cells during two conditions,
+#' 8h of normoxia and 8h of hypoxia (deposited at GEO as GSE89831).
+#' The data frame contains the following fields:
 #' \itemize{
 #'   \item Gene: Gene Symbol for each gene analyzed.
 #'   \item Log2FoldChange: base 2 logarithm of the fold change on RNA transcription for a given gene between the two conditions.
@@ -125,19 +136,21 @@
 
 #' RNA-Seq experiment
 #'
-#' A DESeqResults objetc containing information of of an RNA-Seq experiment on newly transcripted RNA in HUVEC cells during
-#' two conditions, 8h of normoxia and 8h of hypoxia (deposited at GEO as GSE89831).
+#' A DESeqResults objetc containing information of of an RNA-Seq
+#' experiment on newly transcripted RNA in HUVEC cells during
+#' two conditions, 8h of normoxia and 8h of hypoxia (deposited
+#' at GEO as GSE89831).
 #'
 #' @docType data
 #' @keywords datasets
 #' @name hypoxia_DESeq
-#' @usage data("hypoxia_DESeq")
 #' @format a DESeqResults objtec
 "hypoxia_DESeq"
 
 #' List of Entrez Gene IDs
 #'
-#' Used to run examples. Array of 2754 log2(Fold Change) values extracted from an RNA-Seq experiment.
+#' Used to run examples. Array of 2754 log2(Fold Change) values
+#' extracted from an RNA-Seq experiment.
 #'
 #' @docType data
 #' @keywords datasets
@@ -148,8 +161,10 @@
 
 #' TF-gene binding binary matrix
 #'
-#' Its rows correspond to all the human genes that have been assigned an Entrez ID, and its columns, to every ChIP-Seq experiment in the database.
-#' The values are 1 – if the ChIP-Seq has a peak assigned to that gene – or 0 – if it hasn’t –.
+#' Its rows correspond to all the human genes that have been assigned
+#' an Entrez ID, and its columns, to every ChIP-Seq experiment in the
+#' database. The values are 1 – if the ChIP-Seq has a peak assigned
+#' to that gene – or 0 – if it hasn’t –.
 #'
 #' @docType data
 #' @keywords datasets
@@ -160,7 +175,8 @@
 
 #' TF-gene binding DB metadata
 #'
-#' A data frame containing information of the ChIP-Seq experiments used to build the TF-gene binding DB.
+#' A data frame containing information of the ChIP-Seq experiments
+#' used to build the TF-gene binding DB.
 #' Fields in the data frame:
 #' \itemize{
 #'   \item Name: Name of the file.
@@ -181,8 +197,8 @@
 
 #' Data frame, output from the function getCMstats from the TFEA.ChIP package
 #'
-#' Used to run examples. Output of the function getCMstats from the TFEA.ChIP package,
-#' is a data frame storing the following fields:
+#' Used to run examples. Output of the function getCMstats from the
+#' TFEA.ChIP package, is a data frame storing the following fields:
 #' \itemize{
 #'   \item Accession: GEO or Encode accession ID for each ChIP-Seq dataset.
 #'   \item TF: Transcription Factor tested.
@@ -201,8 +217,9 @@
 
 #' TFBS database for 3 ChIP-Seq datasets.
 #'
-#' Used to run examples. Output of the function GR2tfbs_db from the TFEA.ChIP package.
-#' Contains a list of three vectors of Entrez Gene IDs assoctiated to three ChIP-Seq experiments
+#' Used to run examples. Output of the function GR2tfbs_db from the
+#' TFEA.ChIP package. Contains a list of three vectors of Entrez Gene
+#' IDs assoctiated to three ChIP-Seq experiments
 #'
 #' @docType data
 #' @keywords datasets
@@ -210,3 +227,4 @@
 #' @usage data("tfbs.database")
 #' @format a data frame of 10 rows and 6 variables
 "tfbs.database"
+

@@ -9,7 +9,8 @@
 data("ARNT.metadata")
 }
 \description{
-Used to run examples. Data frame containing metadata information for the ChIP-Seq GSM2390643.
+Used to run examples. Data frame containing metadata information
+for the ChIP-Seq GSM2390643.
 Fields in the data frame:
 \itemize{
   \item Name: Name of the file.

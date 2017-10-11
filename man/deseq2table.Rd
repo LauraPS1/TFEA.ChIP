@@ -18,6 +18,6 @@ Function to extract Gene IDs, logFoldChange, and p-val
 values from a DESeqResults object. Gene IDs are translated to ENTREZ IDs, if possible.
 }
 \examples{
-data("deseq.result",package="TFEA.ChIP")
-deseq2table(deseq.result)
+data("hypoxia_DESeq",package="TFEA.ChIP")
+deseq2table(hypoxia_DESeq)
 }

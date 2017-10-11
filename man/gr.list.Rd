@@ -9,6 +9,7 @@
 data("gr.list")
 }
 \description{
-Used to run examples. List of one ChIP-Seq dataset (from GSM2390643) in GenomicRanges format with 2140 peaks.
+Used to run examples. List of one ChIP-Seq dataset (from GSM2390643)
+in GenomicRanges format with 2140 peaks.
 }
 \keyword{datasets}

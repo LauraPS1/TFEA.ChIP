@@ -9,6 +9,7 @@
 data("CM_list")
 }
 \description{
-Used to run examples. List of 10 contingency matrix, output of the function "contingency_matrix" from the TFEA.ChIP package.
+Used to run examples. List of 10 contingency matrix, output of
+the function "contingency_matrix" from the TFEA.ChIP package.
 }
 \keyword{datasets}

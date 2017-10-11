@@ -9,7 +9,8 @@
 data("MetaData")
 }
 \description{
-A data frame containing information of the ChIP-Seq experiments used to build the TF-gene binding DB.
+A data frame containing information of the ChIP-Seq experiments
+used to build the TF-gene binding DB.
 Fields in the data frame:
 \itemize{
   \item Name: Name of the file.

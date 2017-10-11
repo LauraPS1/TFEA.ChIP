@@ -9,6 +9,7 @@
 data("Genes.Upreg")
 }
 \description{
-Used to run examples. Array of 342 Entrez Gene IDs extracted from upregulated genes in an RNA-Seq experiment.
+Used to run examples. Array of 342 Entrez Gene IDs extracted from
+upregulated genes in an RNA-Seq experiment.
 }
 \keyword{datasets}

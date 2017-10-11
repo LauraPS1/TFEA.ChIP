@@ -9,8 +9,10 @@
 data("hypoxia")
 }
 \description{
-A data frame containing information of of an RNA-Seq experiment on newly transcripted RNA in HUVEC cells during
-two conditions, 8h of normoxia and 8h of hypoxia (deposited at GEO as GSE89831). The data frame contains the following fields:
+A data frame containing information of of an RNA-Seq experiment
+on newly transcripted RNA in HUVEC cells during two conditions,
+8h of normoxia and 8h of hypoxia (deposited at GEO as GSE89831).
+The data frame contains the following fields:
 \itemize{
   \item Gene: Gene Symbol for each gene analyzed.
   \item Log2FoldChange: base 2 logarithm of the fold change on RNA transcription for a given gene between the two conditions.

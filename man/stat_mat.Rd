@@ -9,8 +9,8 @@
 data("stat_mat")
 }
 \description{
-Used to run examples. Output of the function getCMstats from the TFEA.ChIP package,
-is a data frame storing the following fields:
+Used to run examples. Output of the function getCMstats from the
+TFEA.ChIP package, is a data frame storing the following fields:
 \itemize{
   \item Accession: GEO or Encode accession ID for each ChIP-Seq dataset.
   \item TF: Transcription Factor tested.

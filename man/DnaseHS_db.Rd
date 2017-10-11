@@ -9,6 +9,7 @@
 data("DnaseHS_db")
 }
 \description{
-Used to run examples. Part of a DHS database storing 32 sites for the human genome in GenomicRanges format.
+Used to run examples. Part of a DHS database storing 32 sites
+for the human genome in GenomicRanges format.
 }
 \keyword{datasets}
