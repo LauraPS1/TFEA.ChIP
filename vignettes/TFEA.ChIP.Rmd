@@ -27,35 +27,37 @@ For illustration purposes we will derive the input required for both analysis fr
 - Log2 Fold Change (*Log2FoldChange*), indicating the difference in expression for each gene in the two experimental conditions being compared.
 - Adjusted p-value (*padj*) for the difference in gene expression between the two conditions.
 
-The output of popular packages, such as DESeq2, for detection of differentially expressed genes from the analysis of count data from RNA-seq experiments produce tables with this information. To extract the information from a DESeqResults object the function *deseq2table* is available:
-```{r eval=TRUE,echo=TRUE}
-data("deseq.result",package="TFEA.ChIP") # load toy example of a DESeqResults object
-dataTable<-deseq2table(deseq.result)
-head(dataTable)
+The output of popular packages, such as DESeq2, for detection of differentially expressed genes from the analysis of count data from RNA-seq experiments produce tables with this information. To extract the information from a DESeqResults object the function *deseq2table* is available. The *hypoxia_DESeq* dataset is the output of a differential expression analysis performed on an RNAseq experiment analyzing the response to hypoxia of endothelial cells^[Tiana, M et al. The SIN3A histone deacetylase complex is required for a complete transcriptional response to hypoxia. https://doi.org/10.1101/182691 ] deposited at the NCBI's GEO repository (GSE89831).
+
+```{r eval=TRUE,echo=TRUE,message=FALSE}
+library(TFEA.ChIP)
+data("hypoxia_DESeq",package="TFEA.ChIP") # load example of a DESeqResults object
+hypoxia_table<-deseq2table(hypoxia_DESeq)
+head(hypoxia_table)
 ```
 
-The *hypoxia* dataset is the output of a differential expression analysis performed with DESeq2 on an RNAseq experiment analyzing the response to hypoxia of endothelial cells^[Tiana, M et al. The SIN3A histone deacetylase complex is required for a complete transcriptional response to hypoxia. https://doi.org/10.1101/182691 ] deposited at the NCBI's GEO repository (GSE89831). To load this data set copy and paste the following lines into your R interpreter:
-
-```{r eval=TRUE,echo=TRUE}
-data("hypoxia",package = "TFEA.ChIP")  #load hypoxia dataset
-head(hypoxia) #shows first rows of the hypoxia dataset
-```
+After running *deseq2table*, your dataset will be ready to use with the rest of the package; gene names will be in Entrez Gene ID format and the resulting table is sorted by log2(Fold Change). For the rest of the vignette, we will use the dataset *hypoxia* as an example to explain how to perform the analysis if your dataset is originally in a data frame format.
 
 ## Analysis of the association of TFBS and differential expression.
 
 1. Identification of DE genes
 
+
 As indicated before, for this analysis, we must provide a list of genes are considered differentially induced and a list of control genes whose expression is not altered in the analyzed experiment:
 ```{r eval=TRUE,echo=TRUE}
-Genes.Upreg <- hypoxia[which(hypoxia$log2FoldChange > 1 & hypoxia$padj <= 0.05),"Gene"]   #extract vector with names of upregulated genes
-Genes.Control <- hypoxia[which(abs(hypoxia$log2FoldChange) < 0.25 & hypoxia$padj > 0.5),"Gene"]   #extract vector with names of non-responsive genes
+data("hypoxia",package = "TFEA.ChIP")
+head(hypoxia)
+
+#extract vector with names of upregulated genes
+Genes.Upreg <- hypoxia[hypoxia$log2FoldChange > 1 & hypoxia$padj <= 0.05,"Gene"] 
+#extract vector with names of non-responsive genes
+Genes.Control <- hypoxia[abs(hypoxia$log2FoldChange) < 0.25 & hypoxia$padj > 0.5,"Gene"]   
 ```
 
 2. Translate the gene IDs to Entrez Gene IDs
 
 Note that, in this particular case, genes are represented using their HGNC symbol. However, internally TFEA.ChIP works with ENTREZ gene IDs, thus other types of gene IDs must be translated into the corresponding ENTREZ IDs. To that end we use the *GeneID2entrez* function:
 ```{r eval=TRUE,echo=TRUE,message=FALSE}
-library(TFEA.ChIP)
 #Conversion of hgnc to ENTREZ IDs
 Genes.Upreg <- GeneID2entrez(Genes.Upreg)
 Genes.Control <- GeneID2entrez(Genes.Control)

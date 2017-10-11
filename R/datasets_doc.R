@@ -49,17 +49,6 @@
 #' @format a list of 10 contingency matrix.
 "CM_list"
 
-#' deseq.result
-#'
-#' Used to run examples. part of a DESeqResults object.
-#'
-#' @docType data
-#' @keywords datasets
-#' @name deseq.result
-#' @usage data("deseq.result")
-#' @format DESeqResult object with 10 elements
-"deseq.result"
-
 #' DHS databse
 #'
 #' Used to run examples. Part of a DHS database storing 32 sites for the human genome in GenomicRanges format.
@@ -133,6 +122,18 @@
 #' @usage data("hypoxia")
 #' @format a data frame of 17527 observations of 4 variables.
 "hypoxia"
+
+#' RNA-Seq experiment
+#'
+#' A DESeqResults objetc containing information of of an RNA-Seq experiment on newly transcripted RNA in HUVEC cells during
+#' two conditions, 8h of normoxia and 8h of hypoxia (deposited at GEO as GSE89831).
+#'
+#' @docType data
+#' @keywords datasets
+#' @name hypoxia_DESeq
+#' @usage data("hypoxia_DESeq")
+#' @format a DESeqResults objtec
+"hypoxia_DESeq"
 
 #' List of Entrez Gene IDs
 #'
@@ -209,4 +210,3 @@
 #' @usage data("tfbs.database")
 #' @format a data frame of 10 rows and 6 variables
 "tfbs.database"
-

@@ -15,7 +15,7 @@ values, sorted by log2FoldChange
 }
 \description{
 Function to extract Gene IDs, logFoldChange, and p-val
-values from a DESeqResults object
+values from a DESeqResults object. Gene IDs are translated to ENTREZ IDs, if possible.
 }
 \examples{
 data("deseq.result",package="TFEA.ChIP")

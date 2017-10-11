@@ -349,14 +349,15 @@ set_user_data<-function(metadata,binary_matrix){
 deseq2table<-function(deseq.result){
     #' @title Extracts data from a DESeq2 results object.
     #' @description Function to extract Gene IDs, logFoldChange, and p-val
-    #' values from a DESeqResults object
+    #' values from a DESeqResults object. Gene IDs are translated to
+    #' ENTREZ IDs, if possible.
     #' @param deseq.result DESeqResults object. Must include gene IDs
     #' @return A table containing Entrez Gene IDs, LogFoldChange and p-val
     #' values, sorted by log2FoldChange
     #' @export deseq2table
     #' @examples
-    #' data("deseq.result",package="TFEA.ChIP")
-    #' deseq2table(deseq.result)
+    #' data("hypoxia_DESeq",package="TFEA.ChIP")
+    #' deseq2table(hypoxia_DESeq)
 
     if(!requireNamespace("DESeq2", quietly = TRUE)){
         stop("DESeq2 package needed for this function to work. ",
