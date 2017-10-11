@@ -48,9 +48,9 @@ txt2GR<-function(fileTable,format,fileMetaData,alpha=NULL){
                     fileMetaData, stringsAsFactors=FALSE)
             }else{
                 warning("fileMetaData format error: 'fileMetaData' must be a",
-                        " data frame/matrix/array with 7 atributes: 'Name',",
-                        "'Accession', 'Cell', 'Cell Type','Treatment',",
-                        "'Antibody','TF'")
+                    " data frame/matrix/array with 7 atributes: 'Name',",
+                    "'Accession', 'Cell', 'Cell Type','Treatment',",
+                    "'Antibody','TF'")
                 break
             }
         }else if(is.array(fileMetaData)){
@@ -59,9 +59,9 @@ txt2GR<-function(fileTable,format,fileMetaData,alpha=NULL){
                     fileMetaData,stringsAsFactors=FALSE)
             }else{
                 warning("fileMetaData format error: 'fileMetaData' must be a",
-                        " data frame/matrix/array with 7 atributes: 'Name',",
-                        "'Accession', 'Cell', 'Cell Type','Treatment',",
-                        "'Antibody','TF'")
+                    " data frame/matrix/array with 7 atributes: 'Name',",
+                    "'Accession', 'Cell', 'Cell Type','Treatment',",
+                    "'Antibody','TF'")
                 break
             }
         }else{
