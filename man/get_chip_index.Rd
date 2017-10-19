@@ -7,7 +7,7 @@
 get_chip_index(database = "g", TFfilter = NULL)
 }
 \arguments{
-\item{database}{Name of the database used: "encode"/"e" or "general"/"g".}
+\item{database}{Name of the database used: 'encode'/'e' or 'general'/'g'.}
 
 \item{TFfilter}{(Optional) Transcription factors of interest.}
 }
@@ -23,6 +23,6 @@ as a filter to select specific ChIPs or transcription factors to run an
 analysis.
 }
 \examples{
-get_chip_index(database="e")
-get_chip_index(database="general",TFfilter=c("SMAD2","SMAD4"))
+get_chip_index(database='e')
+get_chip_index(database='general',TFfilter=c('SMAD2','SMAD4'))
 }

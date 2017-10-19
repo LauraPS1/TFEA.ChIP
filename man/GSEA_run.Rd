@@ -33,7 +33,7 @@ Function to run a GSEA to analyze the distribution of TFBS
 across a sorted list of genes.
 }
 \examples{
-data("Entrez.gene.IDs",package = "TFEA.ChIP")
-chip_index<-get_chip_index(TFfilter = c("HIF1A","EPAS1","ARNT"))
+data('Entrez.gene.IDs',package = 'TFEA.ChIP')
+chip_index<-get_chip_index(TFfilter = c('HIF1A','EPAS1','ARNT'))
 GSEA.result <- GSEA_run(Entrez.gene.IDs,chip_index,get.RES = TRUE)
 }

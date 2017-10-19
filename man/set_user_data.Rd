@@ -17,14 +17,14 @@ has a peak assigned to that gene – or 0 – if it hasn’t –.}
 }
 \value{
 sets the user's metadata table and TFBS matrix as the variables
-"MetaData" and "Mat01", used by the rest of the package.
+'MetaData' and 'Mat01', used by the rest of the package.
 }
 \description{
 Function to set the data objects provided by the user
 as default to the rest of the functions.
 }
 \examples{
-data("MetaData","Mat01",package="TFEA.ChIP")
+data('MetaData','Mat01',package='TFEA.ChIP')
 # For this example, we will usethe variables already included in the
 # package.
 set_user_data(MetaData,Mat01)

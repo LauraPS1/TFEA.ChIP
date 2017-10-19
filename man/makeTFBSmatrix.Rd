@@ -23,6 +23,6 @@ Function to search for a list of entrez gene IDs
 in a  TF-gene binding data base.
 }
 \examples{
-data("tfbs.database","Entrez.gene.IDs",package = "TFEA.ChIP")
+data('tfbs.database','Entrez.gene.IDs',package = 'TFEA.ChIP')
 makeTFBSmatrix(Entrez.gene.IDs,tfbs.database)
 }

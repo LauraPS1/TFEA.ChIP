@@ -18,7 +18,7 @@ Entrez ID. Arranged from higher to lower.}
 \item{specialTF}{(Optional) Named vector of TF symbols -as written in
 the enrichment table- to be highlighted in the plot. The name of each
 element specifies its color group, i.e.: naming elements HIF1A and HIF1B
-as "HIF" to represent them with the same color.}
+as 'HIF' to represent them with the same color.}
 
 \item{TF_colors}{(Optional) Colors to highlight TFs chosen in specialTF.}
 
@@ -37,9 +37,9 @@ Function to plot the Enrichment Score of every member of
 the ChIPseq binding database.
 }
 \examples{
-data("GSEA.result","log2.FC",package = "TFEA.ChIP")
-TF.hightlight<-c("EPAS1")
-names(TF.hightlight)<-c("EPAS1")
-col<- c("red")
+data('GSEA.result','log2.FC',package = 'TFEA.ChIP')
+TF.hightlight<-c('EPAS1')
+names(TF.hightlight)<-c('EPAS1')
+col<- c('red')
 plot_ES(GSEA.result,log2.FC,specialTF = TF.hightlight,TF_colors = col)
 }

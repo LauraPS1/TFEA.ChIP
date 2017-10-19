@@ -23,7 +23,7 @@ noise scores) corresponding to the genes in the gene list}
 list of:
 ES: Enrichment score (real number between -1 and +1)
 arg.ES: Location in gene.list where the peak running enrichment occurs
-(peak of the "mountain")
+(peak of the 'mountain')
 RES: Numerical vector containing the running enrichment score for all
 locations in the gene list
 tag.indicator: Binary vector indicating the location of the gene sets
@@ -33,6 +33,6 @@ tag.indicator: Binary vector indicating the location of the gene sets
 Computes the weighted GSEA score of gene.set in gene.list.
 }
 \examples{
-GSEA_EnrichmentScore(gene.list=c("3091","2034","405","55818"),
-gene.set=c("2034","112399","405"))
+GSEA_EnrichmentScore(gene.list=c('3091','2034','405','55818'),
+gene.set=c('2034','112399','405'))
 }

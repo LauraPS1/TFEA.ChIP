@@ -28,5 +28,5 @@ ID, in this case gene is assigned to the first match and a warning
 is displayed.
 }
 \examples{
-GeneID2entrez(c("TNMD","DPM1","SCYL3","FGR","CFH","FUCA2","GCLC"))
+GeneID2entrez(c('TNMD','DPM1','SCYL3','FGR','CFH','FUCA2','GCLC'))
 }

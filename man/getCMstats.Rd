@@ -27,6 +27,6 @@ ChIP-Seq experiment, the TF tested in that experiment, the p-value and
 the odds ratio resulting from the test.
 }
 \examples{
-data("CM_list",package = "TFEA.ChIP")
+data('CM_list',package = 'TFEA.ChIP')
 stats_mat_UP <- getCMstats(CM_list)
 }

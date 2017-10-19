@@ -8,7 +8,7 @@ plot_CM(CM.statMatrix, plot_title = NULL, specialTF = NULL,
   TF_colors = NULL)
 }
 \arguments{
-\item{CM.statMatrix}{Output of the function "getCMstats".
+\item{CM.statMatrix}{Output of the function 'getCMstats'.
 A data frame storing: Accession ID of every ChIP-Seq tested,
 Transcription Factor,Odds Ratio, p-value and adjusted p-value.}
 
@@ -17,7 +17,7 @@ Transcription Factor,Odds Ratio, p-value and adjusted p-value.}
 \item{specialTF}{(Optional) Named vector of TF symbols -as written in
 the enrichment table- to be highlighted in the plot. The name of each
 element of the vector specifies its color group, i.e.: naming elements
-HIF1A and HIF1B as "HIF" to represent them with the same color.}
+HIF1A and HIF1B as 'HIF' to represent them with the same color.}
 
 \item{TF_colors}{(Optional) Nolors to highlight TFs chosen in specialTF.}
 }
@@ -27,9 +27,9 @@ plotly scatter plot.
 \description{
 Function to generate an interactive html plot from a
 transcription factor enrichment table, output of the function
-"getCMstats".
+'getCMstats'.
 }
 \examples{
-data("stat_mat",package = "TFEA.ChIP")
+data('stat_mat',package = 'TFEA.ChIP')
 plot_CM(stat_mat)
 }

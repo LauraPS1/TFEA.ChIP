@@ -18,7 +18,7 @@ Entrez ID. Arranged from higher to lower.}
 \item{line.colors}{(Optional) Vector of colors for each line.}
 
 \item{line.styles}{(Optional) Vector of line styles for each line
-("solid"/"dash"/"longdash").}
+('solid'/'dash'/'longdash').}
 
 \item{Accession}{(Optional) restricts plot to the indicated list dataset
 IDs.}
@@ -34,7 +34,7 @@ heatmap -log2(fold change) bar-.
 Function to plot all the RES stored in a GSEA_run output.
 }
 \examples{
-data("GSEA.result","log2.FC",package = "TFEA.ChIP")
-plot_RES(GSEA.result,log2.FC,TF=c("EPAS1"),
-    Accession=c("GSM2390642","GSM2390643"))
+data('GSEA.result','log2.FC',package = 'TFEA.ChIP')
+plot_RES(GSEA.result,log2.FC,TF=c('EPAS1'),
+    Accession=c('GSM2390642','GSM2390643'))
 }

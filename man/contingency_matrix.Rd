@@ -26,6 +26,6 @@ of the two gene ID lists according to the presence or absence of the
 terms in these list in a ChIP-Seq binding database.
 }
 \examples{
-data("Genes.Upreg",package = "TFEA.ChIP")
+data('Genes.Upreg',package = 'TFEA.ChIP')
 CM_list_UP <- contingency_matrix(Genes.Upreg)
 }

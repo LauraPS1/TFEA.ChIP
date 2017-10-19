@@ -31,6 +31,6 @@ as a GenomicRange object) to overlapping genes or gene-associated
 Dnase regions (Ref.db).
 }
 \examples{
-data("DnaseHS_db","gr.list", package="TFEA.ChIP")
+data('DnaseHS_db','gr.list', package='TFEA.ChIP')
 GR2tfbs_db(DnaseHS_db, gr.list)
 }

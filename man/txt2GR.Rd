@@ -9,7 +9,7 @@ txt2GR(fileTable, format, fileMetaData, alpha = NULL)
 \arguments{
 \item{fileTable}{data frame from a txt/tsv/bed file}
 
-\item{format}{"narrowPeak" or "macs".
+\item{format}{'narrowPeak' or 'macs'.
 narrowPeak fields:
 'chrom','chromStart','chromEnd','name','score','strand','signalValue',
 'pValue','qValue','peak'
@@ -34,6 +34,6 @@ MACS's peaks.bed formats) and then store the peak coordinates in a
 GenomicRanges object, associated to its metadata.
 }
 \examples{
-data("ARNT.peaks.bed","ARNT.metadata",package = "TFEA.ChIP")
-ARNT.gr<-txt2GR(ARNT.peaks.bed,"macs",ARNT.metadata)
+data('ARNT.peaks.bed','ARNT.metadata',package = 'TFEA.ChIP')
+ARNT.gr<-txt2GR(ARNT.peaks.bed,'macs',ARNT.metadata)
 }

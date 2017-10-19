@@ -14,8 +14,8 @@ highlight_TF(table, column, specialTF, markerColors)
 \item{specialTF}{Named vector containing TF names as they appear in the
 enrichment matrix/df and nicknames for their color group.
 Example:
-          specialTF<-c("HIF1A","EPAS1","ARNT","SIN3A")
-          names(specialTF)<-c("HIF","HIF","HIF","SIN3A")}
+          specialTF<-c('HIF1A','EPAS1','ARNT','SIN3A')
+          names(specialTF)<-c('HIF','HIF','HIF','SIN3A')}
 
 \item{markerColors}{Vector specifying the shade for every color group.}
 }
