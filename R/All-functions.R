@@ -1071,10 +1071,12 @@ plot_ES <- function(GSEA_result, LFC, plot_title = NULL, specialTF = NULL, TF_co
 
     if (!is.null(Accession) | !is.null(TF)) {
         if (is.null(Accession)) {
-            Accession <- enrichmentTable$Accession
+            Accession <- GSEA_result$Enrichment.table[
+                GSEA_result$Enrichment.table$TF %in% TF,]$Accession
         }
         if (is.null(TF)) {
-            TF <- enrichmentTable$TF
+            TF <- GSEA_result$Enrichment.table[
+                GSEA_result$Enrichment.table$Accession %in% Accession,]$TF
         }
         SS <- ((enrichmentTable$Accession %in% Accession) &
             (enrichmentTable$TF %in% TF))
@@ -1216,11 +1218,11 @@ plot_RES <- function(GSEA_result, LFC, plot_title = NULL, line.colors = NULL, li
     if (!is.null(Accession) | !is.null(TF)) {
         if (is.null(Accession)) {
             Accession <- GSEA_result$Enrichment.table[
-                GSEA_result$Enrichment.table$TF %in% TF]$Accession
+                GSEA_result$Enrichment.table$TF %in% TF,]$Accession
         }
         if (is.null(TF)) {
             TF <- GSEA_result$Enrichment.table[
-                GSEA_result$Enrichment.table$Accession %in% Accession]$TF
+                GSEA_result$Enrichment.table$Accession %in% Accession,]$TF
         }
 
         GSEA_result$Enrichment.table <- GSEA_result$Enrichment.table[
