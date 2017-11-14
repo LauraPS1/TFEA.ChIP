@@ -21,8 +21,14 @@ test_GeneID2Entrez<-function(){
 test_preprocessInputData<-function(){
     data("hypoxia_DESeq","hypoxia",package = "TFEA.ChIP")
     # Checking output size
-    RUnit::checkEquals(nrow(preprocessInputData(hypoxia)),17166)
-    RUnit::checkEquals(nrow(preprocessInputData(hypoxia_DESeq)),10574)
+    RUnit::checkEquals(
+        nrow(preprocessInputData(hypoxia)),
+        length(GeneID2entrez(hypoxia$Genes)))
+
+    RUnit::checkEquals(
+        nrow(preprocessInputData(hypoxia_DESeq)),
+        length(GeneID2entrez(rownames(hypoxia_DESeq))))
+
     # Cheking every gene in output has been properly translated
     RUnit::checkTrue(!(FALSE %in% (
         preprocessInputData(hypoxia)$Genes %in% GeneID2entrez(hypoxia$Genes))))
