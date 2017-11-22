@@ -92,7 +92,7 @@ Finally, note that the list of control genes is optional. If not supplied, all h
 
 
 ```{r eval=TRUE,echo=TRUE}
-chip_index<-get_chip_index("encode") #selects ENCODE datasets only
+chip_index<-get_chip_index(encodeFilter = TRUE) #selects ENCODE datasets only
 CM_list_UPe <- contingency_matrix(Genes.Upreg,Genes.Control,chip_index) #generates list of contingency tables
 pval_mat_UPe <- getCMstats(CM_list_UPe,chip_index) #generates list of p-values and ORs
 head(pval_mat_UPe)

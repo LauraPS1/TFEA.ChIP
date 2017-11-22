@@ -4,10 +4,11 @@
 \alias{get_chip_index}
 \title{Creates df containing accessions of ChIP-Seq datasets and TF.}
 \usage{
-get_chip_index(database = "g", TFfilter = NULL)
+get_chip_index(encodeFilter = FALSE, TFfilter = NULL)
 }
 \arguments{
-\item{database}{Name of the database used: 'encode'/'e' or 'general'/'g'.}
+\item{encodeFilter}{(Optional) If TRUE, only ENCODE ChIP-Seqs are
+included in the index.}
 
 \item{TFfilter}{(Optional) Transcription factors of interest.}
 }
@@ -23,6 +24,6 @@ as a filter to select specific ChIPs or transcription factors to run an
 analysis.
 }
 \examples{
-get_chip_index(database='e')
-get_chip_index(database='general',TFfilter=c('SMAD2','SMAD4'))
+get_chip_index(encodeFilter = TRUE)
+get_chip_index(TFfilter=c('SMAD2','SMAD4'))
 }

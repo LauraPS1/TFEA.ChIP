@@ -42,22 +42,22 @@ test_Select_genes<-function(){
     data("hypoxia",package="TFEA.ChIP")
     # All differentially expressed genes
     RUnit::checkEquals(
-        length(Select_genes(hypoxia)),
-        length(hypoxia[hypoxia$pval.adj<=0.05,1]))
+        length( Select_genes( hypoxia ) ),
+        dim( hypoxia[ hypoxia$pval.adj<=0.05, ] )[1] )
     # Downregulated genes
     RUnit::checkEquals(
-        length(Select_genes(hypoxia,max_LFC = 0)),
-        length(hypoxia[hypoxia$pval.adj<=0.05 & hypoxia$log2FoldChange<0,1]))
+        length( Select_genes( hypoxia, max_LFC = 0 ) ),
+        dim( hypoxia[ hypoxia$pval.adj<=0.05 & hypoxia$log2FoldChange<0, ] )[1] )
     # Upregulated genes
     RUnit::checkEquals(
-        length(Select_genes(hypoxia,min_LFC = 0)),
-        length(hypoxia[hypoxia$pval.adj<=0.05 & hypoxia$log2FoldChange>0,1]))
+        length( Select_genes( hypoxia, min_LFC = 0 ) ),
+        dim( hypoxia[ hypoxia$pval.adj<=0.05 & hypoxia$log2FoldChange>0, ] )[1] )
     # Unresponsive genes
     RUnit::checkEquals(
-        length(Select_genes(hypoxia,
-            min_pval=0.5, max_pval=1, min_LFC=-0.25, max_LFC=0.25)),
-        length(hypoxia[hypoxia$pval.adj>=0.5 &
-            hypoxia$log2FoldChange>(-0.25) & hypoxia$log2FoldChange<0.25,1]))
+        length( Select_genes( hypoxia,
+            min_pval = 0.5, max_pval = 1, min_LFC = -0.25, max_LFC = 0.25)),
+        dim( hypoxia[ hypoxia$pval.adj >= 0.5 &
+            hypoxia$log2FoldChange > (-0.25) & hypoxia$log2FoldChange < 0.25, ] )[1] )
 }
 
 test_get_chip_index<-function(){
@@ -69,7 +69,7 @@ test_get_chip_index<-function(){
         nrow(MetaData))
     # Datasets from Encode only
     RUnit::checkEquals(
-        nrow(get_chip_index(database = "encode")),
+        nrow(get_chip_index(encodeFilter = TRUE)),
         nrow(MetaData[grepl("wg",MetaData$Accession),]))
     # TF "JUND" only
     RUnit::checkEquals(
