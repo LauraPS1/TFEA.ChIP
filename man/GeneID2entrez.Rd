@@ -4,7 +4,7 @@
 \alias{GeneID2entrez}
 \title{Translates gene IDs from Gene Symbol or Ensemble ID to Entrez ID.}
 \usage{
-GeneID2entrez(gene.IDs, return.Matrix = FALSE)
+GeneID2entrez(gene.IDs, return.Matrix = FALSE, from.Mouse = FALSE)
 }
 \arguments{
 \item{gene.IDs}{Array of Gene Symbols or Ensemble Gene IDs.}
@@ -12,6 +12,8 @@ GeneID2entrez(gene.IDs, return.Matrix = FALSE)
 \item{return.Matrix}{T/F. When TRUE, the function returns a matrix[n,2],
 one column with the gene symbols or Ensemble IDs, another with their
 respective Entrez IDs.}
+
+\item{from.Mouse}{TRUE if the input consists of mouse gene IDs.}
 }
 \value{
 Vector or matrix containing the Entrez IDs(or NA) corresponding

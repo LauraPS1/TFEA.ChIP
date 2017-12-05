@@ -2,7 +2,7 @@
 #' @importFrom GenomicFeatures genes
 #' @importFrom GenomicRanges GRanges distanceToNearest
 #' @importFrom IRanges IRanges
-#' @importFrom biomaRt select
+#' @importFrom biomaRt select useMart getLDS
 #' @importFrom dplyr '%>%' arrange
 #' @importFrom grDevices colorRamp
 #' @importFrom stats fisher.test p.adjust
@@ -105,6 +105,19 @@ txt2GR <- function(fileTable, format, fileMetaData, alpha = NULL) {
                 valLimit <- alpha
             }
             fileTable <- fileTable[fileTable$score < valLimit, ]
+
+        } else {
+            # If the dataset has both p-value and 10*-log(pval) columns.
+            fileTable <- fileTable[, c(1, 2, 3, 9)]
+            colnames(fileTable) <- c("chr", "start", "end", "score")
+            Stat <- "log10(p-Value)"
+
+            if (is.null(alpha)) {
+                valLimit <- 1.3
+            } else {
+                valLimit <- (-log10(alpha))
+            }
+            fileTable <- fileTable[fileTable$score > valLimit, ]
         }
 
         fileMetaData <- c(fileMetaData, Stat)
@@ -325,7 +338,7 @@ set_user_data <- function(metadata, binary_matrix) {
     assign("Mat01", binary_matrix, envir = envir)
 }
 
-preprocessInputData <- function(inputData) {
+preprocessInputData <- function(inputData, from.Mouse = FALSE ) {
     #' @title Extracts data from a DESeqResults object or a data frame.
     #' @description Function to extract Gene IDs, logFoldChange, and p-val
     #' values from a DESeqResults object or data frame. Gene IDs are
@@ -334,6 +347,7 @@ preprocessInputData <- function(inputData) {
     #' @param inputData DESeqResults object or data frame. In all cases
     #' must include gene IDs. Data frame inputs should include 'pvalue' and
     #' 'log2FoldChange' as well.
+    #' @param from.Mouse TRUE if the input consists of mouse gene IDs.
     #' @return A table containing Entrez Gene IDs, LogFoldChange and p-val
     #' values (both raw p-value and fdr adjusted p-value), sorted by
     #' log2FoldChange.
@@ -350,12 +364,21 @@ preprocessInputData <- function(inputData) {
         }
 
         # check the gene ids and translate if needed
-        if (grepl("^\\d*$", rownames(inputData)[1]) == FALSE) {
-            genes <- suppressMessages(GeneID2entrez(rownames(inputData),
+        if ( all( grepl("^\\d*$", rownames(inputData)[1]) ) != TRUE) {
+            genes <- suppressMessages( GeneID2entrez(
+                gene.IDs = rownames( inputData ),
+                from.Mouse,
                 return.Matrix = TRUE))
-            genes <- genes[!is.na(genes$ENTREZ.ID), ]
-            inputData <- inputData[rownames(inputData) %in% genes$GENE.ID, ]
-            genes <- genes$ENTREZ.ID
+
+            if (from.Mouse == FALSE){
+                genes <- genes[!is.na(genes$ENTREZ.ID), ]
+                inputData <- inputData[rownames(inputData) %in% genes$GENE.ID, ]
+                genes <- genes$ENTREZ.ID
+            }else{
+                genes <- genes[!is.na(genes$human.gene.ID), ]
+                inputData <- inputData[rownames(inputData) %in% genes$mouse.gene.ID, ]
+                genes <- genes$human.gene.ID
+            }
 
         } else {
             genes <- rownames(inputData)
@@ -388,20 +411,33 @@ preprocessInputData <- function(inputData) {
             inputData$pval.adj <- p.adjust(inputData$pvalue,
                 "fdr")
         }
-        # If Gene IDs aren't in Entrez Gene ID format
-        if (grepl("^\\d*$", inputData$Genes[1]) == FALSE) {
-            genes <- suppressMessages(GeneID2entrez(inputData$Gene,
+        # If Gene IDs aren't in Entrez Gene ID format or come from mouse genes.
+        if (all( grepl("^\\d*$", inputData$Genes[1]) ) != TRUE |
+            from.Mouse == TRUE ) {
+
+            genes <- suppressMessages( GeneID2entrez(
+                gene.IDs = inputData$Genes,
+                from.Mouse,
                 return.Matrix = TRUE))
-            genes <- genes[!is.na(genes$ENTREZ.ID), ]
-            inputData <- inputData[inputData$Gene %in% genes$GENE.ID, ]
-            inputData$Genes <- as.character(genes$ENTREZ.ID)
+
+            if (from.Mouse == FALSE){
+                genes <- genes[!is.na(genes$ENTREZ.ID), ]
+                inputData <- inputData[ inputData$Genes %in% genes$GENE.ID, ]
+                inputData$Genes <- genes$ENTREZ.ID
+            }else{
+                genes <- genes[!is.na(genes$human.gene.ID), ]
+                inputData <- inputData[ inputData$Genes %in% genes$mouse.gene.ID, ]
+                inputData$Genes <- genes$human.gene.ID
+            }
         }
         # sorting according to log2(FoldChange)
         inputData <- inputData[order(inputData$log2FoldChange,
             decreasing = TRUE), ]
         return(inputData)
-    } else (stop("preprocessInputData requires a DESeqResults object or ",
-        "a data frame as input.", call. = FALSE))
+
+    } else {
+        stop("preprocessInputData requires a DESeqResults object or ",
+            "a data frame as input.", call. = FALSE)}
 }
 
 Select_genes <- function(GeneExpression_df, max_pval = 0.05, min_pval = 0, max_LFC = NULL, min_LFC = NULL) {
@@ -479,7 +515,7 @@ Select_genes <- function(GeneExpression_df, max_pval = 0.05, min_pval = 0, max_L
     return(geneSelection)
 }
 
-GeneID2entrez <- function(gene.IDs, return.Matrix = FALSE) {
+GeneID2entrez <- function(gene.IDs, return.Matrix = FALSE, from.Mouse = FALSE) {
 
     #' @title Translates gene IDs from Gene Symbol or Ensemble ID to Entrez ID.
     #' @description Translates gene IDs from Gene Symbol or Ensemble Gene ID
@@ -494,50 +530,111 @@ GeneID2entrez <- function(gene.IDs, return.Matrix = FALSE) {
     #' @param return.Matrix T/F. When TRUE, the function returns a matrix[n,2],
     #' one column with the gene symbols or Ensemble IDs, another with their
     #' respective Entrez IDs.
+    #' @param from.Mouse TRUE if the input consists of mouse gene IDs.
     #' @return Vector or matrix containing the Entrez IDs(or NA) corresponding
     #' to every element of the input.
     #' @export GeneID2entrez
     #' @examples
     #' GeneID2entrez(c('TNMD','DPM1','SCYL3','FGR','CFH','FUCA2','GCLC'))
 
-    Genes <- GenomicFeatures::genes(TxDb.Hsapiens.UCSC.hg19.knownGene)
-    suppressMessages(GeneNames <- biomaRt::select(org.Hs.eg.db,
-        Genes$gene_id, c("SYMBOL", "ENSEMBL")))
-    # suppressWarnings added to avoid 'select()' returned 1:many
-    # mapping between keys and columns
 
-    if (grepl("ENSG0", gene.IDs[1]) == TRUE) {
-        ID.type <- "ENSEMBL"
-    } else {
-        ID.type <- "SYMBOL"
-    }
+    if (from.Mouse == FALSE){
 
-    gene.IDs <- toupper(gene.IDs)  # in case any name is in lowercase.
+        Genes <- GenomicFeatures::genes(TxDb.Hsapiens.UCSC.hg19.knownGene)
+        suppressMessages(GeneNames <- biomaRt::select(org.Hs.eg.db,
+            Genes$gene_id, c("SYMBOL", "ENSEMBL")))
+        # suppressWarnings added to avoid 'select()' returned 1:many
+        # mapping between keys and columns
 
-    tmp <- match(as.character(gene.IDs), GeneNames[, ID.type])
-    tmp2 <- match(GeneNames[, ID.type], as.character(gene.IDs))
-
-    if (sum(duplicated(tmp2[!is.na(tmp2)])) > 0) {
-        warning("Some genes returned 1:many mapping to ENTREZ ID. ",
-            "Genes were assigned the first ENTREZ ID match found.\n",
-            call. = FALSE)
-    }
-    message("Done! ", length(tmp[!is.na(tmp)]), " genes of ",
-        length(tmp), " successfully translated.\n")
-
-    if (return.Matrix == TRUE) {
-        if (length(tmp[is.na(tmp)]) > 0) {
-            message("Couldn't find Entrez IDs for ", length(tmp[is.na(tmp)]),
-                " genes (NAs returned instead).\n")
+        if ( all( grepl("^ENSG", gene.IDs, perl = TRUE ) ) == TRUE) {
+            ID.type <- "ENSEMBL"
+        } else {
+            ID.type <- "SYMBOL"
         }
-        return(data.frame(GENE.ID = gene.IDs, ENTREZ.ID = GeneNames[tmp,
-            "ENTREZID"]))
-    } else {
-        if (length(tmp[is.na(tmp)]) > 0) {
-            message("Couldn't find Entrez IDs for ", length(tmp[is.na(tmp)]),
-                " genes.\n")
+
+        gene.IDs <- toupper(gene.IDs)  # in case any name is in lowercase.
+
+        tmp <- match(as.character(gene.IDs), GeneNames[, ID.type])
+        tmp2 <- match(GeneNames[, ID.type], as.character(gene.IDs))
+
+        if (sum(duplicated(tmp2[!is.na(tmp2)])) > 0) {
+            warning("Some genes returned 1:many mapping to ENTREZ ID. ",
+                "Genes were assigned the first ENTREZ ID match found.\n",
+                call. = FALSE)
         }
-        return(GeneNames[tmp[!is.na(tmp)], "ENTREZID"])
+        message("Done! ", length(tmp[!is.na(tmp)]), " genes of ",
+            length(tmp), " successfully translated.\n")
+
+        if (return.Matrix == TRUE) {
+            if (length(tmp[is.na(tmp)]) > 0) {
+                message("Couldn't find Entrez IDs for ", length(tmp[is.na(tmp)]),
+                    " genes (NAs returned instead).\n")
+            }
+            return(data.frame(GENE.ID = gene.IDs, ENTREZ.ID = GeneNames[tmp,
+                "ENTREZID"]))
+        } else {
+            if (length(tmp[is.na(tmp)]) > 0) {
+                message("Couldn't find Entrez IDs for ", length(tmp[is.na(tmp)]),
+                    " genes.\n")
+            }
+            return(GeneNames[tmp[!is.na(tmp)], "ENTREZID"])
+        }
+
+    }else{
+
+        human = useMart("ensembl", dataset = "hsapiens_gene_ensembl")
+        mouse = useMart("ensembl", dataset = "mmusculus_gene_ensembl")
+
+        if ( all( grepl("^ENSM", gene.IDs, perl = TRUE ) ) == TRUE) {
+            hs_ids = getLDS(
+                attributes = c("ensembl_gene_id"), filters = "ensembl_gene_id",
+                values = gene.IDs , mart = mouse,
+                attributesL = c("entrezgene"), martL = human,
+                uniqueRows = TRUE )
+
+            # re-sorting to set gene IDs in their original order.
+            hs_ids <- hs_ids[ match( gene.IDs, hs_ids$Gene.stable.ID), ]
+            colnames(hs_ids)<- c("mouse.gene.ID", "human.gene.ID")
+
+        } else if ( all( grepl("^\\d*$", gene.IDs, perl = TRUE) ) == TRUE ) {
+            hs_ids = getLDS(
+                attributes = c("entrezgene"), filters = "entrezgene",
+                values = gene.IDs, mart = mouse,
+                attributesL = c("entrezgene"), martL = human,
+                uniqueRows = TRUE )
+
+            # re-sorting to set gene IDs in their original order.
+            hs_ids <- hs_ids[ match( gene.IDs, hs_ids$NCBI.gene.ID), ]
+            colnames(hs_ids)<- c("mouse.gene.ID", "human.gene.ID")
+
+        } else {
+            hs_ids = getLDS(
+                attributes = c("mgi_symbol"), filters = "mgi_symbol",
+                values = gene.IDs, mart = mouse,
+                attributesL = c("entrezgene"), martL = human,
+                uniqueRows = TRUE )
+
+            # re-sorting to set gene IDs in their original order.
+            hs_ids <- hs_ids[ match( gene.IDs, hs_ids$MGI.symbol), ]
+            colnames(hs_ids)<- c("mouse.gene.ID", "human.gene.ID")
+        }
+
+        if (return.Matrix == TRUE) {
+            if (dim( hs_ids[ is.na( hs_ids$human.gene.ID ), ])[1] > 0) {
+                message("Couldn't find human Entrez IDs for ",
+                    dim( hs_ids[ is.na( hs_ids$human.gene.ID ), ])[1],
+                    " genes (NAs returned instead).\n")
+            }
+            return( hs_ids )
+        } else {
+            if (dim( hs_ids[ is.na( hs_ids$human.gene.ID ), ])[1] > 0) {
+                message("Couldn't find human Entrez IDs for ",
+                    dim( hs_ids[ is.na( hs_ids$human.gene.ID ), ])[1],
+                    " genes.\n")
+            }
+            return( hs_ids$human.gene.ID )
+        }
+
     }
 }
 

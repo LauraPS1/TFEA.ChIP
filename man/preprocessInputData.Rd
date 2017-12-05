@@ -4,12 +4,14 @@
 \alias{preprocessInputData}
 \title{Extracts data from a DESeqResults object or a data frame.}
 \usage{
-preprocessInputData(inputData)
+preprocessInputData(inputData, from.Mouse = FALSE)
 }
 \arguments{
 \item{inputData}{DESeqResults object or data frame. In all cases
 must include gene IDs. Data frame inputs should include 'pvalue' and
 'log2FoldChange' as well.}
+
+\item{from.Mouse}{TRUE if the input consists of mouse gene IDs.}
 }
 \value{
 A table containing Entrez Gene IDs, LogFoldChange and p-val
