@@ -4,7 +4,7 @@
 \name{MetaData}
 \alias{MetaData}
 \title{TF-gene binding DB metadata}
-\format{A data frame of 1060 observations of 7 variables}
+\format{A data frame of 1122 observations of 7 variables}
 \usage{
 data("MetaData")
 }
