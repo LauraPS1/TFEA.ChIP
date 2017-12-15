@@ -20,14 +20,14 @@ Vector or matrix containing the Entrez IDs(or NA) corresponding
 to every element of the input.
 }
 \description{
-Translates gene IDs from Gene Symbol or Ensemble Gene ID
-to Entrez Gene ID using the IDs approved by HGNC. When translating from
-Gene Symbol, keep in mind that many genes have been given more than one
-symbol through the years. This function will return the Entrez ID
-corresponding to the currently approved symbols if they exist, otherwise
-NA is returned. In addition some genes might map to more than one Entrez
-ID, in this case gene is assigned to the first match and a warning
-is displayed.
+Translates mouse or human gene IDs from Gene Symbol or
+Ensemble Gene ID to Entrez Gene ID using the IDs approved by HGNC.
+When translating from Gene Symbol, keep in mind that many genes have
+been given more than one symbol through the years. This function will
+return the Entrez ID corresponding to the currently approved symbols
+if they exist, otherwise NA is returned. In addition some genes might
+map to more than one Entrez ID, in this case gene is assigned to the
+first match and a warning is displayed.
 }
 \examples{
 GeneID2entrez(c('TNMD','DPM1','SCYL3','FGR','CFH','FUCA2','GCLC'))
