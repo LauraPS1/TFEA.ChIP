@@ -173,6 +173,9 @@ txt2GR <- function(fileTable, format, fileMetaData, alpha = NULL) {
             score = fileTable$score, mcols = MDframe)
         return(gr)
 
+    } else {
+        stop("format error: variable 'format' must be",
+             " either 'narrowpeak' or 'macs'. ")
     }
 }
 
@@ -208,67 +211,71 @@ GR2tfbs_db <- function(Ref.db, gr.list, distanceMargin = 10, outputAsVector = FA
             "Please install it.", call. = FALSE)
     }
 
-    m <- 0
-    for (i in seq_along(gr.list)) {
+    TFgenes_list <- lapply(
+        seq_along(gr.list),
+        function( gr.list, dm, Ref.db, i ){
 
-        gr <- gr.list[[i]]
+            gr <- gr.list[[i]]
+            nearest_index <- suppressWarnings(
+                GenomicRanges::distanceToNearest(gr, Ref.db, select = "all"))
+            nearest_index <- nearest_index[!is.na(nearest_index@elementMetadata@listData[["distance"]])]
+            nearest_index <- nearest_index[
+                nearest_index@elementMetadata@listData[["distance"]] <=   dm]
+            inSubject <- S4Vectors::subjectHits(nearest_index)
 
-        nearest_index <- suppressWarnings(
-            GenomicRanges::distanceToNearest(gr, Ref.db, select = "all"))
-
-        nearest_index <- nearest_index[!is.na(nearest_index@elementMetadata@listData[["distance"]])]
-
-        nearest_index <- nearest_index[nearest_index@elementMetadata@listData[["distance"]] <=
-            distanceMargin]
-
-        inSubject <- S4Vectors::subjectHits(nearest_index)
-
-        if (length(inSubject) == 0) {
-            # in case any ChIP-Seq dataset does not have any genes to
-            # be assigned.
-            m <- m + 1
-            next
-        }
-        assigned_genes <- Ref.db[inSubject]$gene_id
-
-        if (outputAsVector == TRUE) {
-            if ((i - m) == 1) {
-                TFgenes_list <- list(assigned_genes)
-                names(TFgenes_list)[i - m] <- as.character(
-                    gr.list[[i]]@elementMetadata@listData[["mcols.Accession"]][1]
-                )
+            # in case any ChIP-Seq dataset does not have any genes to be assigned
+            if (length(inSubject) == 0) {
+                NULL
             } else {
-                TFgenes_list <- c(TFgenes_list, list(assigned_genes))
-                names(TFgenes_list)[i - m] <- as.character(
-                    gr.list[[i]]@elementMetadata@listData[["mcols.Accession"]][1]
-                )
-            }
-        } else {
-            gene_set <- GSEABase::GeneSet(unique(assigned_genes))
-            gene_set@geneIdType@type <- "Entrez Gene ID"
-            gene_set@setName <- as.character(
-                gr.list[[i]]@elementMetadata@listData[["mcols.Accession"]][1] )
-            gene_set@setIdentifier <- as.character(
-                gr.list[[i]]@elementMetadata@listData[["mcols.Accession"]][1] )
-            gene_set@organism <- "Homo sapiens"
-            gene_set@shortDescription <- "Genes assigned to ChIP-seq"
-            gene_set@longDescription <- paste0(
-                "Cell: ", gr.list[[i]]@elementMetadata@listData[["mcols.Cell"]][1],
-                ", Treatment: ", gr.list[[i]]@elementMetadata@listData[["mcols.Treatment"]][1],
-                ", TF: ", gr.list[[i]]@elementMetadata@listData[["mcols.TF"]][1])
 
-            if ((i - m) == 1) {
-                TFgenes_list <- list(gene_set)
-                names(TFgenes_list)[i - m] <- as.character(
-                    gr.list[[i]]@elementMetadata@listData[["mcols.Accession"]][1] )
-            } else {
-                TFgenes_list <- c(TFgenes_list, list(gene_set))
-                names(TFgenes_list)[i - m] <- as.character(
-                    gr.list[[i]]@elementMetadata@listData[["mcols.Accession"]][1] )
+                assigned_genes <- Ref.db[inSubject]$gene_id
+
+                if (outputAsVector == TRUE) {
+                    names(assigned_genes) <- as.character(
+                        gr@elementMetadata@listData[["mcols.Accession"]][1] )
+
+                    return(assigned_genes)
+
+                } else {
+
+                    gene_set <- GSEABase::GeneSet(unique(assigned_genes))
+                    gene_set@geneIdType@type <- "Entrez Gene ID"
+                    gene_set@setName <- as.character(
+                        gr.list[[i]]@elementMetadata@listData[["mcols.Accession"]][1] )
+                    gene_set@setIdentifier <- as.character(
+                        gr.list[[i]]@elementMetadata@listData[["mcols.Accession"]][1] )
+                    gene_set@organism <- "Homo sapiens"
+                    gene_set@shortDescription <- "Genes assigned to ChIP-seq"
+                    gene_set@longDescription <- paste0(
+                        "Cell: ", gr.list[[i]]@elementMetadata@listData[["mcols.Cell"]][1],
+                        ", Treatment: ", gr.list[[i]]@elementMetadata@listData[["mcols.Treatment"]][1],
+                        ", TF: ", gr.list[[i]]@elementMetadata@listData[["mcols.TF"]][1])
+
+                    return(gene_set)
+                }
             }
-        }
+        },
+        gr.list = gr.list,
+        dm = distanceMargin,
+        Ref.db = Ref.db
+        )
+    # Removing list elements that didn't have any genes assigned
+    TFgenes_list[!vapply(TFgenes_list, is.null, logical(1))]
+
+    # Naming every GeneSet in the list with their accession ID
+    if ( outputAsVector == FALSE ){
+
+        list.names <- sapply(
+            seq_along( TFgenes_list ),
+            function( TFgenes_list, i ){
+                return( TFgenes_list[[i]]@setName )
+            },
+            TFgenes_list = TFgenes_list )
+
+        names(TFgenes_list) <- list.names
     }
-    return(TFgenes_list)
+
+    return( TFgenes_list )
 }
 
 makeTFBSmatrix <- function(GeneList, id_db, geneSetAsInput = TRUE) {
@@ -288,25 +295,24 @@ makeTFBSmatrix <- function(GeneList, id_db, geneSetAsInput = TRUE) {
     #' makeTFBSmatrix(Entrez.gene.IDs,tfbs.database)
 
 
-    for (i in seq_along(id_db)) {
-        TF_vector <- rep(0, length(GeneList))
-        names(TF_vector) <- GeneList
+    TF_matrix <- sapply(
+        seq_along(id_db),
+        function(id_db, GeneList, i){
 
-        if (geneSetAsInput == TRUE) {
-            TF_vector[ names(TF_vector) %in% id_db[[i]]@geneIds ] <- 1
-        }else{
-            TF_vector[ names(TF_vector) %in% id_db[[i]] ] <- 1
-        }
+            TF_vector <- rep(0, length(GeneList))
+            names(TF_vector) <- GeneList
 
-        if (i == 1) {
-            TF_matrix <- matrix(nrow = length(GeneList))
-            TF_matrix <- TF_vector
-            rm(TF_vector)
-        } else {
-            TF_matrix <- cbind(TF_matrix, TF_vector)
-            rm(TF_vector)
-        }
-    }
+            if ( is.vector( id_db[[1]]) ){
+                TF_vector[ names(TF_vector) %in% id_db[[i]] ] <- 1
+            } else { # if id_db is a list of GeneSets
+                TF_vector[ names(TF_vector) %in% id_db[[i]]@geneIds ] <- 1
+            }
+
+            return(TF_vector)
+        },
+        id_db = id_db,
+        GeneList = GeneList
+    )
     colnames(TF_matrix) <- names(id_db)
     rownames(TF_matrix) <- GeneList
     return(TF_matrix)
@@ -343,7 +349,9 @@ preprocessInputData <- function(inputData, from.Mouse = FALSE ) {
     #' @description Function to extract Gene IDs, logFoldChange, and p-val
     #' values from a DESeqResults object or data frame. Gene IDs are
     #' translated to ENTREZ IDs, if possible, and the resultant data frame
-    #' is sorted accordint to decreasing log2(Fold Change).
+    #' is sorted accordint to decreasing log2(Fold Change). Translating
+    #' gene IDs from mouse to their equivalent human genes is avaible
+    #' using the option from.Mouse.
     #' @param inputData DESeqResults object or data frame. In all cases
     #' must include gene IDs. Data frame inputs should include 'pvalue' and
     #' 'log2FoldChange' as well.
@@ -386,7 +394,7 @@ preprocessInputData <- function(inputData, from.Mouse = FALSE ) {
         # get the rest of the variables
         log2FoldChange <- inputData@listData[["log2FoldChange"]]
         pvalue <- inputData@listData[["pvalue"]]
-        pval.adj <- p.adjust(pvalue, "fdr")
+        pval.adj <- inputData@listData[["padj"]]
 
         Table <- data.frame(Genes = genes, log2FoldChange = log2FoldChange,
             pvalue = pvalue, pval.adj = pval.adj)
@@ -458,26 +466,7 @@ Select_genes <- function(GeneExpression_df, max_pval = 0.05, min_pval = 0, max_L
     #' Select_genes(hypoxia)
 
     # Checking input variables
-    if (is.null(max_LFC) & !is.null(min_LFC)) {
-        if (min_LFC == 0) {
-            max_LFC <- max(GeneExpression_df$log2FoldChange)
-            min_LFC <- min(GeneExpression_df[
-                GeneExpression_df$log2FoldChange > 0, ]$log2FoldChange)
 
-        } else {
-            max_LFC <- max(GeneExpression_df$log2FoldChange)
-        }
-
-    } else if (is.null(min_LFC) & !is.null(max_LFC)) {
-        if (max_LFC == 0) {
-            min_LFC <- min(GeneExpression_df$log2FoldChange)
-            max_LFC <- max(GeneExpression_df[
-                GeneExpression_df$log2FoldChange < 0, ]$log2FoldChange)
-
-        } else {
-            min_LFC <- min(GeneExpression_df$log2FoldChange)
-        }
-    }
     if (max_pval < min_pval) {
         stop("'max_pval' has to be greater than 'min_pval'. ",
             call. = FALSE)
@@ -487,25 +476,45 @@ Select_genes <- function(GeneExpression_df, max_pval = 0.05, min_pval = 0, max_L
                 call. = FALSE)
         }
     }
+    # If only one log2(Fold Change) limit is defined
+    if (is.null(max_LFC) & !is.null(min_LFC)) {
+
+        max_LFC <- max(GeneExpression_df$log2FoldChange)
+
+        if (min_LFC == 0) {
+            min_LFC <- min(GeneExpression_df[
+                GeneExpression_df$log2FoldChange > 0, ]$log2FoldChange)
+        }
+
+    } else if (is.null(min_LFC) & !is.null(max_LFC)) {
+
+        min_LFC <- min(GeneExpression_df$log2FoldChange)
+
+        if (max_LFC == 0) {
+            max_LFC <- max(GeneExpression_df[
+                GeneExpression_df$log2FoldChange < 0, ]$log2FoldChange)
+        }
+    }
 
     # Selecting by p-value
     if ("pval.adj" %in% colnames(GeneExpression_df)) {
-        geneSelection <- GeneExpression_df[GeneExpression_df$pval.adj >=
-            min_pval & GeneExpression_df$pval.adj <= max_pval, ]
-
+        geneSelection <- GeneExpression_df[
+            GeneExpression_df$pval.adj >= min_pval &
+            GeneExpression_df$pval.adj <= max_pval, ]
+    } else if ("pvalue" %in% colnames(GeneExpression_df)) {
+        geneSelection <- GeneExpression_df[
+            GeneExpression_df$pvalue >= min_pval &
+            GeneExpression_df$pvalue <= max_pval, ]
     } else {
-        if ("pvalue" %in% colnames(GeneExpression_df)) {
-        geneSelection <- GeneExpression_df[GeneExpression_df$pvalue >=
-            min_pval & GeneExpression_df$pvalue <= max_pval, ]
-        } else {
-            stop("No 'pvalue' or 'pval.adj' field in the input data. ")
-        }
+        stop("No 'pvalue' or 'pval.adj' field in the input data. ")
     }
+
     # Selecting by log2(FoldChange)
     if (!is.null(min_LFC) & !is.null(max_LFC)) {
         if( "log2FoldChange" %in% colnames(GeneExpression_df) ){
-            geneSelection <- geneSelection[geneSelection$log2FoldChange >=
-                min_LFC & geneSelection$log2FoldChange <= max_LFC, ]
+            geneSelection <- geneSelection[
+                geneSelection$log2FoldChange >= min_LFC &
+                geneSelection$log2FoldChange <= max_LFC, ]
         }else{
             stop("No 'log2FoldChange' field in the input data. ")
         }
@@ -518,14 +527,14 @@ Select_genes <- function(GeneExpression_df, max_pval = 0.05, min_pval = 0, max_L
 GeneID2entrez <- function(gene.IDs, return.Matrix = FALSE, from.Mouse = FALSE) {
 
     #' @title Translates gene IDs from Gene Symbol or Ensemble ID to Entrez ID.
-    #' @description Translates gene IDs from Gene Symbol or Ensemble Gene ID
-    #' to Entrez Gene ID using the IDs approved by HGNC. When translating from
-    #' Gene Symbol, keep in mind that many genes have been given more than one
-    #' symbol through the years. This function will return the Entrez ID
-    #' corresponding to the currently approved symbols if they exist, otherwise
-    #' NA is returned. In addition some genes might map to more than one Entrez
-    #' ID, in this case gene is assigned to the first match and a warning
-    #' is displayed.
+    #' @description Translates mouse or human gene IDs from Gene Symbol or
+    #' Ensemble Gene ID to Entrez Gene ID using the IDs approved by HGNC.
+    #' When translating from Gene Symbol, keep in mind that many genes have
+    #' been given more than one symbol through the years. This function will
+    #' return the Entrez ID corresponding to the currently approved symbols
+    #' if they exist, otherwise NA is returned. In addition some genes might
+    #' map to more than one Entrez ID, in this case gene is assigned to the
+    #' first match and a warning is displayed.
     #' @param gene.IDs Array of Gene Symbols or Ensemble Gene IDs.
     #' @param return.Matrix T/F. When TRUE, the function returns a matrix[n,2],
     #' one column with the gene symbols or Ensemble IDs, another with their
@@ -582,8 +591,8 @@ GeneID2entrez <- function(gene.IDs, return.Matrix = FALSE, from.Mouse = FALSE) {
 
     }else{
 
-        human = useMart("ensembl", dataset = "hsapiens_gene_ensembl")
-        mouse = useMart("ensembl", dataset = "mmusculus_gene_ensembl")
+        human <- useMart("ensembl", dataset = "hsapiens_gene_ensembl")
+        mouse <- useMart("ensembl", dataset = "mmusculus_gene_ensembl")
 
         if ( all( grepl("^ENSM", gene.IDs, perl = TRUE ) ) == TRUE) {
             hs_ids = getLDS(
@@ -618,6 +627,9 @@ GeneID2entrez <- function(gene.IDs, return.Matrix = FALSE, from.Mouse = FALSE) {
             hs_ids <- hs_ids[ match( gene.IDs, hs_ids$MGI.symbol), ]
             colnames(hs_ids)<- c("mouse.gene.ID", "human.gene.ID")
         }
+
+        message("Done! ", dim(hs_ids[!is.na(hs_ids$human.gene.ID),])[1],
+            " genes of ", dim(hs_ids)[1], " successfully translated.\n")
 
         if (return.Matrix == TRUE) {
             if (dim( hs_ids[ is.na( hs_ids$human.gene.ID ), ])[1] > 0) {
@@ -675,7 +687,7 @@ get_chip_index <- function(encodeFilter = FALSE, TFfilter = NULL) {
         }
     }
 
-    if ( dim( Index )[1] ==0 ){
+    if ( dim( Index )[1] == 0 ){
         stop("No ChIP-Seq dataset in the database follows ",
             "your conditions.")
     }else{
@@ -711,7 +723,7 @@ contingency_matrix <- function(test_list, control_list, chip_index = get_chip_in
     } else {
         control_list <- control_list[!(control_list %in% test_list)]
     }
-    if (exists("Mat01") == FALSE) {
+    if (!exists("Mat01")) {
         Mat01 <- NULL
         data("Mat01", package = "TFEA.ChIP", envir = environment())
     }
@@ -720,25 +732,28 @@ contingency_matrix <- function(test_list, control_list, chip_index = get_chip_in
     Matrix2 <- Mat01[rownames(Mat01) %in% control_list, colnames(Mat01) %in%
         chip_index$Accession]
 
-    for (i in seq_along(chip_index$Accession)) {
-        chip.vector1 <- Matrix1[, chip_index$Accession[i]]
-        chip.vector2 <- Matrix2[, chip_index$Accession[i]]
+    contMatrix_list <- lapply(
+        seq_along(chip_index$Accession),
 
-        pos1 <- length(chip.vector1[chip.vector1 == 1])
-        pos2 <- length(chip.vector2[chip.vector2 == 1])
-        neg1 <- length(chip.vector1[chip.vector1 == 0])
-        neg2 <- length(chip.vector2[chip.vector2 == 0])
+        function(accs, m1, m2, i){
+            chip.vector1 <- m1[, accs[i] ]
+            chip.vector2 <- m2[, accs[i] ]
 
-        contMatrix <- cbind(c(pos1, pos2), c(neg1, neg2))
-        rownames(contMatrix) <- c("Test", "Control")
-        colnames(contMatrix) <- c("Positive", "Negative")
+            pos1 <- length(chip.vector1[chip.vector1 == 1])
+            pos2 <- length(chip.vector2[chip.vector2 == 1])
+            neg1 <- length(chip.vector1[chip.vector1 == 0])
+            neg2 <- length(chip.vector2[chip.vector2 == 0])
 
-        if (i == 1) {
-            contMatrix_list <- list(contMatrix)
-        } else {
-            contMatrix_list <- c(contMatrix_list, list(contMatrix))
-        }
-    }
+            contMatrix <- cbind(c(pos1, pos2), c(neg1, neg2))
+            rownames(contMatrix) <- c("Test", "Control")
+            colnames(contMatrix) <- c("Positive", "Negative")
+
+            return(contMatrix)
+        },
+        accs = chip_index$Accession,
+        m1 = Matrix1,
+        m2 = Matrix2
+    )
     names(contMatrix_list) <- as.character(chip_index$Accession)
     return(contMatrix_list)
 }
@@ -779,7 +794,8 @@ getCMstats <- function(contMatrix_list, chip_index = get_chip_index()) {
         lista = contMatrix_list)
 
     chip_index <- chip_index[chip_index$Accession %in% names(contMatrix_list),]
-    chip_index <- chip_index[chip_index$Accession == names(contMatrix_list),]
+    chip_index <- chip_index[ match(
+        names(contMatrix_list), chip_index$Accession ),]
 
     statMat <- data.frame(Accession = chip_index$Accession, TF = chip_index$TF,
         p.value = pvals, OR = oddsRatios)
@@ -903,8 +919,9 @@ GSEA_run <- function(gene.list, chip_index = get_chip_index(), get.RES = FALSE, 
     }
     Mat01 <- Mat01[, colnames(Mat01) %in% chip_index$Accession]
 
-    shuffledGL <- GSEA_Shuffling(gene.list, 1000)
     # Generate random gene lists to get a p-value for ESs.
+    shuffledGL <- GSEA_Shuffling(gene.list, 1000)
+
     enrichmentScore <- vector()
     pval <- vector()
     enrichmentArg <- vector()
@@ -1040,8 +1057,8 @@ plot_CM <- function(CM.statMatrix, plot_title = NULL, specialTF = NULL, TF_color
 
     # Adding metadata for the plot
     MetaData <- MetaData[MetaData$Accession %in% CM.statMatrix$Accession, ]
-    MetaData <- MetaData[order(MetaData$Accession), ]
-    CM.statMatrix <- CM.statMatrix[order(CM.statMatrix$Accession), ]
+    MetaData <- MetaData[
+        match( CM.statMatrix$Accession, MetaData$Accession), ]
     CM.statMatrix$Treatment <- MetaData$Treatment
     CM.statMatrix$Cell <- MetaData$Cell
     rm(MetaData)
@@ -1051,7 +1068,7 @@ plot_CM <- function(CM.statMatrix, plot_title = NULL, specialTF = NULL, TF_color
 
         warn_number <- length(CM.statMatrix[CM.statMatrix$OR == Inf, 1])
 
-        # Substitute Inf values for the maximum finite value
+        # Substitute Inf LFC values for the maximum finite value
         CM.statMatrix[CM.statMatrix$OR == Inf, ]$OR <-
             rep(max(CM.statMatrix[CM.statMatrix$OR != Inf, ]$OR),
                 length(CM.statMatrix[CM.statMatrix$OR == Inf, 1]))
@@ -1063,7 +1080,7 @@ plot_CM <- function(CM.statMatrix, plot_title = NULL, specialTF = NULL, TF_color
 
         warn_number <- dim(CM.statMatrix[CM.statMatrix$OR == -Inf,][1])
 
-        # Substitute -Inf values for the minimum finite value
+        # Substitute -Inf LFC values for the minimum finite value
         CM.statMatrix[CM.statMatrix$OR == -Inf, ]$OR <-
             rep(min(CM.statMatrix[CM.statMatrix$OR != -Inf, ]$OR),
                 dim(CM.statMatrix[CM.statMatrix$OR == -Inf, ])[1])
@@ -1074,7 +1091,7 @@ plot_CM <- function(CM.statMatrix, plot_title = NULL, specialTF = NULL, TF_color
     if (dim(CM.statMatrix[CM.statMatrix$adj.p.value == 0,])[1] > 0) {
         warn_number <- dim(CM.statMatrix[CM.statMatrix$adj.p.value == 0,][1])
 
-        # Substitute Inf values for the maximum finite value
+        # Substitute Inf -log(pval) values for the maximum finite value
         CM.statMatrix[CM.statMatrix$p.value == 0, "log.adj.pVal"] <-
             rep(max(CM.statMatrix[CM.statMatrix$adj.p.value != 0, "log.adj.pVal"]),
             dim(CM.statMatrix[CM.statMatrix$adj.p.value == 0,])[1])
@@ -1104,15 +1121,17 @@ plot_CM <- function(CM.statMatrix, plot_title = NULL, specialTF = NULL, TF_color
                 "<br>Treatment: ", CM.statMatrix_highlighted$Treatment,
                 "<br>Cell: ", CM.statMatrix_highlighted$Cell),
             color = CM.statMatrix_highlighted$highlight,
-            colors = markerColors) %>% plotly::layout(title = plot_title)
+            colors = markerColors) %>%
+        plotly::layout(title = plot_title)
 
-    } else if (length(markerColors) == 1) {
+    } else {
         p <- plotly::plot_ly(CM.statMatrix, x = ~log.adj.pVal,
             y = ~OR, type = "scatter", mode = "markers",
             text = paste0(CM.statMatrix$Accession, ": ", CM.statMatrix$TF,
                 "<br>Treatment: ", CM.statMatrix$Treatment,
                 "<br>Cell: ", CM.statMatrix$Cell), color = ~highlight,
-            colors = markerColors) %>% plotly::layout(title = plot_title)
+            colors = markerColors) %>%
+        plotly::layout(title = plot_title)
     }
     p
     return(p)
@@ -1154,17 +1173,15 @@ plot_ES <- function(GSEA_result, LFC, plot_title = NULL, specialTF = NULL, TF_co
     if (is.data.frame(GSEA_result) == TRUE) {
         enrichmentTable <- GSEA_result
     } else if (is.list(GSEA_result) == TRUE) {
-        enrichmentTable <- GSEA_result$Enrichment
+        enrichmentTable <- GSEA_result[["Enrichment.table"]]
     }
 
     if (!is.null(Accession) | !is.null(TF)) {
         if (is.null(Accession)) {
-            Accession <- GSEA_result$Enrichment.table[
-                GSEA_result$Enrichment.table$TF %in% TF,]$Accession
+            Accession <- enrichmentTable[ enrichmentTable$TF %in% TF,]$Accession
         }
         if (is.null(TF)) {
-            TF <- GSEA_result$Enrichment.table[
-                GSEA_result$Enrichment.table$Accession %in% Accession,]$TF
+            TF <- enrichmentTable[ enrichmentTable$Accession %in% Accession,]$TF
         }
         SS <- ((enrichmentTable$Accession %in% Accession) &
             (enrichmentTable$TF %in% TF))
@@ -1201,23 +1218,23 @@ plot_ES <- function(GSEA_result, LFC, plot_title = NULL, specialTF = NULL, TF_co
 
     simbolo<-sapply(seq_along(enrichmentTable[,1]),
         function(EnrTable,i){
-            if (EnrTable[i,4] <= 0.05) {
+            if (EnrTable$pval.ES[i] <= 0.05) {
                 sym<-"pVal<=0.05"
-            }else{
-                sym<-"pVal>0.05"
-            }
-            return(sym) },
+            }else{ sym<-"pVal>0.05" }
+            return(sym)
+        },
         EnrTable = enrichmentTable)
-
     enrichmentTable$symbol <- simbolo
+
+    # Adding metadata
     if (!exists("MetaData")) {
         MetaData <- NULL
         data("MetaData", package = "TFEA.ChIP", envir = environment())
     }
-    # Adding metadata
+
     MetaData <- MetaData[MetaData$Accession %in% enrichmentTable$Accession, ]
-    MetaData <- MetaData[order(MetaData$Accession), ]
-    enrichmentTable <- enrichmentTable[order(enrichmentTable$Accession), ]
+    MetaData <- MetaData[
+        match( enrichmentTable$Accession, MetaData$Accession), ]
     enrichmentTable$Treatment <- MetaData$Treatment
     enrichmentTable$Cell <- MetaData$Cell
     rm(MetaData)
@@ -1248,11 +1265,11 @@ plot_ES <- function(GSEA_result, LFC, plot_title = NULL, specialTF = NULL, TF_co
                 "<br>Cell: ", enrichmentTable_highlighted$Cell),
             color = enrichmentTable_highlighted$highlight, colors = markerColors,
             symbol = enrichmentTable_highlighted$symbol, symbols = c("x",
-                "circle")) %>% plotly::layout(title = plot_title,
+                "circle")) %>%
+        plotly::layout(title = plot_title,
             xaxis = list(title = "Argument"), yaxis = list(title = "ES"))
 
-    } else if (length(markerColors) == 1) {
-
+    } else {
         p <- plotly::plot_ly(enrichmentTable, x = enrichmentTable$Arg.ES,
             y = enrichmentTable$ES, type = "scatter", mode = "markers",
             text = paste0(
@@ -1262,7 +1279,8 @@ plot_ES <- function(GSEA_result, LFC, plot_title = NULL, specialTF = NULL, TF_co
                 "<br>Cell: ", enrichmentTable$Cell),
             color = enrichmentTable$highlight,
             colors = markerColors, symbol = enrichmentTable$symbol,
-            symbols = c("x", "circle")) %>% plotly::layout(title = plot_title,
+            symbols = c("x", "circle")) %>%
+        plotly::layout(title = plot_title,
             xaxis = list(title = "Argument"), yaxis = list(title = "ES"))
     }
     # Adding log2(Fold Change) bar to the plot
@@ -1305,73 +1323,64 @@ plot_RES <- function(GSEA_result, LFC, plot_title = NULL, line.colors = NULL, li
         MetaData <- NULL
         data("MetaData", package = "TFEA.ChIP", envir = environment())
     }
-    # Checking if there's any Accession or TF filter
+        # Accession or TF filters
     if (!is.null(Accession) | !is.null(TF)) {
-        if (is.null(Accession)) {
-            Accession <- GSEA_result$Enrichment.table[
-                GSEA_result$Enrichment.table$TF %in% TF,]$Accession
-        }
-        if (is.null(TF)) {
-            TF <- GSEA_result$Enrichment.table[
-                GSEA_result$Enrichment.table$Accession %in% Accession,]$TF
-        }
 
-        GSEA_result$Enrichment.table <- GSEA_result$Enrichment.table[
-            GSEA_result$Enrichment.table$Accession %in% Accession &
-            GSEA_result$Enrichment.table$TF %in% TF, ]
+        tmp <- GSEA_result[["Enrichment.table"]]
 
-        GSEA_result$RES <- GSEA_result$RES[
-            names(GSEA_result$RES) %in% Accession]
+        if (is.null(Accession)) { Accession <- tmp[tmp$TF %in% TF,]$Accession }
+        if (is.null(TF)) { TF <- tmp[tmp$Accession %in% Accession,]$TF }
 
-        GSEA_result$indicators <- GSEA_result$indicators[
-            names(GSEA_result$indicators %in% Accession)]
+        GSEA_result[["Enrichment.table"]] <- tmp[
+            tmp$Accession %in% Accession &
+            tmp$TF %in% TF, ]
+
+        GSEA_result[["RES"]] <- GSEA_result$RES[
+            names(GSEA_result[["RES"]]) %in% Accession]
+
+        GSEA_result[["indicators"]] <- GSEA_result[["indicators"]][
+            names(GSEA_result[["indicators"]] %in% Accession)]
+
     } else {
-        Accession <- GSEA_result$Enrichment.table$Accession
+        Accession <- GSEA_result[["Enrichment.table"]]$Accession
     }
-
+        # line parameters & plot title
     if (is.null(line.colors)) {
         line.colors <- c("red", "blue", "green", "hotpink", "cyan",
             "greenyellow", "gold", "darkorchid", "chocolate1",
             "black", "lightpink", "seagreen")
-        line.colors <- line.colors[1:length(names(GSEA_result$RES))]
+        line.colors <- line.colors[1:length(names(GSEA_result[["RES"]]))]
     }
     if (is.null(line.styles)) {
-        line.styles <- rep("solid", length(names(GSEA_result$RES)))
+        line.styles <- rep("solid", length(names(GSEA_result[["RES"]])))
     }
     if (is.null(plot_title)) {
         plot_title <- "Transcription Factor Enrichment"
     }
 
-    GSEA.runningSum <- GSEA_result$RES
+    GSEA.runningSum <- GSEA_result[["RES"]]
 
-    chip_index <- get_chip_index("g")
-    tf <- chip_index[chip_index[, 1] %in% Accession, ]
-    rm(chip_index)
+    # Getting metadata for the plot
+    MetaData <- MetaData[ MetaData$Accession %in% Accession, ]
+    RES <- lapply(
+    	seq_along (Accession),
+    	function(result, i){
+    		tmp <- result[ names(result) %in% Accession[i] ][1]
+    		return (tmp)
+    	},
+    	result = GSEA.runningSum
+    )
 
-    MetaData <- MetaData[MetaData$Accession %in% Accession, ]
-    Cell <- vector()
-    Treatment <- rep("no treatment", length(Accession))
-    TF <- vector()
-    RES <- list()
+    tabla <- data.frame(
+    	MetaData$Accession, MetaData$Cell,
+    	MetaData$Treatment, MetaData$TF,
+    	stringsAsFactors = FALSE)
 
-    # Adding metadata for the plot
-    for (i in seq_along(Accession)) {
-
-        Cell[i] <- MetaData[MetaData$Accession == Accession[i], ]$Cell
-
-        if (MetaData[MetaData$Accession == Accession[i], ]$Treatment != "none") {
-            Treatment[i] <- MetaData[MetaData$Accession == Accession[i], 5]
-        }
-
-        TF[i] <- tf[tf[, 1] == Accession[i], 2]
-        RES <- c(RES, GSEA.runningSum[names(GSEA.runningSum) %in% Accession[i]][1])
-    }
-    tabla <- data.frame(Accession, Cell, Treatment, TF, stringsAsFactors = FALSE)
     tabla$RES <- RES
 
-    rm(Cell, Treatment, TF, RES)
+    rm (MetaData, RES)
 
-    if (dim(tabla)[1] > 1) {
+    if (dim(tabla)[1] > 1) { # plot multiple lines
         for (i in seq_along(Accession)) {
             if (i == 1) {
                 grafica <- plotly::plot_ly(tabla, x = c(1:length(tabla$RES[[1]])),
@@ -1404,14 +1413,15 @@ plot_RES <- function(GSEA_result, LFC, plot_title = NULL, line.colors = NULL, li
                     yaxis = list(title = "ES"))
             }
         }
-    } else {
+    } else { # plot one line
         grafica <- plotly::plot_ly(tabla, x = c(1:length(tabla$RES[[1]])),
             y = tabla$RES[[Accession[1]]], type = "scatter", mode = "lines",
             line = list(color = line.colors[1], dash = line.styles[1]),
             name = paste0(tabla$Accession[1],
                 " - ", tabla$TF[1]), text = paste0(tabla$Accession[i],
                 " - ", tabla$TF[i], "<br>Cell: ", tabla$Cell[i],
-                "<br>Treatment: ", tabla$Treatment[i])) %>% plotly::layout(title = plot_title,
+                "<br>Treatment: ", tabla$Treatment[i])) %>%
+        plotly::layout(title = plot_title,
             xaxis = list(title = "Argument"), yaxis = list(title = "ES"))
     }
 
@@ -1497,7 +1507,8 @@ get_LFC_bar <- function(LFC) {
 
     LFC.bar <- plotly::plot_ly(x = c(1:length(LFC)), y = rep(1,
         length(LFC)), z = LFC, type = "heatmap", colorscale = colz,
-        showscale = FALSE) %>% plotly::layout(yaxis = list(visible = FALSE))
+        showscale = FALSE) %>%
+    plotly::layout(yaxis = list(visible = FALSE))
 
     return(LFC.bar)
 }

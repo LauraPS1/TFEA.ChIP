@@ -16,6 +16,7 @@ test_GeneID2Entrez<-function(){
     # Checking matrix output and NA return for invalid names
     RUnit::checkTrue(
         is.na(GeneID2entrez("potato",return.Matrix = TRUE)$ENTREZ.ID))
+    # Checking mouse to human translation
 }
 
 test_preprocessInputData<-function(){

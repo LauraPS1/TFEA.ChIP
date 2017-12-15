@@ -22,7 +22,9 @@ log2FoldChange.
 Function to extract Gene IDs, logFoldChange, and p-val
 values from a DESeqResults object or data frame. Gene IDs are
 translated to ENTREZ IDs, if possible, and the resultant data frame
-is sorted accordint to decreasing log2(Fold Change).
+is sorted accordint to decreasing log2(Fold Change). Translating
+gene IDs from mouse to their equivalent human genes is avaible
+using the option from.Mouse.
 }
 \examples{
 data('hypoxia_DESeq',package='TFEA.ChIP')
