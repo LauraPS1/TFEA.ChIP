@@ -1365,11 +1365,12 @@ plot_RES <- function(GSEA_result, LFC, plot_title = NULL, line.colors = NULL, li
     RES <- lapply(
     	seq_along (Accession),
     	function(result, i){
-    		tmp <- result[ names(result) %in% Accession[i] ][1]
+    		tmp <- result[ names(result) %in% Accession[i] ][[1]]
     		return (tmp)
     	},
     	result = GSEA.runningSum
     )
+    names( RES ) <- MetaData$Accession
 
     tabla <- data.frame(
     	MetaData$Accession, MetaData$Cell,
