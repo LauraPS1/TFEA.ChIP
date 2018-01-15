@@ -1373,8 +1373,10 @@ plot_RES <- function(GSEA_result, LFC, plot_title = NULL, line.colors = NULL, li
     names( RES ) <- MetaData$Accession
 
     tabla <- data.frame(
-    	MetaData$Accession, MetaData$Cell,
-    	MetaData$Treatment, MetaData$TF,
+    	Accession = MetaData$Accession,
+    	Cell = MetaData$Cell,
+    	Treatment = MetaData$Treatment,
+    	TF = MetaData$TF,
     	stringsAsFactors = FALSE)
 
     tabla$RES <- RES
