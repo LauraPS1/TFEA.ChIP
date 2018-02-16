@@ -17,7 +17,7 @@ The package includes a set of tools to customize the ChIP data, perform enrichme
 - Analysis of the association of TFBS and differential expression from 2x2 tables recording the presence of binding sites for a given TF in DE and control genes. The statistical significance of the association for each factor determined by a Fisher's exact test.
 - GSEA analysis, based on the core function of the GSEA algorithm developed by the GSEA team at the Broad Institute of MIT and Harvard^[Subramanian, Tamayo, et al. (2005) PNAS 102, 15545-15550] ^[Mootha, Lindgren, et al. (2003) Nat Genet 34, 267-273]
 
-TFEA.ChIP includes a TF-gene interaction database containing 1122 datasets from ChIP-Seq experiments testing 333 different human transcription factors. Although the package is mainly focused towards analyzing expression data generated from human cells, TFEA.ChIP includes the option to use datasets coming from experiments in mice, translating mouse gene names to their equivalent ID on the human genome.
+TFEA.ChIP includes a TF-gene interaction database containing 1122 datasets from ChIP-Seq experiments testing 331 different human transcription factors. Although the package is mainly focused towards analyzing expression data generated from human cells, TFEA.ChIP includes the option to use datasets coming from experiments in mice, translating mouse gene names to their equivalent ID on the human genome.
 
 # Analysis Example
 
