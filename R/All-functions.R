@@ -1239,7 +1239,8 @@ plot_ES <- function(GSEA_result, LFC, plot_title = NULL, specialTF = NULL, TF_co
     enrichmentTable$Cell <- MetaData$Cell
     rm(MetaData)
 
-    if (length(markerColors > 1)) {
+    if (length(markerColors) > 1 &
+        length(unique(enrichmentTable$TF)) > specialTF ) {
         enrichmentTable_highlighted <- enrichmentTable[enrichmentTable$highlight !=
             "Other", ]
         enrichmentTable_other <- enrichmentTable[enrichmentTable$highlight ==
