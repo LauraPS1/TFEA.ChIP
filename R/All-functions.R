@@ -778,7 +778,7 @@ getCMstats <- function(contMatrix_list, chip_index = get_chip_index()) {
     #' @examples
     #' data('CM_list',package = 'TFEA.ChIP')
     #' stats_mat_UP <- getCMstats(CM_list)
-
+    
     pvals <- sapply(seq_along(contMatrix_list),
         function(lista,i) {
             pval <- stats::fisher.test(lista[[names(lista)[i]]])[["p.value"]]
@@ -803,6 +803,11 @@ getCMstats <- function(contMatrix_list, chip_index = get_chip_index()) {
     statMat$adj.p.value <- stats::p.adjust(statMat$p.value, "fdr")
     statMat$log.adj.pVal <- (-1 * (log10(statMat$adj.p.value)))
 
+    if (!exists("MetaData")) {
+      MetaData <- NULL
+      data("MetaData", package = "TFEA.ChIP", envir = environment())
+    }
+    statMat<-merge(MetaData[,c("Accession","Cell","Treatment")],statMat,by="Accession")
     return(statMat)
 }
 
