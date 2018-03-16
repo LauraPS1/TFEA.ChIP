@@ -145,7 +145,7 @@ The function *GSEA_run* will perform a GSEA-based analysis on the input gene lis
 * When **True**, the function returns a list of three elements. The first element (*Enrichment.table*) is the enrichment data frame previously mentioned. The second element (*RES*) is a list of vectors containing the *Running Enrichment Scores* values (see GSEA documentation, http://software.broadinstitute.org/gsea/doc/GSEAUserGuideTEXT.htm#_Interpreting_GSEA_Results) for each of the sorted genes tested against each one of the analyzed ChIP datasets. The third element (*indicators*) is a list of vectors indicating if the sorted genes were bound by the factor analyzed in each ChIP dataset. 
 
 ```{r eval=TRUE,echo=TRUE,results='hide'}
-GSEA.result <- GSEA_run(hypoxia_table$Genes,chip_index,get.RES = TRUE) #run GSEA analysis
+GSEA.result <- GSEA_run(hypoxia_table$Genes, hypoxia_table$log2FoldChange, chip_index, get.RES = TRUE) #run GSEA analysis
 ```
 ```{r eval=TRUE,echo=TRUE}
 head(GSEA.result[["Enrichment.table"]])
@@ -221,7 +221,7 @@ gr.list <- lapply(
 ```{r eval=TRUE,echo=TRUE}
 # As an example of the output
 data("ARNT.peaks.bed","ARNT.metadata",package = "TFEA.ChIP") # Loading example datasets for this function
-ARNT.gr<-txt2GR(ARNT.peaks.bed,"macs",ARNT.metadata)
+ARNT.gr<-txt2GR(ARNT.peaks.bed,"macs1.4",ARNT.metadata)
 head(ARNT.gr,n=2)
 ```
 
@@ -248,9 +248,7 @@ dnaseClusters<-makeGRangesFromDataFrame(dnaseClusters,
 txdb<-TxDb.Hsapiens.UCSC.hg19.knownGene
 Genes<-genes(txdb)
 
-near.gene<-distanceToNearest(dnaseClusters,Genes)
-near.gene<-near.gene[!is.na(near.gene@elementMetadata@listData$distance)]
-near.gene<-near.gene[near.gene@elementMetadata@listData$distance<1000]
+near.gene<-findOverlaps(dnaseClusters, Genes, maxgap = 1000 )
 
 dnase.sites.list<-queryHits(near.gene)
 near.gene<-subjectHits(near.gene)
@@ -269,7 +267,7 @@ The function *GR2tfbs_db* assigns the TFBS peaks in the ChIP datasets stored in 
 
 ```{r eval=TRUE,echo=TRUE}
 data("DnaseHS_db","gr.list", package="TFEA.ChIP") # Loading example datasets for this function
-TF.gene.binding.db<-GR2tfbs_db(DnaseHS_db,gr.list) 
+TF.gene.binding.db<-GR2tfbs_db( DnaseHS_db, gr.list ) 
 str(TF.gene.binding.db)
 ```
 
@@ -280,7 +278,7 @@ library(TxDb.Hsapiens.UCSC.hg19.knownGene)
 data("gr.list", package="TFEA.ChIP") # Loading example datasets for this function
 txdb<-TxDb.Hsapiens.UCSC.hg19.knownGene
 Genes<-genes(txdb)
-TF.gene.binding.db<-GR2tfbs_db(Genes,gr.list, distanceMargin = 0)
+TF.gene.binding.db<-GR2tfbs_db( Genes, gr.list, distanceMargin = 0 )
 str(TF.gene.binding.db)
 ```
 

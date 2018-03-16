@@ -9,12 +9,14 @@ txt2GR(fileTable, format, fileMetaData, alpha = NULL)
 \arguments{
 \item{fileTable}{data frame from a txt/tsv/bed file}
 
-\item{format}{'narrowPeak' or 'macs'.
+\item{format}{'narrowpeak', 'macs1.4' or 'macs2'.
 narrowPeak fields:
 'chrom','chromStart','chromEnd','name','score','strand','signalValue',
 'pValue','qValue','peak'
-macs fields:
-'chrom','chromStart','chromEnd','name','qValue'}
+macs1.4 fields:
+'chrom','chromStart','chromEnd','name','-10*log10(p-value)'
+macs2 fields:
+'chrom','chromStart','chromEnd','name','-log10(p-value)'}
 
 \item{fileMetaData}{Data frame/matrix/array contaning the following
 fields: 'Name','Accession','Cell','Cell Type','Treatment','Antibody',

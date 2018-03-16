@@ -4,15 +4,17 @@
 \alias{GSEA_run}
 \title{Function to run a GSEA analysis}
 \usage{
-GSEA_run(gene.list, chip_index = get_chip_index(), get.RES = FALSE,
+GSEA_run(gene.list, LFC, chip_index = get_chip_index(), get.RES = FALSE,
   RES.filter = NULL)
 }
 \arguments{
 \item{gene.list}{List of Entrez IDs ordered by their fold change.}
 
-\item{chip_index}{Output of the function “get_chip_index”, a data frame
+\item{LFC}{log2( Fold Change ) vector.
 containing accession IDs of ChIPs on the database and the TF each one
 tests. If not provided, the whole internal database will be used}
+
+\item{chip_index}{Output of the function “get_chip_index”, a data frame}
 
 \item{get.RES}{(Optional) boolean. If TRUE, the function stores RES of
 all/some TF.}
@@ -33,7 +35,7 @@ Function to run a GSEA to analyze the distribution of TFBS
 across a sorted list of genes.
 }
 \examples{
-data('Entrez.gene.IDs',package = 'TFEA.ChIP')
+data('hypoxia',package = 'TFEA.ChIP')
 chip_index<-get_chip_index(TFfilter = c('HIF1A','EPAS1','ARNT'))
-GSEA.result <- GSEA_run(Entrez.gene.IDs,chip_index,get.RES = TRUE)
+GSEA.result <- GSEA_run( hypoxia$Genes, hypoxia$log2FoldChange, chip_index, get.RES = TRUE)
 }
