@@ -887,7 +887,7 @@ GSEA_EnrichmentScore <- function(gene.list, gene.set, weighted.score.type = 0, c
     sum.correl.tag <- sum(correl.vector[tag.indicator == 1])
     if (sum.correl.tag > 0) {
         norm.tag <- 1/sum.correl.tag
-        norm.no.tag <- 1/(N - sum.correl.tag)
+        norm.no.tag <- 1/Nm
         RES <- cumsum(tag.indicator * correl.vector * norm.tag -
             no.tag.indicator * norm.no.tag)
         max.ES <- max(RES)
