@@ -18,12 +18,14 @@ txt2GR <- function(fileTable, format, fileMetaData, alpha = NULL) {
     #' MACS's peaks.bed formats) and then store the peak coordinates in a
     #' GenomicRanges object, associated to its metadata.
     #' @param fileTable data frame from a txt/tsv/bed file
-    #' @param format 'narrowPeak' or 'macs'.
+    #' @param format 'narrowpeak', 'macs1.4' or 'macs2'.
     #' narrowPeak fields:
     #' 'chrom','chromStart','chromEnd','name','score','strand','signalValue',
     #' 'pValue','qValue','peak'
-    #' macs fields:
-    #' 'chrom','chromStart','chromEnd','name','qValue'
+    #' macs1.4 fields:
+    #' 'chrom','chromStart','chromEnd','name','-10*log10(p-value)'
+    #' macs2 fields:
+    #' 'chrom','chromStart','chromEnd','name','-log10(p-value)'
     #' @param fileMetaData Data frame/matrix/array contaning the following
     #' fields: 'Name','Accession','Cell','Cell Type','Treatment','Antibody',
     #' 'TF'.
@@ -37,7 +39,8 @@ txt2GR <- function(fileTable, format, fileMetaData, alpha = NULL) {
     #' data('ARNT.peaks.bed','ARNT.metadata',package = 'TFEA.ChIP')
     #' ARNT.gr<-txt2GR(ARNT.peaks.bed,'macs',ARNT.metadata)
 
-    stopifnot(format %in% c("narrowpeak", "macs"))
+    stopifnot(format %in% c("narrowpeak","narrowPeak","macs1.4",
+                            "macs2", "MACS1.4", "MACS2"))
     stopifnot((is.data.frame(fileMetaData) || is.matrix(fileMetaData) ||
         is.array(fileMetaData)))
 
@@ -82,7 +85,7 @@ txt2GR <- function(fileTable, format, fileMetaData, alpha = NULL) {
             colnames(fileTable)[1:3] <- c("chr", "start", "end")
 
         } else if (fileTable[1, 8] == -1) {
-            # If the score table has a log10(p-value) column
+            # If the score table has a q-value column
             fileTable <- fileTable[, c(1, 2, 3, 9)]
             colnames(fileTable) <- c("chr", "start", "end", "score")
             Stat <- "log10(p-Value)"
@@ -95,10 +98,12 @@ txt2GR <- function(fileTable, format, fileMetaData, alpha = NULL) {
             fileTable <- fileTable[fileTable$score > valLimit, ]
 
         } else if (fileTable[1, 9] == -1) {
-            # If the score table has a p-value column
+            # If the score table has a -log10(p-value) column
             fileTable <- fileTable[, c(1, 2, 3, 8)]
             colnames(fileTable) <- c("chr", "start", "end", "score")
-            Stat <- "p-Value"
+            fileTable$score <- 10 ^ (-1 * (fileTable$score ) )
+            fileTable$score <- p.adjust( fileTable$score, "fdr" ) # adjust p-values using Benjamini & Hochberg correction.
+            Stat <- "corrected p-Value"
             if (is.null(alpha)) {
                 valLimit <- 0.05
             } else {
@@ -107,10 +112,10 @@ txt2GR <- function(fileTable, format, fileMetaData, alpha = NULL) {
             fileTable <- fileTable[fileTable$score < valLimit, ]
 
         } else {
-            # If the dataset has both p-value and 10*-log(pval) columns.
+            # If the dataset has both p-value and 10*-log(qval) columns.
             fileTable <- fileTable[, c(1, 2, 3, 9)]
             colnames(fileTable) <- c("chr", "start", "end", "score")
-            Stat <- "log10(p-Value)"
+            Stat <- "corrected p-Value"
 
             if (is.null(alpha)) {
                 valLimit <- 1.3
@@ -119,30 +124,43 @@ txt2GR <- function(fileTable, format, fileMetaData, alpha = NULL) {
             }
             fileTable <- fileTable[fileTable$score > valLimit, ]
         }
+        if( dim( fileTable)[1] > 0){
+            fileMetaData <- c(fileMetaData, Stat)
+            MDframe <- as.data.frame(lapply(fileMetaData, rep, dim(fileTable)[1]))
+            colnames(MDframe) <- c("Name", "Accession", "Cell", "Cell Type",
+                "Treatment", "Antibody", "TF", "Score Type")
 
-        fileMetaData <- c(fileMetaData, Stat)
-        MDframe <- as.data.frame(lapply(fileMetaData, rep, dim(fileTable)[1]))
-        colnames(MDframe) <- c("Name", "Accession", "Cell", "Cell Type",
-            "Treatment", "Antibody", "TF", "Score Type")
+            gr <- GenomicRanges::GRanges(seqnames = fileTable$chr,
+                ranges = IRanges::IRanges(fileTable$start, end = fileTable$end),
+                score = fileTable$score, mcols = MDframe)
+            return(gr)
+        } else {
+            warning( "File ", fileMetaData$Accession,
+                     " has no significant peaks after correcting p-values.")
+            return(NULL)
+        }
 
-        gr <- GenomicRanges::GRanges(seqnames = fileTable$chr,
-            ranges = IRanges::IRanges(fileTable$start, end = fileTable$end),
-            score = fileTable$score, mcols = MDframe)
-        return(gr)
-
-    } else if (format == "macs") {
+    } else if (format %in% c("macs1.4", "macs2") ) {
 
         if (is.null(alpha)) {
-            valLimit <- 50
+            valLimit <- 0.05
         } else {
-            valLimit <- (-10 * log10(alpha))
+            valLimit <- alpha
         }
 
         if (dim(fileTable)[2] == 5) {
             fileTable <- fileTable[, c(1, 2, 3, 5)]
             colnames(fileTable) <- c("chr", "start", "end", "score")
-            fileTable <- fileTable[fileTable$score > valLimit, ]
-            Stat <- "-10*log.Pvalue"
+
+            if (format == "macs1.4") {
+                fileTable$score <- 10 ^ (-1 * (fileTable$score / 10 ) ) # -10 * log10(p-value)
+            } else if (format == "macs2"){
+                fileTable$score <- 10 ^ (-1 * (fileTable$score ) ) # -log10(p-value)
+            }
+            fileTable$score <- p.adjust( fileTable$score, "fdr" ) # adjust p-values using Benjamini & Hochberg correction.
+
+            fileTable <- fileTable[fileTable$score < valLimit, ]
+            Stat <- "corrected p-Value"
 
         } else if (dim(fileTable)[2] == 4 & is.character(fileTable[1, 4])) {
             # if the 4th column consists of peak names
@@ -157,21 +175,36 @@ txt2GR <- function(fileTable, format, fileMetaData, alpha = NULL) {
 
         } else if (dim(fileTable)[2] == 4 & !is.character(fileTable[1,
             4])) {
-            # if the 4th column consists of adjusted p-values
+            # if the 4th column consists of p-values
             colnames(fileTable) <- c("chr", "start", "end", "score")
-            fileTable <- fileTable[fileTable$score > valLimit, ]
-            Stat <- "-10*log.Pvalue"
+
+            if (format == "macs1.4") {
+                fileTable$score <- 10 ^ (-1 * (fileTable$score / 10 ) ) # -10 * log10(p-value)
+            } else if (format == "macs2"){
+                fileTable$score <- 10 ^ (-1 * (fileTable$score ) ) # -log10(p-value)
+            }
+
+            fileTable$score <- p.adjust( fileTable$score, "fdr" ) # adjust p-values using Benjamini & Hochberg correction.
+            fileTable <- fileTable[fileTable$score < valLimit, ]
+            Stat <- "corrected p-Value"
         }
 
-        fileMetaData <- c(fileMetaData, Stat)
-        MDframe <- as.data.frame(lapply(fileMetaData, rep, dim(fileTable)[1]))
-        colnames(MDframe) <- c("Name", "Accession", "Cell", "Cell Type",
-            "Treatment", "Antibody", "TF", "Score Type")
+        if( dim( fileTable)[1] > 0){
 
-        gr <- GenomicRanges::GRanges(seqnames = fileTable$chr,
-            ranges = IRanges::IRanges(fileTable$start, end = fileTable$end),
-            score = fileTable$score, mcols = MDframe)
-        return(gr)
+            fileMetaData <- c(fileMetaData, Stat)
+            MDframe <- as.data.frame(lapply(fileMetaData, rep, dim(fileTable)[1]))
+            colnames(MDframe) <- c("Name", "Accession", "Cell", "Cell Type",
+                "Treatment", "Antibody", "TF", "Score Type")
+
+            gr <- GenomicRanges::GRanges(seqnames = fileTable$chr,
+                ranges = IRanges::IRanges(fileTable$start, end = fileTable$end),
+                score = fileTable$score, mcols = MDframe)
+            return(gr)
+        } else {
+            warning( "File ", fileMetaData$Accession,
+                     " has no significant peaks after correcting p-values.")
+            return( NULL )
+        }
 
     } else {
         stop("format error: variable 'format' must be",
@@ -217,10 +250,7 @@ GR2tfbs_db <- function(Ref.db, gr.list, distanceMargin = 10, outputAsVector = FA
 
             gr <- gr.list[[i]]
             nearest_index <- suppressWarnings(
-                GenomicRanges::distanceToNearest(gr, Ref.db, select = "all"))
-            nearest_index <- nearest_index[!is.na(nearest_index@elementMetadata@listData[["distance"]])]
-            nearest_index <- nearest_index[
-                nearest_index@elementMetadata@listData[["distance"]] <=   dm]
+                GenomicRanges::findOverlaps(gr, Ref.db, maxgap = dm ))
             inSubject <- S4Vectors::subjectHits(nearest_index)
 
             # in case any ChIP-Seq dataset does not have any genes to be assigned
@@ -231,9 +261,6 @@ GR2tfbs_db <- function(Ref.db, gr.list, distanceMargin = 10, outputAsVector = FA
                 assigned_genes <- Ref.db[inSubject]$gene_id
 
                 if (outputAsVector == TRUE) {
-                    names(assigned_genes) <- as.character(
-                        gr@elementMetadata@listData[["mcols.Accession"]][1] )
-
                     return(assigned_genes)
 
                 } else {
@@ -262,7 +289,7 @@ GR2tfbs_db <- function(Ref.db, gr.list, distanceMargin = 10, outputAsVector = FA
     # Removing list elements that didn't have any genes assigned
     TFgenes_list[!vapply(TFgenes_list, is.null, logical(1))]
 
-    # Naming every GeneSet in the list with their accession ID
+    # Naming every GeneSet / array in the list with their accession ID
     if ( outputAsVector == FALSE ){
 
         list.names <- sapply(
@@ -273,6 +300,15 @@ GR2tfbs_db <- function(Ref.db, gr.list, distanceMargin = 10, outputAsVector = FA
             TFgenes_list = TFgenes_list )
 
         names(TFgenes_list) <- list.names
+    } else {
+        list.names <- sapply(
+            gr.list,
+            function(i){
+                return(
+                    as.character( i@elementMetadata@listData[["mcols.Accession"]][1] )
+                )
+            })
+         names(TFgenes_list) <- list.names
     }
 
     return( TFgenes_list )
@@ -778,7 +814,7 @@ getCMstats <- function(contMatrix_list, chip_index = get_chip_index()) {
     #' @examples
     #' data('CM_list',package = 'TFEA.ChIP')
     #' stats_mat_UP <- getCMstats(CM_list)
-    
+
     pvals <- sapply(seq_along(contMatrix_list),
         function(lista,i) {
             pval <- stats::fisher.test(lista[[names(lista)[i]]])[["p.value"]]
@@ -841,7 +877,7 @@ GSEA_EnrichmentScore <- function(gene.list, gene.set, weighted.score.type = 0, c
     tag.indicator <- sign(match(gene.list, gene.set, nomatch = 0))
     no.tag.indicator <- 1 - tag.indicator
     N <- length(gene.list)
-    Nh <- length(gene.set)
+    Nh <- sum( gene.list %in% gene.set )
     Nm <- N - Nh
     if (weighted.score.type == 0) {
         correl.vector <- rep(1, N)
@@ -893,13 +929,14 @@ GSEA_Shuffling <- function(gene.list, permutations) {
     return(shuffledGL)
 }
 
-GSEA_run <- function(gene.list, chip_index = get_chip_index(), get.RES = FALSE, RES.filter = NULL) {
+GSEA_run <- function(gene.list, LFC, chip_index = get_chip_index(), get.RES = FALSE, RES.filter = NULL) {
 
     #' @title Function to run a GSEA analysis
     #' @description Function to run a GSEA to analyze the distribution of TFBS
     #' across a sorted list of genes.
     #' @param gene.list List of Entrez IDs ordered by their fold change.
     #' @param chip_index Output of the function “get_chip_index”, a data frame
+    #' @param LFC log2( Fold Change ) vector.
     #' containing accession IDs of ChIPs on the database and the TF each one
     #' tests. If not provided, the whole internal database will be used
     #' @param get.RES (Optional) boolean. If TRUE, the function stores RES of
@@ -914,13 +951,17 @@ GSEA_run <- function(gene.list, chip_index = get_chip_index(), get.RES = FALSE, 
     #' and mismatches (0) between the gene list and the gene set.
     #' @export GSEA_run
     #' @examples
-    #' data('Entrez.gene.IDs',package = 'TFEA.ChIP')
+    #' data('hypoxia',package = 'TFEA.ChIP')
     #' chip_index<-get_chip_index(TFfilter = c('HIF1A','EPAS1','ARNT'))
-    #' GSEA.result <- GSEA_run(Entrez.gene.IDs,chip_index,get.RES = TRUE)
+    #' GSEA.result <- GSEA_run( hypoxia$Genes, hypoxia$log2FoldChange, chip_index, get.RES = TRUE)
 
     if (!exists("Mat01")) {
         Mat01 <- NULL
         data("Mat01", package = "TFEA.ChIP", envir = environment())
+    }
+    if (!exists("MetaData")) {
+        MetaData <- NULL
+        data("MetaData", package = "TFEA.ChIP", envir = environment())
     }
     Mat01 <- Mat01[, colnames(Mat01) %in% chip_index$Accession]
 
@@ -946,14 +987,16 @@ GSEA_run <- function(gene.list, chip_index = get_chip_index(), get.RES = FALSE, 
 
         if (length(chip.genes) > 10) {
 
-            result <- GSEA_EnrichmentScore(gene.list, chip.genes)
+            result <- GSEA_EnrichmentScore(gene.list, chip.genes,
+                weighted.score.type = 1, correl.vector =  LFC)
 
-            shuffled.ES <- sapply(seq_along(shuffledGL),
-                function(lista, j) {
-                    tmp.ES <- GSEA_EnrichmentScore(lista[[j]], chip.genes)[["ES"]]
+            shuffled.ES <- sapply(
+                shuffledGL,
+                function( j ) {
+                    tmp.ES <- GSEA_EnrichmentScore( j , chip.genes,
+                        weighted.score.type = 1, correl.vector =  LFC)[["ES"]]
                     return(tmp.ES)
-                },
-                lista = shuffledGL)
+                })
 
             enrichmentScore <- c(enrichmentScore, result$ES)
             pval <- c(pval, sum(abs(shuffled.ES) >= abs(result$ES))/1000)
@@ -994,6 +1037,10 @@ GSEA_run <- function(gene.list, chip_index = get_chip_index(), get.RES = FALSE, 
     enrichmentTable$pval.ES <- as.numeric(enrichmentTable$pval.ES)
     enrichmentTable$Arg.ES <- as.numeric(enrichmentTable$Arg.ES)
     enrichmentTable <- enrichmentTable[!is.na(enrichmentTable$pval.ES), ]
+
+    enrichmentTable <- merge(
+        MetaData[,c("Accession","Cell","Treatment")],
+        enrichmentTable, by="Accession")
 
     if (get.RES == TRUE) {
         GSEA_results <- list(enrichmentTable, res, ind)
@@ -1044,13 +1091,13 @@ plot_CM <- function(CM.statMatrix, plot_title = NULL, specialTF = NULL, TF_color
             "greenyellow", "gold", "darkorchid", "chocolate1",
             "black", "lightpink", "seagreen")
         TF_colors <- TF_colors[1:length(unique(names(specialTF)))]
-        highlight_list <- highlight_TF(CM.statMatrix, 2, specialTF,
+        highlight_list <- highlight_TF(CM.statMatrix, 4, specialTF,
             TF_colors)
         CM.statMatrix$highlight <- highlight_list[[1]]
         markerColors <- highlight_list[[2]]
     }
     if (!is.null(specialTF) & !is.null(TF_colors)) {
-        highlight_list <- highlight_TF(CM.statMatrix, 2, specialTF,
+        highlight_list <- highlight_TF(CM.statMatrix, 4, specialTF,
             TF_colors)
         CM.statMatrix$highlight <- highlight_list[[1]]
         markerColors <- highlight_list[[2]]
@@ -1067,13 +1114,13 @@ plot_CM <- function(CM.statMatrix, plot_title = NULL, specialTF = NULL, TF_color
     CM.statMatrix$Treatment <- MetaData$Treatment
     CM.statMatrix$Cell <- MetaData$Cell
     rm(MetaData)
-    
+
     # Cheking if any plot variables have an Inf value.
     if (length(CM.statMatrix[CM.statMatrix$OR == Inf, 1]) > 0) {
 
         warn_number <- length(CM.statMatrix[CM.statMatrix$OR == Inf, 1])
 
-        # Substitute Inf LFC values for the maximum finite value
+        # Substitute Inf OR values for the maximum finite value
         CM.statMatrix[CM.statMatrix$OR == Inf, ]$OR <-
             rep(max(CM.statMatrix[CM.statMatrix$OR != Inf, ]$OR),
                 length(CM.statMatrix[CM.statMatrix$OR == Inf, 1]))
@@ -1085,7 +1132,7 @@ plot_CM <- function(CM.statMatrix, plot_title = NULL, specialTF = NULL, TF_color
 
         warn_number <- dim(CM.statMatrix[CM.statMatrix$OR == -Inf,][1])
 
-        # Substitute -Inf LFC values for the minimum finite value
+        # Substitute -Inf OR values for the minimum finite value
         CM.statMatrix[CM.statMatrix$OR == -Inf, ]$OR <-
             rep(min(CM.statMatrix[CM.statMatrix$OR != -Inf, ]$OR),
                 dim(CM.statMatrix[CM.statMatrix$OR == -Inf, ])[1])
@@ -1104,7 +1151,7 @@ plot_CM <- function(CM.statMatrix, plot_title = NULL, specialTF = NULL, TF_color
         warning(warn_number, " elements have a -log(p-Value) of Inf. ",
             "Maximum value for -log(p-Val) introduced instead.")
     }
-    
+
     # Computes logOR
     CM.statMatrix$LOR<-log2(CM.statMatrix$OR)
 
@@ -1115,7 +1162,7 @@ plot_CM <- function(CM.statMatrix, plot_title = NULL, specialTF = NULL, TF_color
             "Other", ]
 
         p <- plotly::plot_ly(CM.statMatrix_other, x = ~log.adj.pVal,
-            y = ~LOR, type = "scatter", mode = "markers",
+            y = ~OR, type = "scatter", mode = "markers",
             text = paste0(
                 CM.statMatrix_other$Accession, ": ", CM.statMatrix_other$TF,
                 "<br>Treatment: ", CM.statMatrix_other$Treatment,
@@ -1123,7 +1170,7 @@ plot_CM <- function(CM.statMatrix, plot_title = NULL, specialTF = NULL, TF_color
             color = ~highlight, colors = markerColors)
 
         p <- plotly::add_markers(p, x = CM.statMatrix_highlighted$log.adj.pVal,
-            y = CM.statMatrix_highlighted$LOR, type = "scatter", mode = "markers",
+            y = CM.statMatrix_highlighted$OR, type = "scatter", mode = "markers",
             text = paste0(
                 CM.statMatrix_highlighted$Accession, ": ", CM.statMatrix_highlighted$TF,
                 "<br>Treatment: ", CM.statMatrix_highlighted$Treatment,
@@ -1134,7 +1181,7 @@ plot_CM <- function(CM.statMatrix, plot_title = NULL, specialTF = NULL, TF_color
 
     } else {
         p <- plotly::plot_ly(CM.statMatrix, x = ~log.adj.pVal,
-            y = ~LOR, type = "scatter", mode = "markers",
+            y = ~OR, type = "scatter", mode = "markers",
             text = paste0(CM.statMatrix$Accession, ": ", CM.statMatrix$TF,
                 "<br>Treatment: ", CM.statMatrix$Treatment,
                 "<br>Cell: ", CM.statMatrix$Cell), color = ~highlight,
@@ -1212,13 +1259,13 @@ plot_ES <- function(GSEA_result, LFC, plot_title = NULL, specialTF = NULL, TF_co
             "greenyellow", "gold", "darkorchid", "chocolate1",
             "black", "lightpink", "seagreen")
         TF_colors <- TF_colors[1:length(unique(names(specialTF)))]
-        highlight_list <- highlight_TF(enrichmentTable, 2, specialTF,
+        highlight_list <- highlight_TF(enrichmentTable, 4, specialTF,
             TF_colors)
         enrichmentTable$highlight <- highlight_list[[1]]
         markerColors <- highlight_list[[2]]
     }
     if (!is.null(specialTF) & !is.null(TF_colors)) {
-        highlight_list <- highlight_TF(enrichmentTable, 2, specialTF,
+        highlight_list <- highlight_TF(enrichmentTable, 4, specialTF,
             TF_colors)
         enrichmentTable$highlight <- highlight_list[[1]]
         markerColors <- highlight_list[[2]]
@@ -1248,7 +1295,7 @@ plot_ES <- function(GSEA_result, LFC, plot_title = NULL, specialTF = NULL, TF_co
     rm(MetaData)
 
     if (length(markerColors) > 1 &
-        length(unique(enrichmentTable$TF)) > specialTF ) {
+        length(unique(enrichmentTable$TF)) > length( specialTF ) ) {
         enrichmentTable_highlighted <- enrichmentTable[enrichmentTable$highlight !=
             "Other", ]
         enrichmentTable_other <- enrichmentTable[enrichmentTable$highlight ==
@@ -1430,9 +1477,9 @@ plot_RES <- function(GSEA_result, LFC, plot_title = NULL, line.colors = NULL, li
             y = tabla$RES[[Accession[1]]], type = "scatter", mode = "lines",
             line = list(color = line.colors[1], dash = line.styles[1]),
             name = paste0(tabla$Accession[1],
-                " - ", tabla$TF[1]), text = paste0(tabla$Accession[i],
-                " - ", tabla$TF[i], "<br>Cell: ", tabla$Cell[i],
-                "<br>Treatment: ", tabla$Treatment[i])) %>%
+                " - ", tabla$TF[1]), text = paste0(tabla$Accession[1],
+                " - ", tabla$TF[1], "<br>Cell: ", tabla$Cell[1],
+                "<br>Treatment: ", tabla$Treatment[1])) %>%
         plotly::layout(title = plot_title,
             xaxis = list(title = "Argument"), yaxis = list(title = "ES"))
     }
