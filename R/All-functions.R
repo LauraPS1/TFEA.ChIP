@@ -1169,16 +1169,16 @@ plot_CM <- function(CM.statMatrix, plot_title = NULL, specialTF = NULL, TF_color
         CM.statMatrix_other <- CM.statMatrix[CM.statMatrix$highlight ==
             "Other", ]
 
-        p <- plotly::plot_ly(CM.statMatrix_other, x = ~log.adj.pVal,
-            y = ~LOR, type = "scatter", mode = "markers",
+        p <- plotly::plot_ly(CM.statMatrix_other, x = ~log10.adj.pVal,
+            y = ~log2.OR, type = "scatter", mode = "markers",
             text = paste0(
                 CM.statMatrix_other$Accession, ": ", CM.statMatrix_other$TF,
                 "<br>Treatment: ", CM.statMatrix_other$Treatment,
                 "<br>Cell: ", CM.statMatrix_other$Cell),
             color = ~highlight, colors = markerColors)
 
-        p <- plotly::add_markers(p, x = CM.statMatrix_highlighted$log.adj.pVal,
-            y = CM.statMatrix_highlighted$LOR, type = "scatter", mode = "markers",
+        p <- plotly::add_markers(p, x = CM.statMatrix_highlighted$log10.adj.pVal,
+            y = CM.statMatrix_highlighted$log2.OR, type = "scatter", mode = "markers",
             text = paste0(
                 CM.statMatrix_highlighted$Accession, ": ", CM.statMatrix_highlighted$TF,
                 "<br>Treatment: ", CM.statMatrix_highlighted$Treatment,
@@ -1188,8 +1188,8 @@ plot_CM <- function(CM.statMatrix, plot_title = NULL, specialTF = NULL, TF_color
         plotly::layout(title = plot_title)
 
     } else {
-        p <- plotly::plot_ly(CM.statMatrix, x = ~log.adj.pVal,
-            y = ~LOR, type = "scatter", mode = "markers",
+        p <- plotly::plot_ly(CM.statMatrix, x = ~log10.adj.pVal,
+            y = ~log2.OR, type = "scatter", mode = "markers",
             text = paste0(CM.statMatrix$Accession, ": ", CM.statMatrix$TF,
                 "<br>Treatment: ", CM.statMatrix$Treatment,
                 "<br>Cell: ", CM.statMatrix$Cell), color = ~highlight,
