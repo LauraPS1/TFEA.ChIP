@@ -795,57 +795,65 @@ contingency_matrix <- function(test_list, control_list, chip_index = get_chip_in
 }
 
 getCMstats <- function(contMatrix_list, chip_index = get_chip_index()) {
-
-    #' @title Generate statistical parameters from a contingency_matrix output
-    #' @description From a list of contingency matrices, such as the output
-    #' from “contingency_matrix”, this function computes a fisher's exact test
-    #' for each matrix and generates a data frame that stores accession ID of a
-    #' ChIP-Seq experiment, the TF tested in that experiment, the p-value and
-    #' the odds ratio resulting from the test.
-    #' @param contMatrix_list Output of “contingency_matrix”, a list of
-    #' contingency matrix.
-    #' @param chip_index Output of the function “get_chip_index”, a data frame
-    #' containing accession IDs of ChIPs on the database and the TF each one
-    #' tests. If not provided, the whole internal database will be used
-    #' @return Data frame containing accession ID of a ChIP-Seq experiment, the
-    #' TF tested in that experiment, raw p-value (-10*log10 pvalue), odds-ratio
-    #' and FDR-adjusted p-values (-10*log10 adj.pvalue).
-    #' @export getCMstats
-    #' @examples
-    #' data('CM_list',package = 'TFEA.ChIP')
-    #' stats_mat_UP <- getCMstats(CM_list)
-
-    pvals <- sapply(seq_along(contMatrix_list),
-        function(lista,i) {
-            pval <- stats::fisher.test(lista[[names(lista)[i]]])[["p.value"]]
-            return(pval)
-        },
-        lista = contMatrix_list)
-
-    oddsRatios <- sapply(seq_along(contMatrix_list),
-        function(lista,i) {
-            pval <- stats::fisher.test(lista[[names(lista)[i]]])[["estimate"]]
-            return(pval)
-        },
-        lista = contMatrix_list)
-
-    chip_index <- chip_index[chip_index$Accession %in% names(contMatrix_list),]
-    chip_index <- chip_index[ match(
-        names(contMatrix_list), chip_index$Accession ),]
-
-    statMat <- data.frame(Accession = chip_index$Accession, TF = chip_index$TF,
-        p.value = pvals, OR = oddsRatios)
-
-    statMat$adj.p.value <- stats::p.adjust(statMat$p.value, "fdr")
-    statMat$log.adj.pVal <- (-1 * (log10(statMat$adj.p.value)))
-
-    if (!exists("MetaData")) {
-      MetaData <- NULL
-      data("MetaData", package = "TFEA.ChIP", envir = environment())
-    }
-    statMat<-merge(MetaData[,c("Accession","Cell","Treatment")],statMat,by="Accession")
-    return(statMat)
+  
+  #' @title Generate statistical parameters from a contingency_matrix output
+  #' @description From a list of contingency matrices, such as the output
+  #' from “contingency_matrix”, this function computes a fisher's exact test
+  #' for each matrix and generates a data frame that stores accession ID of a
+  #' ChIP-Seq experiment, the TF tested in that experiment, the p-value and
+  #' the odds ratio resulting from the test.
+  #' @param contMatrix_list Output of “contingency_matrix”, a list of
+  #' contingency matrix.
+  #' @param chip_index Output of the function “get_chip_index”, a data frame
+  #' containing accession IDs of ChIPs on the database and the TF each one
+  #' tests. If not provided, the whole internal database will be used
+  #' @return Data frame containing accession ID of a ChIP-Seq experiment, the
+  #' TF tested in that experiment, raw p-value (-10*log10 pvalue), odds-ratio
+  #' and FDR-adjusted p-values (-10*log10 adj.pvalue).
+  #' @export getCMstats
+  #' @examples
+  #' data('CM_list',package = 'TFEA.ChIP')
+  #' stats_mat_UP <- getCMstats(CM_list)
+  
+  pvals <- sapply(seq_along(contMatrix_list),
+                  function(lista,i) {
+                    pval <- stats::fisher.test(lista[[names(lista)[i]]])[["p.value"]]
+                    return(pval)
+                  },
+                  lista = contMatrix_list)
+  
+  oddsRatios <- sapply(seq_along(contMatrix_list),
+                       function(lista,i) {
+                         pval <- stats::fisher.test(lista[[names(lista)[i]]])[["estimate"]]
+                         return(pval)
+                       },
+                       lista = contMatrix_list)
+  
+  chip_index <- chip_index[chip_index$Accession %in% names(contMatrix_list),]
+  chip_index <- chip_index[ match(
+    names(contMatrix_list), chip_index$Accession ),]
+  
+  statMat <- data.frame(Accession = chip_index$Accession, TF = chip_index$TF,
+                        p.value = pvals, OR = oddsRatios)
+  
+  statMat$log2.OR <- log2(statMat$OR)
+  statMat$log2.OR[which(!is.finite(statMat$log2.OR))]<-NA
+  
+  statMat$adj.p.value <- stats::p.adjust(statMat$p.value, "fdr")
+  statMat$log10.adj.pVal <- (-1 * (log10(statMat$adj.p.value)))
+  statMat$log10.adj.pVal[which(!is.finite(statMat$log10.adj.pVal))]<-NA
+  
+  statMat$distance<-apply(statMat[,c("log2.OR","log10.adj.pVal")],1,function(x) sqrt((x[1]**2)+(x[2]**2)))
+  statMat$distance<-statMat$distance*sign(statMat$log2.OR)
+  
+  if (!exists("MetaData")) {
+    MetaData <- NULL
+    data("MetaData", package = "TFEA.ChIP", envir = environment())
+  }
+  statMat<-merge(MetaData[,c("Accession","Cell","Treatment")],statMat,by="Accession")
+  return(statMat[order(statMat$distance,decreasing = T,na.last = T),])
 }
+
 
 GSEA_EnrichmentScore <- function(gene.list, gene.set, weighted.score.type = 0, correl.vector = NULL) {
 
