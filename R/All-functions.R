@@ -254,7 +254,7 @@ GR2tfbs_db <- function(Ref.db, gr.list, distanceMargin = 10, outputAsVector = FA
             inSubject <- S4Vectors::subjectHits(nearest_index)
 
             # in case any ChIP-Seq dataset does not have any genes to be assigned
-            if (length(inSubject) == 0) {
+            if (length( Ref.db[unique(inSubject)]$gene_id ) < 10) {
                 NULL
             } else {
 
