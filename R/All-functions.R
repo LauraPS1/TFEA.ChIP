@@ -310,7 +310,7 @@ GR2tfbs_db <- function(Ref.db, gr.list, distanceMargin = 10, outputAsVector = FA
             })
          names(TFgenes_list) <- list.names
     }
-
+    TFgenes_list[ sapply( TFgenes_list, is.null ) ] <- NULL
     return( TFgenes_list )
 }
 
