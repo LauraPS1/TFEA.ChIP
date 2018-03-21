@@ -4,12 +4,12 @@
 \name{DnaseHS_db}
 \alias{DnaseHS_db}
 \title{DHS databse}
-\format{GenomicRanges object with 32 elements}
+\format{GenomicRanges object with 76 elements}
 \usage{
 data("DnaseHS_db")
 }
 \description{
-Used to run examples. Part of a DHS database storing 32 sites
+Used to run examples. Part of a DHS database storing 76 sites
 for the human genome in GenomicRanges format.
 }
 \keyword{datasets}

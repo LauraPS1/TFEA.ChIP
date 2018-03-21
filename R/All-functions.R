@@ -293,11 +293,11 @@ GR2tfbs_db <- function(Ref.db, gr.list, distanceMargin = 10, outputAsVector = FA
     if ( outputAsVector == FALSE ){
 
         list.names <- sapply(
-            seq_along( TFgenes_list ),
-            function( TFgenes_list, i ){
-                return( TFgenes_list[[i]]@setName )
-            },
-            TFgenes_list = TFgenes_list )
+            TFgenes_list,
+            function( i ){
+                return( i@setName )
+            }
+        )
 
         names(TFgenes_list) <- list.names
     } else {
@@ -795,7 +795,7 @@ contingency_matrix <- function(test_list, control_list, chip_index = get_chip_in
 }
 
 getCMstats <- function(contMatrix_list, chip_index = get_chip_index()) {
-  
+
   #' @title Generate statistical parameters from a contingency_matrix output
   #' @description From a list of contingency matrices, such as the output
   #' from “contingency_matrix”, this function computes a fisher's exact test
@@ -807,45 +807,46 @@ getCMstats <- function(contMatrix_list, chip_index = get_chip_index()) {
   #' @param chip_index Output of the function “get_chip_index”, a data frame
   #' containing accession IDs of ChIPs on the database and the TF each one
   #' tests. If not provided, the whole internal database will be used
-  #' @return Data frame containing accession ID of a ChIP-Seq experiment, the
-  #' TF tested in that experiment, raw p-value (-10*log10 pvalue), odds-ratio
+  #' @return Data frame containing accession ID of a ChIP-Seq experiment and
+  #' its experimental conditions, the TF tested in that experiment, raw and
+  #' adjusted p-values, odds-ratio, and euclidean distance.
   #' and FDR-adjusted p-values (-10*log10 adj.pvalue).
   #' @export getCMstats
   #' @examples
   #' data('CM_list',package = 'TFEA.ChIP')
   #' stats_mat_UP <- getCMstats(CM_list)
-  
+
   pvals <- sapply(seq_along(contMatrix_list),
                   function(lista,i) {
                     pval <- stats::fisher.test(lista[[names(lista)[i]]])[["p.value"]]
                     return(pval)
                   },
                   lista = contMatrix_list)
-  
+
   oddsRatios <- sapply(seq_along(contMatrix_list),
                        function(lista,i) {
                          pval <- stats::fisher.test(lista[[names(lista)[i]]])[["estimate"]]
                          return(pval)
                        },
                        lista = contMatrix_list)
-  
+
   chip_index <- chip_index[chip_index$Accession %in% names(contMatrix_list),]
   chip_index <- chip_index[ match(
     names(contMatrix_list), chip_index$Accession ),]
-  
+
   statMat <- data.frame(Accession = chip_index$Accession, TF = chip_index$TF,
                         p.value = pvals, OR = oddsRatios)
-  
+
   statMat$log2.OR <- log2(statMat$OR)
   statMat$log2.OR[which(!is.finite(statMat$log2.OR))]<-NA
-  
+
   statMat$adj.p.value <- stats::p.adjust(statMat$p.value, "fdr")
   statMat$log10.adj.pVal <- (-1 * (log10(statMat$adj.p.value)))
   statMat$log10.adj.pVal[which(!is.finite(statMat$log10.adj.pVal))]<-NA
-  
+
   statMat$distance<-apply(statMat[,c("log2.OR","log10.adj.pVal")],1,function(x) sqrt((x[1]**2)+(x[2]**2)))
   statMat$distance<-statMat$distance*sign(statMat$log2.OR)
-  
+
   if (!exists("MetaData")) {
     MetaData <- NULL
     data("MetaData", package = "TFEA.ChIP", envir = environment())
@@ -943,17 +944,18 @@ GSEA_run <- function(gene.list, LFC, chip_index = get_chip_index(), get.RES = FA
     #' @description Function to run a GSEA to analyze the distribution of TFBS
     #' across a sorted list of genes.
     #' @param gene.list List of Entrez IDs ordered by their fold change.
+    #' @param LFC Vector of log2( Fold Change ) values.
     #' @param chip_index Output of the function “get_chip_index”, a data frame
-    #' @param LFC log2( Fold Change ) vector.
     #' containing accession IDs of ChIPs on the database and the TF each one
     #' tests. If not provided, the whole internal database will be used
-    #' @param get.RES (Optional) boolean. If TRUE, the function stores RES of
-    #' all/some TF.
+    #' @param get.RES (Optional) boolean. If TRUE, the function stores Running
+    #' Enrichment Scores of all/some TF.
     #' @param RES.filter (Optional) chr vector. When get.RES==TRUE, allows to
-    #' choose which TF's RES to store.
+    #' choose which TF's Running Enrichment Score to store.
     #' @return a list of:
-    #' Enrichment.table: data frame containing accession ID, TF name,
-    #' enrichment score, p-value, and argument of every ChIP-Seq experiment.
+    #' Enrichment.table: data frame containing accession ID, Cell type, ChIP-Seq
+    #' treatment, transcription factor tested, enrichment score, adjusted p-value,
+    #' and argument of every ChIP-Seq experiment.
     #' RES (optional): list of running sums of every ChIP-Seq
     #' indicators (optional): list of 0/1 vectors that stores the matches (1)
     #' and mismatches (0) between the gene list and the gene set.
@@ -1160,9 +1162,6 @@ plot_CM <- function(CM.statMatrix, plot_title = NULL, specialTF = NULL, TF_color
         warning(warn_number, " elements have a -log(p-Value) of Inf. ",
             "Maximum value for -log(p-Val) introduced instead.")
     }
-
-    # Computes logOR
-    CM.statMatrix$LOR<-log2(CM.statMatrix$OR)
 
     if (length(markerColors) > 1) {
         CM.statMatrix_highlighted <- CM.statMatrix[CM.statMatrix$highlight !=
