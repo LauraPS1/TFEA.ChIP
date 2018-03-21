@@ -1028,6 +1028,7 @@ GSEA_run <- function(gene.list, LFC, chip_index = get_chip_index(), get.RES = FA
             }
         } else {
             chip_index <- chip_index[-i, ]
+			i <- i-1
         }
         # update progress bar
         setTxtProgressBar(pbar, i)
