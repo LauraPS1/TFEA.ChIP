@@ -10,22 +10,23 @@ GSEA_run(gene.list, LFC, chip_index = get_chip_index(), get.RES = FALSE,
 \arguments{
 \item{gene.list}{List of Entrez IDs ordered by their fold change.}
 
-\item{LFC}{log2( Fold Change ) vector.
+\item{LFC}{Vector of log2( Fold Change ) values.}
+
+\item{chip_index}{Output of the function “get_chip_index”, a data frame
 containing accession IDs of ChIPs on the database and the TF each one
 tests. If not provided, the whole internal database will be used}
 
-\item{chip_index}{Output of the function “get_chip_index”, a data frame}
-
-\item{get.RES}{(Optional) boolean. If TRUE, the function stores RES of
-all/some TF.}
+\item{get.RES}{(Optional) boolean. If TRUE, the function stores Running
+Enrichment Scores of all/some TF.}
 
 \item{RES.filter}{(Optional) chr vector. When get.RES==TRUE, allows to
-choose which TF's RES to store.}
+choose which TF's Running Enrichment Score to store.}
 }
 \value{
 a list of:
-Enrichment.table: data frame containing accession ID, TF name,
-enrichment score, p-value, and argument of every ChIP-Seq experiment.
+Enrichment.table: data frame containing accession ID, Cell type, ChIP-Seq
+treatment, transcription factor tested, enrichment score, adjusted p-value,
+and argument of every ChIP-Seq experiment.
 RES (optional): list of running sums of every ChIP-Seq
 indicators (optional): list of 0/1 vectors that stores the matches (1)
 and mismatches (0) between the gene list and the gene set.

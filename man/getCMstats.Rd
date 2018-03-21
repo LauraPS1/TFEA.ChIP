@@ -15,8 +15,9 @@ containing accession IDs of ChIPs on the database and the TF each one
 tests. If not provided, the whole internal database will be used}
 }
 \value{
-Data frame containing accession ID of a ChIP-Seq experiment, the
-TF tested in that experiment, raw p-value (-10*log10 pvalue), odds-ratio
+Data frame containing accession ID of a ChIP-Seq experiment and
+its experimental conditions, the TF tested in that experiment, raw and
+adjusted p-values, odds-ratio, and euclidean distance.
 and FDR-adjusted p-values (-10*log10 adj.pvalue).
 }
 \description{

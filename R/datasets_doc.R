@@ -54,14 +54,14 @@
 
 #' DHS databse
 #'
-#' Used to run examples. Part of a DHS database storing 32 sites
+#' Used to run examples. Part of a DHS database storing 76 sites
 #' for the human genome in GenomicRanges format.
 #'
 #' @docType data
 #' @keywords datasets
 #' @name DnaseHS_db
 #' @usage data("DnaseHS_db")
-#' @format GenomicRanges object with 32 elements
+#' @format GenomicRanges object with 76 elements
 "DnaseHS_db"
 
 #' List of Entrez Gene IDs
@@ -90,8 +90,8 @@
 
 #' List of one ChIP-Seq dataset
 #'
-#' Used to run examples. List of one ChIP-Seq dataset (from GSM2390643)
-#' in GenomicRanges format with 2140 peaks.
+#' Used to run examples. List of part of one ChIP-Seq dataset (from
+#' wgEncodeEH002402) in GenomicRanges format with 50 peaks.
 #'
 #' @docType data
 #' @keywords datasets
@@ -170,7 +170,7 @@
 #' @keywords datasets
 #' @name Mat01
 #' @usage data("Mat01")
-#' @format a matrix of 1122 columns and 23056 rows
+#' @format a matrix of 1075 columns and 23056 rows
 "Mat01"
 
 #' TF-gene binding DB metadata
@@ -179,7 +179,6 @@
 #' used to build the TF-gene binding DB.
 #' Fields in the data frame:
 #' \itemize{
-#'   \item Name: Name of the file.
 #'   \item Accession: Accession ID of the experiment.
 #'   \item Cell: Cell line or tissue.
 #'   \item 'Cell Type': More information about the cells.
@@ -192,7 +191,7 @@
 #' @keywords datasets
 #' @name MetaData
 #' @usage data("MetaData")
-#' @format A data frame of 1122 observations of 7 variables
+#' @format A data frame of 1075 observations of 6 variables
 "MetaData"
 
 #' Data frame, output from the function getCMstats from the TFEA.ChIP package

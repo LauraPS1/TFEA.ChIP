@@ -4,7 +4,7 @@
 \name{MetaData}
 \alias{MetaData}
 \title{TF-gene binding DB metadata}
-\format{A data frame of 1122 observations of 7 variables}
+\format{A data frame of 1075 observations of 6 variables}
 \usage{
 data("MetaData")
 }
@@ -13,7 +13,6 @@ A data frame containing information of the ChIP-Seq experiments
 used to build the TF-gene binding DB.
 Fields in the data frame:
 \itemize{
-  \item Name: Name of the file.
   \item Accession: Accession ID of the experiment.
   \item Cell: Cell line or tissue.
   \item 'Cell Type': More information about the cells.

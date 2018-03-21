@@ -133,16 +133,16 @@ test_txt2GR<-function(){
     data("ARNT.peaks.bed","ARNT.metadata",package = "TFEA.ChIP")
     # Checking output size
     RUnit::checkEquals(
-        length(ARNT.gr<-txt2GR(ARNT.peaks.bed,"macs",ARNT.metadata)),
+        length(ARNT.gr<-txt2GR(ARNT.peaks.bed,"macs1.4",ARNT.metadata)),
         nrow(ARNT.peaks.bed[ARNT.peaks.bed$X.10.log10.pvalue.<50]))
     # Checking that missing input variables produces errors
     RUnit::checkException(
         ARNT.gr<-txt2GR(ARNT.peaks.bed,fileMetaData = ARNT.metadata))
     RUnit::checkException(
-        ARNT.gr<-txt2GR(ARNT.peaks.bed,"macs"))
+        ARNT.gr<-txt2GR(ARNT.peaks.bed,"macs1.4"))
     # Checking incorrect input variables produces errors
     RUnit::checkException(
-        ARNT.gr<-txt2GR(ARNT.peaks.bed,"macs",ARNT.metadata[,1:3]))
+        ARNT.gr<-txt2GR(ARNT.peaks.bed,"macs1.4",ARNT.metadata[,1:3]))
 
 }
 
@@ -152,27 +152,27 @@ test_GR2tfbs_db<-function(){
     # list of one gene set with only two gene IDs: 2782 and 23261
     RUnit::checkEquals(length(GR2tfbs_db(DnaseHS_db, gr.list)),1)
     RUnit::checkEquals(
-        GR2tfbs_db(DnaseHS_db, gr.list)[[1]]@geneIds,
-        c("2782","23261"))
+        GR2tfbs_db(DnaseHS_db, gr.list)[[1]]@geneIds[1],
+        c("6009"))
 }
 
 test_GSEA_run<-function(){
-    data("Entrez.gene.IDs",package = "TFEA.ChIP")
+    data("hypoxia",package = "TFEA.ChIP")
+    preprocessInputData(hypoxia)
     # Selecting a small number of ChIP-Seq datasets to save time
     chip_index<-get_chip_index(TFfilter = c("EPAS1","ARNT"))
     # Checking enrichment table
     RUnit::checkEquals(
-        GSEA_run(Entrez.gene.IDs,chip_index)$Accession,
+        GSEA_run(hypoxia$Genes, hypoxia$log2FoldChange, chip_index)$Accession,
         chip_index$Accession)
-    expected_ES<-c(0.479650,0.449680,0.232260,0.298820,0.346470,
-        0.226810,0.226920,0.404960,0.172440,0.203680, -0.047051,
-        0.159360,0.266290,0.216330,-0.050501)
+    expected_ES<-c(-0.22049,0.32867,0.36344,0.27756,-0.23734,
+        0.27821,0.62676,0.54203,0.43016,0.32617,0.25807)
     RUnit::checkEquals(
-        GSEA_run(Entrez.gene.IDs,chip_index)$ES,
+        GSEA_run(hypoxia$Genes, hypoxia$log2FoldChange, chip_index)$ES,
         expected_ES)
     # Checking output with RES and indicator
     RUnit::checkTrue(is.list(
-        GSEA_run(Entrez.gene.IDs,chip_index[1:2,],get.RES = TRUE)))
+        GSEA_run(hypoxia$Genes, hypoxia$log2FoldChange, chip_index[1:2,],get.RES = TRUE)))
 
 
 }
