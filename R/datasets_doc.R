@@ -200,11 +200,15 @@
 #' TFEA.ChIP package, is a data frame storing the following fields:
 #' \itemize{
 #'   \item Accession: GEO or Encode accession ID for each ChIP-Seq dataset.
+#'   \item Cell: cell type on which the ChIP-Seq experiment was performed
+#'   \item Treatment: treatment used on the cells
 #'   \item TF: Transcription Factor tested.
-#'   \item p.value: p-value of the Fisher test performed on a contingency matrix for each ChIP-Seq experiment.
+#'   \item p.value: raw p-value of the Fisher test performed on a contingency matrix for each ChIP-Seq experiment.
 #'   \item OR: Odds Ratio on the contingency matrix done for each ChIP-Seq experiment.
+#'   \item log2.OR
 #'   \item adj.p.value: p-value adjusted by FDR
-#'   \item log.adj.pVal: log10(adj.p.value)
+#'   \item log10.adj.pVal
+#'   \distance euclidean distance from (log10.adj.pval, log2.OR) to the coordinates origin.
 #' }
 #'
 #' @docType data

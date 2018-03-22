@@ -37,7 +37,7 @@ txt2GR <- function(fileTable, format, fileMetaData, alpha = NULL) {
     #' @export txt2GR
     #' @examples
     #' data('ARNT.peaks.bed','ARNT.metadata',package = 'TFEA.ChIP')
-    #' ARNT.gr<-txt2GR(ARNT.peaks.bed,'macs',ARNT.metadata)
+    #' ARNT.gr<-txt2GR(ARNT.peaks.bed,'macs1.4',ARNT.metadata)
 
     stopifnot(format %in% c("narrowpeak","narrowPeak","macs1.4",
                             "macs2", "MACS1.4", "MACS2"))
@@ -962,6 +962,7 @@ GSEA_run <- function(gene.list, LFC, chip_index = get_chip_index(), get.RES = FA
     #' @export GSEA_run
     #' @examples
     #' data('hypoxia',package = 'TFEA.ChIP')
+    #' preprocessInputData(hypoxia)
     #' chip_index<-get_chip_index(TFfilter = c('HIF1A','EPAS1','ARNT'))
     #' GSEA.result <- GSEA_run( hypoxia$Genes, hypoxia$log2FoldChange, chip_index, get.RES = TRUE)
 
@@ -1223,8 +1224,8 @@ plot_ES <- function(GSEA_result, LFC, plot_title = NULL, specialTF = NULL, TF_co
     #' @export plot_ES
     #' @examples
     #' data('GSEA.result','log2.FC',package = 'TFEA.ChIP')
-    #' TF.hightlight<-c('EPAS1')
-    #' names(TF.hightlight)<-c('EPAS1')
+    #' TF.hightlight<-c('STAT1')
+    #' names(TF.hightlight)<-c('STAT1')
     #' col<- c('red')
     #' plot_ES(GSEA.result,log2.FC,specialTF = TF.hightlight,TF_colors = col)
 
@@ -1375,8 +1376,8 @@ plot_RES <- function(GSEA_result, LFC, plot_title = NULL, line.colors = NULL, li
     #' @export plot_RES
     #' @examples
     #' data('GSEA.result','log2.FC',package = 'TFEA.ChIP')
-    #' plot_RES(GSEA.result,log2.FC,TF=c('EPAS1'),
-    #'     Accession=c('GSM2390642','GSM2390643'))
+    #' plot_RES(GSEA.result,log2.FC,TF=c('STAT1'),
+    #'     Accession=c('wgEncodeEH000663','wgEncodeEH000664'))
 
     if (!requireNamespace("plotly", quietly = TRUE)) {
         stop("plotly package needed for this function to work.",
