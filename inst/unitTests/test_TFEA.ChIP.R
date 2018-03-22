@@ -23,19 +23,20 @@ test_preprocessInputData<-function(){
     data("hypoxia_DESeq","hypoxia",package = "TFEA.ChIP")
     # Checking output size
     RUnit::checkEquals(
-        nrow(preprocessInputData(hypoxia)),
-        length(GeneID2entrez(hypoxia$Genes)))
+        suppressWarnings(nrow(preprocessInputData(hypoxia))),
+        suppressWarnings(length(GeneID2entrez(hypoxia$Genes))))
 
     RUnit::checkEquals(
-        nrow(preprocessInputData(hypoxia_DESeq)),
-        length(GeneID2entrez(rownames(hypoxia_DESeq))))
+        suppressWarnings(nrow(preprocessInputData(hypoxia_DESeq))),
+        suppressWarnings(length(GeneID2entrez(rownames(hypoxia_DESeq)))))
 
     # Cheking every gene in output has been properly translated
     RUnit::checkTrue(!(FALSE %in% (
-        preprocessInputData(hypoxia)$Genes %in% GeneID2entrez(hypoxia$Genes))))
+        suppressWarnings(preprocessInputData(hypoxia)$Genes) %in%
+        suppressWarnings(GeneID2entrez(hypoxia$Genes)))))
     RUnit::checkTrue(!(FALSE %in% (
-        preprocessInputData(hypoxia_DESeq)$Genes %in%
-        GeneID2entrez(rownames(hypoxia_DESeq)))))
+        suppressWarnings(preprocessInputData(hypoxia_DESeq)$Genes) %in%
+        suppressWarnings(GeneID2entrez(rownames(hypoxia_DESeq))))))
 
 }
 
@@ -158,18 +159,18 @@ test_GR2tfbs_db<-function(){
 
 test_GSEA_run<-function(){
     data("hypoxia",package = "TFEA.ChIP")
-    preprocessInputData(hypoxia)
+    hypoxia<-preprocessInputData(hypoxia)
     # Selecting a small number of ChIP-Seq datasets to save time
     chip_index<-get_chip_index(TFfilter = c("EPAS1","ARNT"))
+    gsea_result <- GSEA_run(hypoxia$Genes, hypoxia$log2FoldChange, chip_index)
     # Checking enrichment table
-    RUnit::checkEquals(
-        GSEA_run(hypoxia$Genes, hypoxia$log2FoldChange, chip_index)$Accession,
-        chip_index$Accession)
+    RUnit::checkTrue(
+        all( gsea_result$Accession %in%
+        chip_index$Accession))
+
     expected_ES<-c(-0.22049,0.32867,0.36344,0.27756,-0.23734,
         0.27821,0.62676,0.54203,0.43016,0.32617,0.25807)
-    RUnit::checkEquals(
-        GSEA_run(hypoxia$Genes, hypoxia$log2FoldChange, chip_index)$ES,
-        expected_ES)
+    RUnit::checkEquals( gsea_result$ES, expected_ES)
     # Checking output with RES and indicator
     RUnit::checkTrue(is.list(
         GSEA_run(hypoxia$Genes, hypoxia$log2FoldChange, chip_index[1:2,],get.RES = TRUE)))
