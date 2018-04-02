@@ -208,7 +208,7 @@
 #'   \item log2.OR
 #'   \item adj.p.value: p-value adjusted by FDR
 #'   \item log10.adj.pVal
-#'   \distance euclidean distance from (log10.adj.pval, log2.OR) to the coordinates origin.
+#'   \item distance: euclidean distance from (log10.adj.pval, log2.OR) to the coordinates origin.
 #' }
 #'
 #' @docType data
