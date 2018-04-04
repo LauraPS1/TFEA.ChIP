@@ -38,8 +38,8 @@ the ChIPseq binding database.
 }
 \examples{
 data('GSEA.result','log2.FC',package = 'TFEA.ChIP')
-TF.hightlight<-c('EPAS1')
-names(TF.hightlight)<-c('EPAS1')
+TF.hightlight<-c('STAT1')
+names(TF.hightlight)<-c('STAT1')
 col<- c('red')
 plot_ES(GSEA.result,log2.FC,specialTF = TF.hightlight,TF_colors = col)
 }

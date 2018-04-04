@@ -37,6 +37,7 @@ across a sorted list of genes.
 }
 \examples{
 data('hypoxia',package = 'TFEA.ChIP')
+preprocessInputData(hypoxia)
 chip_index<-get_chip_index(TFfilter = c('HIF1A','EPAS1','ARNT'))
 GSEA.result <- GSEA_run( hypoxia$Genes, hypoxia$log2FoldChange, chip_index, get.RES = TRUE)
 }
