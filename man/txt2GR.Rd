@@ -37,5 +37,5 @@ GenomicRanges object, associated to its metadata.
 }
 \examples{
 data('ARNT.peaks.bed','ARNT.metadata',package = 'TFEA.ChIP')
-ARNT.gr<-txt2GR(ARNT.peaks.bed,'macs',ARNT.metadata)
+ARNT.gr<-txt2GR(ARNT.peaks.bed,'macs1.4',ARNT.metadata)
 }
