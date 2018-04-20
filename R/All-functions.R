@@ -7,6 +7,7 @@
 #' @importFrom grDevices colorRamp
 #' @importFrom stats fisher.test p.adjust
 #' @importFrom utils data setTxtProgressBar txtProgressBar
+#' @importFrom R.utils withTimeout
 #' @import TxDb.Hsapiens.UCSC.hg19.knownGene
 #' @import org.Hs.eg.db
 ################### FUNCTIONS #################
@@ -627,8 +628,20 @@ GeneID2entrez <- function(gene.IDs, return.Matrix = FALSE, from.Mouse = FALSE) {
 
     }else{
 
-        human <- useMart("ensembl", dataset = "hsapiens_gene_ensembl")
-        mouse <- useMart("ensembl", dataset = "mmusculus_gene_ensembl")
+        biomart_test <- tryCatch(
+            {withTimeout( {tmp <- biomaRt::listMarts()},
+                                   timeout = 3, onTimeout = "warning")},
+            error = function(w) { return( 0 ) },
+            warning = function(w){ return( 0 ) }
+        )
+        if (biomart_test == 0 ){
+            stop( paste0("We are having trouble reaching biomaRt.\n",
+                "Please, try again later."))
+        }
+
+
+        human <- biomaRt::useMart("ensembl", dataset = "hsapiens_gene_ensembl")
+        mouse <- biomaRt::useMart("ensembl", dataset = "mmusculus_gene_ensembl")
 
         if ( all( grepl("^ENSM", gene.IDs, perl = TRUE ) ) == TRUE) {
             hs_ids = getLDS(

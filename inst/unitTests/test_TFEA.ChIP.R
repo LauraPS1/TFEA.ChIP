@@ -16,7 +16,6 @@ test_GeneID2Entrez<-function(){
     # Checking matrix output and NA return for invalid names
     RUnit::checkTrue(
         is.na(GeneID2entrez("potato",return.Matrix = TRUE)$ENTREZ.ID))
-    # Checking mouse to human translation
 }
 
 test_preprocessInputData<-function(){
@@ -168,9 +167,12 @@ test_GSEA_run<-function(){
         all( gsea_result$Accession %in%
         chip_index$Accession))
 
-    expected_ES<-c(-0.22049,0.32867,0.36344,0.27756,-0.23734,
-        0.27821,0.62676,0.54203,0.43016,0.32617,0.25807)
-    RUnit::checkEquals( gsea_result$ES, expected_ES)
+    # Checking all ChIPs done in hypoxic conditions are enriched
+    RUnit::checkTrue(
+        all(gsea_result[gsea_result$Treatment!="none", "ES"] > 0),
+        all(gsea_result[
+            gsea_result$Treatment!="none", "Arg.ES"] < dim(hypoxia)[1]/2)
+    )
     # Checking output with RES and indicator
     RUnit::checkTrue(is.list(
         GSEA_run(hypoxia$Genes, hypoxia$log2FoldChange, chip_index[1:2,],get.RES = TRUE)))

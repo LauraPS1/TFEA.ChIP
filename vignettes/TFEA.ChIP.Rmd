@@ -67,7 +67,8 @@ In case the input dataset cannot be preprocessed or the user is interested in an
 ```{r eval=TRUE,echo=TRUE,message=FALSE}
 #Conversion of hgnc to ENTREZ IDs
 GeneID2entrez(gene.IDs = c("EGLN3","NFYA","ALS2","MYC","ARNT"))
-GeneID2entrez(gene.IDs = c("Hmmr", "Tlx3", "Cpeb4"), from.Mouse = TRUE )
+# To translate from mouse IDs:
+# GeneID2entrez(gene.IDs = c("Hmmr", "Tlx3", "Cpeb4"), from.Mouse = TRUE )
 ```
 
 3.  Association analysis
