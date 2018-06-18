@@ -305,9 +305,11 @@ GR2tfbs_db <- function(Ref.db, gr.list, distanceMargin = 10, outputAsVector = FA
         list.names <- sapply(
             gr.list,
             function(i){
-                return(
-                    as.character( i@elementMetadata@listData[["mcols.Accession"]][1] )
-                )
+                tmp <- as.character( i@elementMetadata@listData[["mcols.Accession"]][1])
+                if (length(tmp) ==0){
+                    tmp <- as.character( i@elementMetadata@listData[["Accession"]][1])
+                }
+                return( tmp )
             })
          names(TFgenes_list) <- list.names
     }
@@ -1439,7 +1441,7 @@ plot_RES <- function(GSEA_result, LFC, plot_title = NULL, line.colors = NULL, li
     GSEA.runningSum <- GSEA_result[["RES"]]
 
     # Getting metadata for the plot
-    MetaData <- MetaData[ MetaData$Accession %in% Accession, ]
+    MetaData <- MetaData[ match(Accession, MetaData$Accession), ]
     RES <- lapply(
     	seq_along (Accession),
     	function(result, i){
