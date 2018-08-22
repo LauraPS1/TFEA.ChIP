@@ -4,7 +4,7 @@
 \alias{GeneID2entrez}
 \title{Translates gene IDs from Gene Symbol or Ensemble ID to Entrez ID.}
 \usage{
-GeneID2entrez(gene.IDs, return.Matrix = FALSE, from.Mouse = FALSE)
+GeneID2entrez(gene.IDs, return.Matrix = FALSE, mode = "h2h")
 }
 \arguments{
 \item{gene.IDs}{Array of Gene Symbols or Ensemble Gene IDs.}
@@ -13,7 +13,9 @@ GeneID2entrez(gene.IDs, return.Matrix = FALSE, from.Mouse = FALSE)
 one column with the gene symbols or Ensemble IDs, another with their
 respective Entrez IDs.}
 
-\item{from.Mouse}{TRUE if the input consists of mouse gene IDs.}
+\item{mode}{Specify the organism used: 'h2h' for homo sapiens gene IDs,
+'m2m' for mouse gene IDs, or 'm2h' to get the corresponding human gene
+IDs from a mouse input.}
 }
 \value{
 Vector or matrix containing the Entrez IDs(or NA) corresponding
@@ -31,4 +33,5 @@ first match and a warning is displayed.
 }
 \examples{
 GeneID2entrez(c('TNMD','DPM1','SCYL3','FGR','CFH','FUCA2','GCLC'))
+GeneID2entrez(c('Mcm6', 'Rpl7', 'Itch' ), mode ="m2m")
 }

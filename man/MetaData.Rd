@@ -4,12 +4,12 @@
 \name{MetaData}
 \alias{MetaData}
 \title{TF-gene binding DB metadata}
-\format{A data frame of 1075 observations of 6 variables}
+\format{A data frame of 1154 observations of 6 variables}
 \usage{
 data("MetaData")
 }
 \description{
-A data frame containing information of the ChIP-Seq experiments
+A data frame containing information about the ChIP-Seq experiments
 used to build the TF-gene binding DB.
 Fields in the data frame:
 \itemize{

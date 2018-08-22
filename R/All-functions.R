@@ -2,7 +2,7 @@
 #' @importFrom GenomicFeatures genes
 #' @importFrom GenomicRanges GRanges distanceToNearest
 #' @importFrom IRanges IRanges
-#' @importFrom biomaRt select useMart getLDS
+#' @importFrom biomaRt select useMart getLDS getBM
 #' @importFrom dplyr '%>%' arrange
 #' @importFrom grDevices colorRamp
 #' @importFrom stats fisher.test p.adjust
@@ -292,26 +292,33 @@ GR2tfbs_db <- function(Ref.db, gr.list, distanceMargin = 10, outputAsVector = FA
 
     # Naming every GeneSet / array in the list with their accession ID
     if ( outputAsVector == FALSE ){
-
-        list.names <- sapply(
-            TFgenes_list,
-            function( i ){
-                return( i@setName )
-            }
-        )
-
-        names(TFgenes_list) <- list.names
-    } else {
-        list.names <- sapply(
-            gr.list,
-            function(i){
-                tmp <- as.character( i@elementMetadata@listData[["mcols.Accession"]][1])
-                if (length(tmp) ==0){
-                    tmp <- as.character( i@elementMetadata@listData[["Accession"]][1])
+        if( !is.null( names( gr.list ))){
+            names(TFgenes_list) <- names(gr.list)
+        }else {
+            list.names <- sapply(
+                TFgenes_list,
+                function( i ){
+                    return( i@setName )
                 }
-                return( tmp )
-            })
-         names(TFgenes_list) <- list.names
+            )
+            names(TFgenes_list) <- list.names
+        }
+    } else {
+        if( !is.null( names( gr.list ))){
+            names(TFgenes_list) <- names(gr.list)
+        }else {
+
+            list.names <- sapply(
+                gr.list,
+                function(i){
+                    tmp <- as.character( i@elementMetadata@listData[["mcols.Accession"]][1])
+                    if (length(tmp) ==0){
+                        tmp <- as.character( i@elementMetadata@listData[["Accession"]][1])
+                    }
+                    return( tmp )
+                })
+             names(TFgenes_list) <- list.names
+        }
     }
     TFgenes_list[ sapply( TFgenes_list, is.null ) ] <- NULL
     return( TFgenes_list )
@@ -383,18 +390,20 @@ set_user_data <- function(metadata, binary_matrix) {
     assign("Mat01", binary_matrix, envir = envir)
 }
 
-preprocessInputData <- function(inputData, from.Mouse = FALSE ) {
+preprocessInputData <- function(inputData, mode = "h2h" ) {
     #' @title Extracts data from a DESeqResults object or a data frame.
     #' @description Function to extract Gene IDs, logFoldChange, and p-val
     #' values from a DESeqResults object or data frame. Gene IDs are
     #' translated to ENTREZ IDs, if possible, and the resultant data frame
     #' is sorted accordint to decreasing log2(Fold Change). Translating
     #' gene IDs from mouse to their equivalent human genes is avaible
-    #' using the option from.Mouse.
+    #' using the variable "mode".
     #' @param inputData DESeqResults object or data frame. In all cases
     #' must include gene IDs. Data frame inputs should include 'pvalue' and
     #' 'log2FoldChange' as well.
-    #' @param from.Mouse TRUE if the input consists of mouse gene IDs.
+    #' @param  mode Specify the organism used: 'h2h' for homo sapiens gene IDs,
+    #' 'm2m' for mouse gene IDs, or 'm2h' to get the corresponding human gene
+    #' IDs from a mouse input.
     #' @return A table containing Entrez Gene IDs, LogFoldChange and p-val
     #' values (both raw p-value and fdr adjusted p-value), sorted by
     #' log2FoldChange.
@@ -411,17 +420,17 @@ preprocessInputData <- function(inputData, from.Mouse = FALSE ) {
         }
 
         # check the gene ids and translate if needed
-        if ( all( grepl("^\\d*$", rownames(inputData)[1]) ) != TRUE) {
+        if ( ! all( grepl("^\\d*$", rownames(inputData) ) ) | mode == "m2h" ) {
             genes <- suppressMessages( GeneID2entrez(
                 gene.IDs = rownames( inputData ),
-                from.Mouse,
+                mode,
                 return.Matrix = TRUE))
 
-            if (from.Mouse == FALSE){
+            if ( mode %in% c("h2h","m2m") ){
                 genes <- genes[!is.na(genes$ENTREZ.ID), ]
                 inputData <- inputData[rownames(inputData) %in% genes$GENE.ID, ]
                 genes <- genes$ENTREZ.ID
-            }else{
+            } else {
                 genes <- genes[!is.na(genes$human.gene.ID), ]
                 inputData <- inputData[rownames(inputData) %in% genes$mouse.gene.ID, ]
                 genes <- genes$human.gene.ID
@@ -459,15 +468,14 @@ preprocessInputData <- function(inputData, from.Mouse = FALSE ) {
                 "fdr")
         }
         # If Gene IDs aren't in Entrez Gene ID format or come from mouse genes.
-        if (all( grepl("^\\d*$", inputData$Genes[1]) ) != TRUE |
-            from.Mouse == TRUE ) {
+        if ( ! all( grepl("^\\d*$", inputData$Genes)) | mode == "m2h" ) {
 
             genes <- suppressMessages( GeneID2entrez(
                 gene.IDs = inputData$Genes,
-                from.Mouse,
+                mode,
                 return.Matrix = TRUE))
 
-            if (from.Mouse == FALSE){
+            if (  mode %in% c("h2h","m2m")  ){
                 genes <- genes[!is.na(genes$ENTREZ.ID), ]
                 inputData <- inputData[ inputData$Genes %in% genes$GENE.ID, ]
                 inputData$Genes <- genes$ENTREZ.ID
@@ -563,7 +571,7 @@ Select_genes <- function(GeneExpression_df, max_pval = 0.05, min_pval = 0, max_L
     return(geneSelection)
 }
 
-GeneID2entrez <- function(gene.IDs, return.Matrix = FALSE, from.Mouse = FALSE) {
+GeneID2entrez <- function(gene.IDs, return.Matrix = FALSE, mode = "h2h") {
 
     #' @title Translates gene IDs from Gene Symbol or Ensemble ID to Entrez ID.
     #' @description Translates mouse or human gene IDs from Gene Symbol or
@@ -578,15 +586,21 @@ GeneID2entrez <- function(gene.IDs, return.Matrix = FALSE, from.Mouse = FALSE) {
     #' @param return.Matrix T/F. When TRUE, the function returns a matrix[n,2],
     #' one column with the gene symbols or Ensemble IDs, another with their
     #' respective Entrez IDs.
-    #' @param from.Mouse TRUE if the input consists of mouse gene IDs.
+    #' @param mode Specify the organism used: 'h2h' for homo sapiens gene IDs,
+    #' 'm2m' for mouse gene IDs, or 'm2h' to get the corresponding human gene
+    #' IDs from a mouse input.
     #' @return Vector or matrix containing the Entrez IDs(or NA) corresponding
     #' to every element of the input.
     #' @export GeneID2entrez
     #' @examples
     #' GeneID2entrez(c('TNMD','DPM1','SCYL3','FGR','CFH','FUCA2','GCLC'))
+    #' GeneID2entrez(c('Mcm6', 'Rpl7', 'Itch' ), mode ="m2m")
 
+    stopifnot( mode %in% c("h2h", "m2m", "m2h"))
 
-    if (from.Mouse == FALSE){
+    gene.IDs <- gene.IDs[ !is.na( gene.IDs ) ]
+
+    if ( mode == 'h2h'){
 
         Genes <- GenomicFeatures::genes(TxDb.Hsapiens.UCSC.hg19.knownGene)
         suppressMessages(GeneNames <- biomaRt::select(org.Hs.eg.db,
@@ -594,7 +608,7 @@ GeneID2entrez <- function(gene.IDs, return.Matrix = FALSE, from.Mouse = FALSE) {
         # suppressWarnings added to avoid 'select()' returned 1:many
         # mapping between keys and columns
 
-        if ( all( grepl("^ENSG", gene.IDs, perl = TRUE ) ) == TRUE) {
+        if ( all( grepl("^ENSG", gene.IDs, perl = TRUE ) ) ) {
             ID.type <- "ENSEMBL"
         } else {
             ID.type <- "SYMBOL"
@@ -628,10 +642,57 @@ GeneID2entrez <- function(gene.IDs, return.Matrix = FALSE, from.Mouse = FALSE) {
             return(GeneNames[tmp[!is.na(tmp)], "ENTREZID"])
         }
 
-    }else{
+    } else if( mode == "m2m" ) {
 
         biomart_test <- tryCatch(
-            {withTimeout( {tmp <- biomaRt::listMarts()},
+            {R.utils::withTimeout( {tmp <- biomaRt::listMarts()},
+                                   timeout = 3, onTimeout = "warning")},
+            error = function(w) { return( 0 ) },
+            warning = function(w){ return( 0 ) }
+        )
+        if (biomart_test == 0 ){
+            stop( paste0("We are having trouble reaching biomaRt.\n",
+                "Please, try again later."))
+        }
+
+        mouse <- biomaRt::useMart("ensembl", dataset = "mmusculus_gene_ensembl")
+        GeneNames <- biomaRt::getBM(attributes = c("ensembl_gene_id", "mgi_symbol","entrezgene"),
+                    values = "*",
+                    mart = mouse)
+
+        if ( all( grepl("^ENSM", gene.IDs, perl = TRUE ) ) ) {
+
+            ids <- GeneNames[ match( gene.IDs, GeneNames$ensembl_gene_id), c(1,3) ]
+            colnames(ids)<- c("GENE.ID", "ENTREZ.ID")
+
+        } else {
+
+            ids <- GeneNames[ match( gene.IDs, GeneNames$mgi_symbol), c(1,3) ]
+            colnames(ids)<- c("GENE.ID", "ENTREZ.ID")
+        }
+
+        message("Done! ", sum( ! is.na( ids$ENTREZ.ID ) ) ,
+            " genes of ", dim( ids )[1], " successfully translated.\n")
+
+        if (return.Matrix == TRUE) {
+            if ( sum( is.na( ids$ENTREZ.ID )) > 0) {
+                message("Couldn't find Entrez IDs for ", sum( is.na( ids$ENTREZ.ID )),
+                    " genes (NAs returned instead).\n")
+            }
+            return( ids )
+        } else {
+            if ( sum( is.na( ids$ENTREZ.ID )) > 0) {
+                message("Couldn't find human Entrez IDs for ",
+                    sum( is.na( ids$ENTREZ.ID )), " genes.\n")
+            }
+            return( ids$ENTREZ.ID )
+        }
+
+
+    } else if( mode == "m2h" ){
+
+        biomart_test <- tryCatch(
+            {R.utils::withTimeout( {tmp <- biomaRt::listMarts()},
                                    timeout = 3, onTimeout = "warning")},
             error = function(w) { return( 0 ) },
             warning = function(w){ return( 0 ) }
@@ -679,21 +740,20 @@ GeneID2entrez <- function(gene.IDs, return.Matrix = FALSE, from.Mouse = FALSE) {
             colnames(hs_ids)<- c("mouse.gene.ID", "human.gene.ID")
         }
 
-        message("Done! ", dim(hs_ids[!is.na(hs_ids$human.gene.ID),])[1],
+        message("Done! ", sum( ! is.na( hs_ids$human.gene.ID )),
             " genes of ", dim(hs_ids)[1], " successfully translated.\n")
 
         if (return.Matrix == TRUE) {
-            if (dim( hs_ids[ is.na( hs_ids$human.gene.ID ), ])[1] > 0) {
+            if ( sum( is.na( hs_ids$human.gene.ID )) > 0) {
                 message("Couldn't find human Entrez IDs for ",
-                    dim( hs_ids[ is.na( hs_ids$human.gene.ID ), ])[1],
+                     sum( is.na( hs_ids$human.gene.ID )),
                     " genes (NAs returned instead).\n")
             }
             return( hs_ids )
         } else {
-            if (dim( hs_ids[ is.na( hs_ids$human.gene.ID ), ])[1] > 0) {
+            if ( sum( is.na( hs_ids$human.gene.ID )) > 0) {
                 message("Couldn't find human Entrez IDs for ",
-                    dim( hs_ids[ is.na( hs_ids$human.gene.ID ), ])[1],
-                    " genes.\n")
+                     sum( is.na( hs_ids$human.gene.ID )),  " genes.\n")
             }
             return( hs_ids$human.gene.ID )
         }

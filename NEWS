@@ -1,0 +1,11 @@
+CHANGES IN VERSION 1.1.1
+------------------------
+
+New Features: 
+
+	* The function GeneID2entrez now suports translation
+	  from mouse ENSEMBL gene IDs and MGI symbols to mouse
+	  Entrez gene IDs
+
+	* 76 new ChIP-Seq experiments added to the database
+

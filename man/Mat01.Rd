@@ -4,14 +4,14 @@
 \name{Mat01}
 \alias{Mat01}
 \title{TF-gene binding binary matrix}
-\format{a matrix of 1075 columns and 23056 rows}
+\format{a matrix of 1154 columns and 23056 rows}
 \usage{
 data("Mat01")
 }
 \description{
-Its rows correspond to all the human genes that have been assigned
-an Entrez ID, and its columns, to every ChIP-Seq experiment in the
-database. The values are 1 – if the ChIP-Seq has a peak assigned
-to that gene – or 0 – if it hasn’t –.
+Its rows correspond to all the human genes in the Known Gene database,
+and its columns, to every ChIP-Seq experiment in the database. The values
+are 1 – if the ChIP-Seq has a peak assigned to that gene – or 0 –
+if it hasn’t –.
 }
 \keyword{datasets}

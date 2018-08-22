@@ -161,21 +161,21 @@
 
 #' TF-gene binding binary matrix
 #'
-#' Its rows correspond to all the human genes that have been assigned
-#' an Entrez ID, and its columns, to every ChIP-Seq experiment in the
-#' database. The values are 1 – if the ChIP-Seq has a peak assigned
-#' to that gene – or 0 – if it hasn’t –.
+#' Its rows correspond to all the human genes in the Known Gene database,
+#' and its columns, to every ChIP-Seq experiment in the database. The values
+#' are 1 – if the ChIP-Seq has a peak assigned to that gene – or 0 –
+#' if it hasn’t –.
 #'
 #' @docType data
 #' @keywords datasets
 #' @name Mat01
 #' @usage data("Mat01")
-#' @format a matrix of 1075 columns and 23056 rows
+#' @format a matrix of 1154 columns and 23056 rows
 "Mat01"
 
 #' TF-gene binding DB metadata
 #'
-#' A data frame containing information of the ChIP-Seq experiments
+#' A data frame containing information about the ChIP-Seq experiments
 #' used to build the TF-gene binding DB.
 #' Fields in the data frame:
 #' \itemize{
@@ -191,7 +191,7 @@
 #' @keywords datasets
 #' @name MetaData
 #' @usage data("MetaData")
-#' @format A data frame of 1075 observations of 6 variables
+#' @format A data frame of 1154 observations of 6 variables
 "MetaData"
 
 #' Data frame, output from the function getCMstats from the TFEA.ChIP package

@@ -4,14 +4,16 @@
 \alias{preprocessInputData}
 \title{Extracts data from a DESeqResults object or a data frame.}
 \usage{
-preprocessInputData(inputData, from.Mouse = FALSE)
+preprocessInputData(inputData, mode = "h2h")
 }
 \arguments{
 \item{inputData}{DESeqResults object or data frame. In all cases
 must include gene IDs. Data frame inputs should include 'pvalue' and
 'log2FoldChange' as well.}
 
-\item{from.Mouse}{TRUE if the input consists of mouse gene IDs.}
+\item{mode}{Specify the organism used: 'h2h' for homo sapiens gene IDs,
+'m2m' for mouse gene IDs, or 'm2h' to get the corresponding human gene
+IDs from a mouse input.}
 }
 \value{
 A table containing Entrez Gene IDs, LogFoldChange and p-val
@@ -24,7 +26,7 @@ values from a DESeqResults object or data frame. Gene IDs are
 translated to ENTREZ IDs, if possible, and the resultant data frame
 is sorted accordint to decreasing log2(Fold Change). Translating
 gene IDs from mouse to their equivalent human genes is avaible
-using the option from.Mouse.
+using the variable "mode".
 }
 \examples{
 data('hypoxia_DESeq',package='TFEA.ChIP')
