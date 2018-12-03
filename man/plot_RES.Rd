@@ -36,5 +36,5 @@ Function to plot all the RES stored in a GSEA_run output.
 \examples{
 data('GSEA.result','log2.FC',package = 'TFEA.ChIP')
 plot_RES(GSEA.result,log2.FC,TF=c('STAT1'),
-    Accession=c('wgEncodeEH000663','wgEncodeEH000664'))
+    Accession=c('GSM2390642','wgEncodeEH002867'))
 }

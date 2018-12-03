@@ -1,11 +1,12 @@
-CHANGES IN VERSION 1.1.1
+CHANGES IN VERSION 1.4.1
 ------------------------
 
-New Features: 
+New Features:
 
-	* The function GeneID2entrez now suports translation
-	  from mouse ENSEMBL gene IDs and MGI symbols to mouse
-	  Entrez gene IDs
+	* Integrate enrichment analysis results by TF with rankTFs().
+	  The function uses the output of getCMstats() to perform
+	  Wilcoxon rank-sum test or GSEA on the ChIPs ordered by
+	  distance score.
+	* Faster execution of GSEA_run
 
-	* 76 new ChIP-Seq experiments added to the database
 

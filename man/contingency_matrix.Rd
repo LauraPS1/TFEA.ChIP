@@ -4,7 +4,8 @@
 \alias{contingency_matrix}
 \title{Computes 2x2 contingency matrices}
 \usage{
-contingency_matrix(test_list, control_list, chip_index = get_chip_index())
+contingency_matrix(test_list, control_list,
+  chip_index = get_chip_index())
 }
 \arguments{
 \item{test_list}{List of gene Entrez IDs}

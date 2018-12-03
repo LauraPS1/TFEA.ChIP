@@ -419,6 +419,8 @@ preprocessInputData <- function(inputData, mode = "h2h" ) {
                 "Please install it.", call. = FALSE)
         }
 
+        inputData <- as.data.frame( inputData )
+
         # check the gene ids and translate if needed
         if ( ! all( grepl("^\\d*$", rownames(inputData) ) ) | mode == "m2h" ) {
             genes <- suppressMessages( GeneID2entrez(
@@ -440,9 +442,9 @@ preprocessInputData <- function(inputData, mode = "h2h" ) {
             genes <- rownames(inputData)
         }
         # get the rest of the variables
-        log2FoldChange <- inputData@listData[["log2FoldChange"]]
-        pvalue <- inputData@listData[["pvalue"]]
-        pval.adj <- inputData@listData[["padj"]]
+        log2FoldChange <- inputData[["log2FoldChange"]]
+        pvalue <- inputData[["pvalue"]]
+        pval.adj <- inputData[["padj"]]
 
         Table <- data.frame(Genes = genes, log2FoldChange = log2FoldChange,
             pvalue = pvalue, pval.adj = pval.adj)
@@ -495,7 +497,8 @@ preprocessInputData <- function(inputData, mode = "h2h" ) {
             "a data frame as input.", call. = FALSE)}
 }
 
-Select_genes <- function(GeneExpression_df, max_pval = 0.05, min_pval = 0, max_LFC = NULL, min_LFC = NULL) {
+Select_genes <- function(GeneExpression_df, max_pval = 0.05,
+                         min_pval = 0, max_LFC = NULL, min_LFC = NULL) {
     #' @title Extracts genes according to logFoldChange and p-val limits
     #' @description Function to extract Gene IDs from a dataframe according
     #' to the established limits for log2(FoldChange) and p-value.
@@ -633,7 +636,7 @@ GeneID2entrez <- function(gene.IDs, return.Matrix = FALSE, mode = "h2h") {
                     " genes (NAs returned instead).\n")
             }
             return(data.frame(GENE.ID = gene.IDs, ENTREZ.ID = GeneNames[tmp,
-                "ENTREZID"]))
+                "ENTREZID"], stringsAsFactors = F))
         } else {
             if (length(tmp[is.na(tmp)]) > 0) {
                 message("Couldn't find Entrez IDs for ", length(tmp[is.na(tmp)]),
@@ -667,7 +670,7 @@ GeneID2entrez <- function(gene.IDs, return.Matrix = FALSE, mode = "h2h") {
 
         } else {
 
-            ids <- GeneNames[ match( gene.IDs, GeneNames$mgi_symbol), c(1,3) ]
+            ids <- GeneNames[ match( gene.IDs, GeneNames$mgi_symbol), c(2,3) ]
             colnames(ids)<- c("GENE.ID", "ENTREZ.ID")
         }
 
@@ -806,7 +809,8 @@ get_chip_index <- function(encodeFilter = FALSE, TFfilter = NULL) {
     }
 }
 
-contingency_matrix <- function(test_list, control_list, chip_index = get_chip_index()) {
+contingency_matrix <- function(test_list, control_list,
+                               chip_index = get_chip_index()) {
 
     #' @title Computes 2x2 contingency matrices
     #' @description Function to compute contingency 2x2 matrix by the partition
@@ -910,7 +914,7 @@ getCMstats <- function(contMatrix_list, chip_index = get_chip_index()) {
     names(contMatrix_list), chip_index$Accession ),]
 
   statMat <- data.frame(Accession = chip_index$Accession, TF = chip_index$TF,
-                        p.value = pvals, OR = oddsRatios)
+                        p.value = pvals, OR = oddsRatios, stringsAsFactors = F)
 
   statMat$log2.OR <- log2(statMat$OR)
   statMat$log2.OR[which(!is.finite(statMat$log2.OR))]<-NA
@@ -919,19 +923,199 @@ getCMstats <- function(contMatrix_list, chip_index = get_chip_index()) {
   statMat$log10.adj.pVal <- (-1 * (log10(statMat$adj.p.value)))
   statMat$log10.adj.pVal[which(!is.finite(statMat$log10.adj.pVal))]<-NA
 
-  statMat$distance<-apply(statMat[,c("log2.OR","log10.adj.pVal")],1,function(x) sqrt((x[1]**2)+(x[2]**2)))
-  statMat$distance<-statMat$distance*sign(statMat$log2.OR)
+  maxOR <- max(statMat$OR[ statMat$OR != Inf ])
+  minOR <- min(statMat$OR[ statMat$OR != -Inf ])
+
+  statMat$tmpOR <- statMat$OR
+  statMat$tmpOR[ statMat$OR == Inf ] <- maxOR
+  statMat$tmpOR[ statMat$OR == -Inf ] <- minOR
+
+  statMat$distance <- sapply(
+    seq_along(statMat$Accession),
+    function(i){
+        if( statMat$OR[i] > 1 ){
+            x1 <- c( 0, 1 )
+            x2 <- c( statMat$log10.adj.pVal[i], statMat$tmpOR[i])
+            d <- sqrt( sum(x1-x2)**2 )
+
+        } else if ( statMat$OR[i] <= 1 & statMat$OR[i] > 0 ) {
+            x1 <- c( 0, 1 )
+            x2 <- c( statMat$log10.adj.pVal[i], 1/statMat$tmpOR[i] )
+            d <- -1 * sqrt( sum(x1-x2)**2 )
+        } else { d <- 0 }
+
+        return(d)
+    }
+  )
+  statMat <- statMat[, colnames(statMat)!="tmpOR" ]
 
   if (!exists("MetaData")) {
     MetaData <- NULL
     data("MetaData", package = "TFEA.ChIP", envir = environment())
   }
-  statMat<-merge(MetaData[,c("Accession","Cell","Treatment")],statMat,by="Accession")
-  return(statMat[order(statMat$distance,decreasing = T,na.last = T),])
+  statMat <- merge(MetaData[,c("Accession","Cell","Treatment")],statMat,by="Accession")
+  statMat <- statMat[order(statMat$distance,decreasing = T,na.last = T),]
+  return( statMat )
 }
 
+rankTFs <- function( resultsTable,
+                     rankMethod = "gsea", makePlot = F,
+                     plotTitle = "TF ranking"){
 
-GSEA_EnrichmentScore <- function(gene.list, gene.set, weighted.score.type = 0, correl.vector = NULL) {
+    #' @title Rank the TFs in the output from 'getCMstats'
+    #' @description Rank the TFs in the output from 'getCMstats' using
+    #' Wilcoxon rank-sum test or a GSEA-like approach.
+    #' @param resultsTable Output from the function 'getCMstats'
+    #' @param rankMethod "wilcoxon" or "gsea".
+    #' @param makePlot (Optional) For rankMethod="gsea". If TRUE, generates a plot for
+    #' TFs with a p-value < 0.05.
+    #' @param plotTitle (Optional) Title for the plot.
+    #' @return data frame containing:
+    #' \itemize{
+    #'   \item For Wilcoxon rank-sum test: rank, TF name, test statistic
+    #'   ('wilc_W), p-value, Freeman's theta, epsilon-squared anf effect size
+    #'   \item For GSEA-like ranking: TF name, enrichment score, argument,
+    #'   p-value, number of ChIPs}
+    #' @export rankTFs
+    #' @examples
+    #' data('stat_mat',package = 'TFEA.ChIP')
+    #' rankTFs( stat_mat )
+
+
+    #### Input format
+    rankMethod <- tolower( rankMethod )
+    stopifnot(rankMethod %in% c("wilcoxon", "gsea"))
+
+    # check the input type ( TFEA.ChIP association analysis  )
+    cols_needed <- c("Accession","TF","distance")
+    if( any( ! cols_needed %in% colnames( resultsTable ) ) ){
+        stop("Input error: resultsTable doesn't contain all",
+             "the columns required ('Accession','TF','distance')")
+    }
+
+    #### gsea ranking
+    if( rankMethod == "gsea" ){
+
+        chipSets <- lapply(
+            unique( resultsTable$TF ),
+            function(i, tab ){
+                return( tab$Accession[ tab$TF == i ])
+            }, tab = resultsTable
+        )
+        names( chipSets ) <- unique( resultsTable$TF )
+
+        TFrank <- lapply(
+            chipSets,
+            function(i, statMat ){
+
+                tf <-  statMat$TF[ statMat$Accession == i[1] ]
+                res <- GSEA_EnrichmentScore(
+                    statMat$Accession, i, 1, statMat$distance )
+
+                shuffled <- rep( list( statMat$Accession ), 100)
+                shuffled <- lapply( shuffled, sample )
+
+                shuffled.ES <-  sapply(
+                    shuffled,
+                    function( j, i, chipDist ) {
+                        tmp.ES <- GSEA_EnrichmentScore( j , i, 1, chipDist )$ES
+                        return(tmp.ES)
+                    }, i=i, chipDist = statMat$distance )
+
+                shuffled.ES <- unlist( shuffled.ES )
+                shuffled.ES <- shuffled.ES[ !is.na(shuffled.ES) ]
+                pVal <- sum( abs(shuffled.ES) > abs(res$ES) ) / length( shuffled )
+
+                return( data.frame(
+                    "TF" = tf,
+                    "ES" = res$ES,
+                    "arg.ES" = res$arg.ES,
+                    "pVal" = pVal,
+                    "numberOfChIPs" = length(i),
+                    stringsAsFactors = F
+                ))
+            }, statMat = resultsTable
+        )
+        TFrank <- do.call( rbind, TFrank )
+
+        if( makePlot == T ){
+            plot_df <- TFrank[TFrank$pVal<0.05 & !is.na(TFrank$pVal),]
+            sub1 <- subset( plot_df, plot_df$ES > 0)
+            sub2 <- subset( plot_df, plot_df$ES < 0)
+
+            if( any( resultsTable$distance == 0 ) ){
+                mid <- max(which( resultsTable$distance ==0 )) -
+                    min( which( resultsTable$distance ==0 ) )/2
+            } else {
+                mid <- sum( resultsTable$distance > 0 ) + 0.5
+            }
+
+            p <- ggplot2::ggplot( ) +
+                ggplot2::geom_point(
+                    mapping=ggplot2::aes(x=plot_df$arg.ES, y=plot_df$ES, color=plot_df$TF) ) +
+                ggplot2::ylim( -1.5, 1.5 ) +
+                ggrepel::geom_text_repel(
+                    ggplot2::aes( x=sub1$arg.ES, y=sub1$ES, label=sub1$TF,
+                                  color=sub1$TF),
+                    data = sub1, nudge_y = 1,
+                    angle = 90, direction = "x" ) +
+                ggrepel::geom_text_repel(
+                    ggplot2::aes( x=sub2$arg.ES, y=sub2$ES, label=sub2$TF,
+                                  color=sub2$TF),
+                    data = sub2, nudge_y = -1,
+                    angle = 90, direction = "x" ) +
+                ggplot2::theme_minimal() +
+                ggplot2::geom_hline( yintercept = 0 ) +
+                ggplot2::geom_point( ggplot2::aes( x=mid, y=0 ),  color="black" ) +
+                ggplot2::guides( color = FALSE ) +
+                ggplot2::labs( title = plotTitle,
+                    y = "Enrichment Score", x= "ChIP-seq ranking")
+            p
+            return( list( TF_ranking=TFrank, TFranking_plot = p ))
+        } else{ return(TFrank) }
+
+        #### Wilcoxon rank-sum test
+    } else if( rankMethod == "wilcoxon" ){
+
+        chip_ranking <- data.frame(
+            acc = resultsTable$Accession,
+            TF = resultsTable$TF,
+            rank = c(1:length( resultsTable$Accession )),
+            stringsAsFactors = F
+        )
+
+        TF_wilcox <- lapply(
+            unique( chip_ranking$TF ),
+            function(i, chip_ranking){
+
+                tmp <- chip_ranking[, c(2:3)]
+                tmp$TF[ tmp$TF != i ] <- "other"
+                tmp$TF <- as.factor(tmp$TF)
+
+                wilTest <- stats::wilcox.test( rank ~ TF, data=tmp )
+
+                return( data.frame(
+                    TF = i,
+                    wilc_W = wilTest[["statistic"]],
+                    wilc_pval = wilTest[["p.value"]],
+                    freeman_theta = rcompanion::freemanTheta(x = tmp$rank, g = tmp$TF ),
+                    epsilon_squared = rcompanion::epsilonSquared( x = tmp$rank, g = tmp$TF ),
+                    wilc_r = rcompanion::wilcoxonR( x = tmp$rank, g = tmp$TF ),
+                    stringsAsFactors = F
+                ))
+            }, chip_ranking = chip_ranking
+        )
+        TF_wilcox <- do.call( rbind, TF_wilcox)
+        TF_wilcox$rank <- 1:dim( TF_wilcox )[1]
+        rownames( TF_wilcox ) <- TF_wilcox$rank
+        TF_wilcox <- TF_wilcox[, c(7,1:6)]
+
+        return( TF_wilcox )
+    }
+}
+
+GSEA_EnrichmentScore <- function(gene.list, gene.set,
+                                 weighted.score.type = 0, correl.vector = NULL) {
 
     # Computes the weighted GSEA score of gene.set in gene.list. Developed by
     # The Broad Institute
@@ -974,8 +1158,8 @@ GSEA_EnrichmentScore <- function(gene.list, gene.set, weighted.score.type = 0, c
         norm.no.tag <- 1/Nm
         RES <- cumsum(tag.indicator * correl.vector * norm.tag -
             no.tag.indicator * norm.no.tag)
-        max.ES <- max(RES)
-        min.ES <- min(RES)
+        max.ES <- max( RES, na.rm = T )
+        min.ES <- min( RES, na.rm = T )
         if (abs(max.ES) > abs(min.ES)) {
             # ES <- max.ES
             ES <- signif(max.ES, digits = 5)
@@ -996,24 +1180,65 @@ GSEA_EnrichmentScore <- function(gene.list, gene.set, weighted.score.type = 0, c
     }
 }
 
-GSEA_Shuffling <- function(gene.list, permutations) {
+GSEA_ESpermutations <- function(gene.list, gene.set, weighted.score.type = 0,
+                                correl.vector = NULL, perms = 1000 ) {
 
-    #' @title Function to create shuffled gene lists to run GSEA.
-    #' @description Function to create shuffled gene lists to run GSEA.
+    #' @title Calculate enrichment scores for a permutation test.
+    #' @description Function to calculate enrichment scores over a randomly ordered
+    #' gene list.
     #' @param gene.list Vector of gene Entrez IDs.
-    #' @param permutations Number of shuffled gene vector IDs required.
-    #' @return Vector of randomly arranged Entrez IDs.
+    #' @param gene.set A gene set, e.g. gene IDs corresponding to a ChIP-Seq
+    #' experiment's peaks.
+    #' @param weighted.score.type Type of score: weight:
+    #' 0 (unweighted = Kolmogorov-Smirnov), 1 (weighted), and 2 (over-weighted)
+    #' @param correl.vector A vector with the coorelations (such as signal to
+    #' noise scores) corresponding to the genes in the gene list
+    #' @param perms Number of permutations
+    #' @return Vector of Enrichment Scores for a permutation test.
     # examples
-    # GSEA_Shuffling(gene.list,1000)
+    # GSEA_EnrichmentScore(gene.list=c('3091','2034','405','55818'),
+    #' gene.set=c('2034','112399','405'), perms=10)
 
-    shuffledGL <- rep(list(gene.list), permutations)
+    tag.indicator <- sign(match(gene.list, gene.set, nomatch = 0))
+    no.tag.indicator <- 1 - tag.indicator
+    N <- length(gene.list)
+    Nh <- sum( gene.list %in% gene.set )
+    Nm <- N - Nh
+    if (weighted.score.type == 0) {
+        correl.vector <- rep(1, N)
+    }
+    alpha <- weighted.score.type
+    correl.vector <- abs(correl.vector^alpha)
+    sum.correl.tag <- sum(correl.vector[tag.indicator == 1])
+    if (sum.correl.tag > 0) {
+        norm.tag <- 1/sum.correl.tag
+        norm.no.tag <- 1/Nm
 
-    shuffledGL <- lapply(shuffledGL, sample)
+        pES <- sapply(
+            seq_len(perms),
+            function( i, mInd, cv, mNorm, nmNorm){
 
-    return(shuffledGL)
+                mInd <- sample( mInd )
+                nmInd <- 1 - mInd
+                sum.correl.tag <- sum(cv[mInd == 1])
+                mNorm <- 1/sum.correl.tag
+
+                RES <- cumsum(
+                    mInd * cv * mNorm - nmInd * nmNorm)
+                return( max( abs( RES ), na.rm = T ) )
+            },
+            mInd=tag.indicator, cv=correl.vector,
+            nmNorm=norm.no.tag
+        )
+        return( pES )
+
+    } else {
+        return( rep( NA, perms ) )
+    }
 }
 
-GSEA_run <- function(gene.list, LFC, chip_index = get_chip_index(), get.RES = FALSE, RES.filter = NULL) {
+GSEA_run <- function(gene.list, LFC, chip_index = get_chip_index(),
+                     get.RES = FALSE, RES.filter = NULL, perms = 1000 ) {
 
     #' @title Function to run a GSEA analysis
     #' @description Function to run a GSEA to analyze the distribution of TFBS
@@ -1027,10 +1252,11 @@ GSEA_run <- function(gene.list, LFC, chip_index = get_chip_index(), get.RES = FA
     #' Enrichment Scores of all/some TF.
     #' @param RES.filter (Optional) chr vector. When get.RES==TRUE, allows to
     #' choose which TF's Running Enrichment Score to store.
+    #' @param perms Number of permutations for a permutation test.
     #' @return a list of:
     #' Enrichment.table: data frame containing accession ID, Cell type, ChIP-Seq
-    #' treatment, transcription factor tested, enrichment score, adjusted p-value,
-    #' and argument of every ChIP-Seq experiment.
+    #' treatment, transcription factor tested, enrichment score, raw and
+    #' adjusted p-value, and argument of every ChIP-Seq experiment.
     #' RES (optional): list of running sums of every ChIP-Seq
     #' indicators (optional): list of 0/1 vectors that stores the matches (1)
     #' and mismatches (0) between the gene list and the gene set.
@@ -1050,9 +1276,6 @@ GSEA_run <- function(gene.list, LFC, chip_index = get_chip_index(), get.RES = FA
         data("MetaData", package = "TFEA.ChIP", envir = environment())
     }
     Mat01 <- Mat01[, colnames(Mat01) %in% chip_index$Accession]
-
-    # Generate random gene lists to get a p-value for ESs.
-    shuffledGL <- GSEA_Shuffling(gene.list, 1000)
 
     enrichmentScore <- vector()
     pval <- vector()
@@ -1076,16 +1299,13 @@ GSEA_run <- function(gene.list, LFC, chip_index = get_chip_index(), get.RES = FA
             result <- GSEA_EnrichmentScore(gene.list, chip.genes,
                 weighted.score.type = 1, correl.vector =  LFC)
 
-            shuffled.ES <- sapply(
-                shuffledGL,
-                function( j ) {
-                    tmp.ES <- GSEA_EnrichmentScore( j , chip.genes,
-                        weighted.score.type = 1, correl.vector =  LFC)[["ES"]]
-                    return(tmp.ES)
-                })
+            shuffled.ES <- GSEA_ESpermutations( gene.list , chip.genes,
+                weighted.score.type = 1, correl.vector =  LFC, perms )
+
+            shuffled.ES <- shuffled.ES[ !is.na(shuffled.ES) ]
 
             enrichmentScore <- c(enrichmentScore, result$ES)
-            pval <- c(pval, sum(abs(shuffled.ES) >= abs(result$ES))/1000)
+            pval <- c(pval, sum( shuffled.ES >= abs(result$ES))/ length(shuffled.ES))
             enrichmentArg <- c(enrichmentArg, result$arg.ES)
 
             if (get.RES == TRUE & missing(RES.filter)) {
@@ -1114,16 +1334,12 @@ GSEA_run <- function(gene.list, LFC, chip_index = get_chip_index(), get.RES = FA
     close(pbar)
     pval.adj <- stats::p.adjust(pval, "fdr")  # Adjust pvalues
 
-    enrichmentTable <- cbind(chip_index$Accession, chip_index$TF,
-        as.numeric(enrichmentScore), as.numeric(pval.adj), as.numeric(enrichmentArg))
+    enrichmentTable <- data.frame(
+        Accession = chip_index$Accession, TF = chip_index$TF,
+        ES = enrichmentScore, p.val = pval, pval.adj = pval.adj,
+        Arg.ES = enrichmentArg, stringsAsFactors = F )
 
-    enrichmentTable <- as.data.frame(enrichmentTable, stringsAsFactors = FALSE)
-    colnames(enrichmentTable) <- c("Accession", "TF", "ES", "pval.ES",
-        "Arg.ES")
-    enrichmentTable$ES <- as.numeric(enrichmentTable$ES)
-    enrichmentTable$pval.ES <- as.numeric(enrichmentTable$pval.ES)
-    enrichmentTable$Arg.ES <- as.numeric(enrichmentTable$Arg.ES)
-    enrichmentTable <- enrichmentTable[!is.na(enrichmentTable$pval.ES), ]
+    enrichmentTable <- enrichmentTable[!is.na(enrichmentTable$pval.adj), ]
 
     enrichmentTable <- merge(
         MetaData[,c("Accession","Cell","Treatment")],
@@ -1138,7 +1354,8 @@ GSEA_run <- function(gene.list, LFC, chip_index = get_chip_index(), get.RES = FA
     }
 }
 
-plot_CM <- function(CM.statMatrix, plot_title = NULL, specialTF = NULL, TF_colors = NULL) {
+plot_CM <- function(CM.statMatrix, plot_title = NULL,
+                    specialTF = NULL, TF_colors = NULL) {
 
     #' @title Makes an interactive html plot from an enrichment table.
     #' @description Function to generate an interactive html plot from a
@@ -1276,7 +1493,8 @@ plot_CM <- function(CM.statMatrix, plot_title = NULL, specialTF = NULL, TF_color
     return(p)
 }
 
-plot_ES <- function(GSEA_result, LFC, plot_title = NULL, specialTF = NULL, TF_colors = NULL, Accession = NULL, TF = NULL) {
+plot_ES <- function(GSEA_result, LFC, plot_title = NULL, specialTF = NULL,
+                    TF_colors = NULL, Accession = NULL, TF = NULL) {
 
     #' @title Plots Enrichment Score from the output of GSEA.run.
     #' @description Function to plot the Enrichment Score of every member of
@@ -1299,8 +1517,8 @@ plot_ES <- function(GSEA_result, LFC, plot_title = NULL, specialTF = NULL, TF_co
     #' @export plot_ES
     #' @examples
     #' data('GSEA.result','log2.FC',package = 'TFEA.ChIP')
-    #' TF.hightlight<-c('STAT1')
-    #' names(TF.hightlight)<-c('STAT1')
+    #' TF.hightlight<-c('EPAS1')
+    #' names(TF.hightlight)<-c('EPAS1')
     #' col<- c('red')
     #' plot_ES(GSEA.result,log2.FC,specialTF = TF.hightlight,TF_colors = col)
 
@@ -1357,7 +1575,7 @@ plot_ES <- function(GSEA_result, LFC, plot_title = NULL, specialTF = NULL, TF_co
 
     simbolo<-sapply(seq_along(enrichmentTable[,1]),
         function(EnrTable,i){
-            if (EnrTable$pval.ES[i] <= 0.05) {
+            if (EnrTable$pval.adj[i] <= 0.05) {
                 sym<-"pVal<=0.05"
             }else{ sym<-"pVal>0.05" }
             return(sym)
@@ -1389,7 +1607,7 @@ plot_ES <- function(GSEA_result, LFC, plot_title = NULL, specialTF = NULL, TF_co
             y = enrichmentTable_other$ES, type = "scatter", mode = "markers",
             text = paste0(
                 enrichmentTable_other$Accession, ": ", enrichmentTable_other$TF,
-                "<br>Pval: ", round(enrichmentTable_other$pval.ES, 3),
+                "<br>Adjusted p-value: ", round(enrichmentTable_other$pval.adj, 3),
                 "<br>Treatment: ", enrichmentTable_other$Treatment,
                 "<br>Cell: ", enrichmentTable_other$Cell),
             color = enrichmentTable_other$highlight,
@@ -1400,7 +1618,7 @@ plot_ES <- function(GSEA_result, LFC, plot_title = NULL, specialTF = NULL, TF_co
             y = enrichmentTable_highlighted$ES, type = "scatter", mode = "markers",
             text = paste0(
                 enrichmentTable_highlighted$Accession, ": ", enrichmentTable_highlighted$TF,
-                "<br>Pval: ", round(enrichmentTable_highlighted$pval.ES, 3),
+                "<br>Pval: ", round(enrichmentTable_highlighted$pval.adj, 3),
                 "<br>Treatment: ", enrichmentTable_highlighted$Treatment,
                 "<br>Cell: ", enrichmentTable_highlighted$Cell),
             color = enrichmentTable_highlighted$highlight, colors = markerColors,
@@ -1414,7 +1632,7 @@ plot_ES <- function(GSEA_result, LFC, plot_title = NULL, specialTF = NULL, TF_co
             y = enrichmentTable$ES, type = "scatter", mode = "markers",
             text = paste0(
                 enrichmentTable$Accession, ": ", enrichmentTable$TF,
-                "<br>Pval: ", round(enrichmentTable$pval.ES, 3),
+                "<br>Pval: ", round(enrichmentTable$pval.adj, 3),
                 "<br>Treatment: ", enrichmentTable$Treatment,
                 "<br>Cell: ", enrichmentTable$Cell),
             color = enrichmentTable$highlight,
@@ -1431,7 +1649,8 @@ plot_ES <- function(GSEA_result, LFC, plot_title = NULL, specialTF = NULL, TF_co
     return(graf)
 }
 
-plot_RES <- function(GSEA_result, LFC, plot_title = NULL, line.colors = NULL, line.styles = NULL, Accession = NULL, TF = NULL) {
+plot_RES <- function(GSEA_result, LFC, plot_title = NULL, line.colors = NULL,
+                     line.styles = NULL, Accession = NULL, TF = NULL) {
 
     #' @title Plots all the RES stored in a GSEA_run output.
     #' @description Function to plot all the RES stored in a GSEA_run output.
@@ -1452,7 +1671,7 @@ plot_RES <- function(GSEA_result, LFC, plot_title = NULL, line.colors = NULL, li
     #' @examples
     #' data('GSEA.result','log2.FC',package = 'TFEA.ChIP')
     #' plot_RES(GSEA.result,log2.FC,TF=c('STAT1'),
-    #'     Accession=c('wgEncodeEH000663','wgEncodeEH000664'))
+    #'     Accession=c('GSM2390642','wgEncodeEH002867'))
 
     if (!requireNamespace("plotly", quietly = TRUE)) {
         stop("plotly package needed for this function to work.",
