@@ -102,6 +102,13 @@ head(pval_mat_UPe)
 ```
 To know more about the experiments included in TFEA.ChIP's database or the conditions of a particular experiment, load the metadata table included using *data("MetaData", package = "TFEA.ChIP")*.
 
+To summarize the results by transcription factor use *rankTFs*. This function performs Wilcoxon rank-sum test or GSEA to test whether ChIPs belonging to the same TF are, as a group, significantly enriched / depleted in the results of the analysis. Be aware that in the case of transcription factors whose behavior is dependant on cellular context, integrating the results of all the related ChIPs might conceal its enrichment in a particular set of experimental conditions.
+
+```{r eval=TRUE,echo=TRUE}
+TF_ranking <- rankTFs( pval_mat_UP, rankMethod = "gsea", makePlot = T )
+TF_ranking[[ "TFranking_plot" ]]
+head( TF_ranking[[ "TF_ranking" ]] )
+```
 
 4. Plot results
 

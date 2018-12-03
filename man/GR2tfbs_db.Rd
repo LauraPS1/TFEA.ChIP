@@ -4,7 +4,8 @@
 \alias{GR2tfbs_db}
 \title{Makes a TFBS-gene binding database}
 \usage{
-GR2tfbs_db(Ref.db, gr.list, distanceMargin = 10, outputAsVector = FALSE)
+GR2tfbs_db(Ref.db, gr.list, distanceMargin = 10,
+  outputAsVector = FALSE)
 }
 \arguments{
 \item{Ref.db}{GenomicRanges object containing a database of reference
