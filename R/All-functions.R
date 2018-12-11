@@ -797,7 +797,12 @@ get_chip_index <- function(encodeFilter = FALSE, TFfilter = NULL) {
         Index <- dplyr::select(MetaData, "Accession", "TF")
         Index <- Index[Index$TF %in% TFfilter, ]
         if (encodeFilter == TRUE) {
-            Index <- Index[grepl("^wg.*", Index$Accession), ]
+
+            if (any(grepl("^wg.*", Index$Accession))){
+                Index <- Index[grepl("^wg", Index$Accession), ]
+            } else {
+                Index <- Index[grepl("^ENC", Index$Accession), ]
+            }
         }
     }
 
@@ -1291,7 +1296,9 @@ GSEA_run <- function(gene.list, LFC, chip_index = get_chip_index(),
 
     for (i in seq_along(chip_index$Accession)) {
 
-        chip.genes <- Mat01[, colnames(Mat01) == chip_index$Accession[i]]
+        if (is.matrix(Mat01)){
+            chip.genes <- Mat01[, colnames(Mat01) == chip_index$Accession[i]]
+        } else { chip.genes <- Mat01 }
         chip.genes <- names(chip.genes[chip.genes == 1])
 
         if (length(chip.genes) > 10) {
