@@ -943,12 +943,12 @@ getCMstats <- function(contMatrix_list, chip_index = get_chip_index()) {
         if( statMat$OR[i] > 1 ){
             x1 <- c( 0, 1 )
             x2 <- c( statMat$log10.adj.pVal[i], statMat$tmpOR[i])
-            d <- sqrt( sum(x1-x2)**2 )
+            d <- sqrt( sum( (x2-x1)**2 ) )
 
         } else if ( statMat$OR[i] <= 1 & statMat$OR[i] > 0 ) {
             x1 <- c( 0, 1 )
             x2 <- c( statMat$log10.adj.pVal[i], 1/statMat$tmpOR[i] )
-            d <- -1 * sqrt( sum(x1-x2)**2 )
+            d <- -1 * sqrt( sum( (x2-x1)**2 ) )
         } else { d <- 0 }
 
         return(d)
