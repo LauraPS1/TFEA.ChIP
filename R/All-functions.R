@@ -653,9 +653,11 @@ GeneID2entrez <- function(gene.IDs, return.Matrix = FALSE, mode = "h2h") {
             error = function(w) { return( 0 ) },
             warning = function(w){ return( 0 ) }
         )
-        if (biomart_test == 0 ){
-            stop( paste0("We are having trouble reaching biomaRt.\n",
-                "Please, try again later."))
+        if( is.numeric(biomart_test) ){
+            if ( biomart_test == 0 ){
+                stop( paste0("We are having trouble reaching biomaRt.\n",
+                    "Please, try again later."))
+            }
         }
 
         mouse <- biomaRt::useMart("ensembl", dataset = "mmusculus_gene_ensembl")
