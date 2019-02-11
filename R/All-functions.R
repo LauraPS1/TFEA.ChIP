@@ -418,8 +418,10 @@ preprocessInputData <- function(inputData, mode = "h2h" ) {
             stop("DESeq2 package needed for this function to work. ",
                 "Please install it.", call. = FALSE)
         }
-
-        inputData <- as.data.frame( inputData )
+        g <- inputData@rownames
+        inputData <- as.data.frame( inputData@listData )
+        rownames( inputData ) <- g
+        rm(g)
 
         # check the gene ids and translate if needed
         if ( ! all( grepl("^\\d*$", rownames(inputData) ) ) | mode == "m2h" ) {

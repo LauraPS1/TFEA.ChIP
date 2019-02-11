@@ -34,13 +34,13 @@ To extract the information from a DESeqResults object or a data frame the functi
 
 ```{r eval=TRUE,echo=TRUE,message=FALSE}
 library(TFEA.ChIP)
-data("hypoxia_DESeq","hypoxia",package="TFEA.ChIP") # load example datasets
-hypoxia_table<-preprocessInputData(hypoxia_DESeq)
-head(hypoxia_table)
+data( "hypoxia_DESeq", "hypoxia", package="TFEA.ChIP" ) # load example datasets
+hypoxia_table <- preprocessInputData( hypoxia_DESeq )
+head( hypoxia_table )
 
-head(hypoxia)
-hypoxia_table<-preprocessInputData(hypoxia)
-head(hypoxia_table)
+head( hypoxia )
+hypoxia_table <- preprocessInputData( hypoxia )
+head( hypoxia_table )
 
 ```
 
@@ -54,11 +54,11 @@ After running *preprocessInputData*, your dataset will be ready to use with the 
 As indicated before, for this analysis, we must provide a list of genes are considered differentially induced and a list of control genes whose expression is not altered in the analyzed experiment. For that we will use the function *Select_genes*:
 ```{r eval=TRUE,echo=TRUE}
 #extract vector with names of upregulated genes
-Genes.Upreg <- Select_genes(hypoxia_table,min_LFC = 1)
+Genes.Upreg <- Select_genes( hypoxia_table, min_LFC = 1 )
 #extract vector with names of non-responsive genes
-Genes.Control <- Select_genes(hypoxia_table,
+Genes.Control <- Select_genes( hypoxia_table,
     min_pval = 0.5, max_pval = 1,
-    min_LFC = -0.25, max_LFC = 0.25)
+    min_LFC = -0.25, max_LFC = 0.25 )
 ```
 
 2. Translate the gene IDs to Entrez Gene IDs
@@ -66,9 +66,9 @@ Genes.Control <- Select_genes(hypoxia_table,
 In case the input dataset cannot be preprocessed or the user is interested in analyzing a particular set of genes that doesn't come from the input dataset, translating the IDs to Entrez Gene ID format is required. To that end its available the function *GeneID2entrez*:
 ```{r eval=TRUE,echo=TRUE,message=FALSE}
 #Conversion of hgnc to ENTREZ IDs
-GeneID2entrez(gene.IDs = c("EGLN3","NFYA","ALS2","MYC","ARNT"))
+GeneID2entrez( gene.IDs = c("EGLN3","NFYA","ALS2","MYC","ARNT" ) )
 # To translate from mouse IDs:
-# GeneID2entrez(gene.IDs = c("Hmmr", "Tlx3", "Cpeb4"), from.Mouse = TRUE )
+# GeneID2entrez( gene.IDs = c( "Hmmr", "Tlx3", "Cpeb4" ), from.Mouse = TRUE )
 ```
 
 3.  Association analysis
@@ -84,9 +84,9 @@ In this step, we will construct a contingency table for each of the factors stor
 Then, we will apply Fisher's exact test to each contingency table to test the null hypothesis that factor binding and differential expression are independent. In addition, to the raw p-values the function also return the FDR-adjusted values to correct for multiple testing.
 
 ```{r eval=TRUE,echo=TRUE}
-CM_list_UP <- contingency_matrix(Genes.Upreg,Genes.Control) #generates list of contingency tables, one per dataset
-pval_mat_UP <- getCMstats(CM_list_UP) #generates list of p-values and OR from association test
-head(pval_mat_UP)
+CM_list_UP <- contingency_matrix( Genes.Upreg, Genes.Control ) #generates list of contingency tables, one per dataset
+pval_mat_UP <- getCMstats( CM_list_UP ) #generates list of p-values and OR from association test
+head( pval_mat_UP )
 ```
 
 In this example, all 1122 datasets in the internal database were used in the analysis. However, we can restrict the analysis to a specific subset of the database and/or a given set of transcription factors. To this end we can produce and index of the tables of interest with the function *get_chip_index* and pass this index as an additional argument to *contingency_matrix*. 
@@ -94,17 +94,17 @@ Finally, note that the list of control genes is optional. If not supplied, all h
 
 
 ```{r eval=TRUE,echo=TRUE}
-chip_index<-get_chip_index(TFfilter = c("HIF1A","EPAS1","ARNT")) #restrict the analysis to datasets assaying these factors
-chip_index<-get_chip_index(encodeFilter = TRUE) # Or select ENCODE datasets only
-CM_list_UPe <- contingency_matrix(Genes.Upreg,Genes.Control,chip_index) #generates list of contingency tables
-pval_mat_UPe <- getCMstats(CM_list_UPe,chip_index) #generates list of p-values and ORs
-head(pval_mat_UPe)
+chip_index <- get_chip_index( TFfilter = c( "HIF1A","EPAS1","ARNT" ) ) #restrict the analysis to datasets assaying these factors
+chip_index <- get_chip_index( encodeFilter = TRUE ) # Or select ENCODE datasets only
+CM_list_UPe <- contingency_matrix( Genes.Upreg, Genes.Control, chip_index ) #generates list of contingency tables
+pval_mat_UPe <- getCMstats( CM_list_UPe, chip_index ) #generates list of p-values and ORs
+head( pval_mat_UPe )
 ```
 To know more about the experiments included in TFEA.ChIP's database or the conditions of a particular experiment, load the metadata table included using *data("MetaData", package = "TFEA.ChIP")*.
 
-To summarize the results by transcription factor use *rankTFs*. This function performs Wilcoxon rank-sum test or GSEA to test whether ChIPs belonging to the same TF are, as a group, significantly enriched / depleted in the results of the analysis. Be aware that in the case of transcription factors whose behavior is dependant on cellular context, integrating the results of all the related ChIPs might conceal its enrichment in a particular set of experimental conditions.
+To summarize the results by transcription factor use *rankTFs*. This function performs Wilcoxon rank-sum test or GSEA to test whether ChIPs belonging to the same TF are, as a group, significantly enriched / depleted in the results of the analysis. Be aware that in the case of transcription factors whose behavior is dependent on cellular context, integrating the results of all the related ChIPs might conceal its enrichment in a particular set of experimental conditions.
 
-```{r eval=TRUE,echo=TRUE}
+```{r eval=TRUE, echo=TRUE, fig.width=8, fig.height=4}
 TF_ranking <- rankTFs( pval_mat_UP, rankMethod = "gsea", makePlot = T )
 TF_ranking[[ "TFranking_plot" ]]
 head( TF_ranking[[ "TF_ranking" ]] )
@@ -115,7 +115,7 @@ head( TF_ranking[[ "TF_ranking" ]] )
 The table of results generated by *getCMstats* can be parsed to select candidate TF. The function *plot_CM* uses the package *plotly* to generate an interactive plot representing the p-value against the odd-ratio that is very helpful to explore the results.
 
 ```{r eval=FALSE,echo=TRUE}
-plot_CM(pval_mat_UP) #plot p-values against ORs
+plot_CM( pval_mat_UP ) #plot p-values against ORs
 ```
 ![Snapshot of a plot generated with plot_CM.](CMplot1.png)
 
@@ -123,10 +123,10 @@ In fact, the exploration of this graph shows a strong enrichment for several HIF
 
 
 ```{r eval=FALSE,echo=TRUE}
-HIFs<-c("EPAS1","HIF1A","ARNT")
-names(HIFs)<-c("EPAS1","HIF1A","ARNT")
-col<-c("red","blue","green")
-plot_CM(pval_mat_UP,specialTF = HIFs,TF_colors = col) #plot p-values against ORs highlighting indicated TFs
+HIFs <- c( "EPAS1","HIF1A","ARNT" )
+names(HIFs) <- c( "EPAS1","HIF1A","ARNT" )
+col <- c( "red","blue","green" )
+plot_CM( pval_mat_UP, specialTF = HIFs, TF_colors = col ) #plot p-values against ORs highlighting indicated TFs
 ```
 ![Snapshot of a plot generated with plot_CM.](CMplot2.png)
 
@@ -141,7 +141,7 @@ The GSEA analysis implemented in the TFEA.ChIP package requires as input a sorte
 By default, the analysis will include all the ChIP-Seq experiments available in the database. However, this analysis might take several minutes to run. To restrict the analysis to a subset of the database we can generate an index variable and pass it to the function *GSEA_run*. This will limit the analysis to the ChIP-Seq datasets of the user's choosing. This index variable can be generated using the function *get_chip_index* and allows the user to select the whole database, the set of ChIP-Seq experiments produced by the ENCODE project ("encode") or a specific subset of transcription factors (as a vector containing the TF names).
 
 ```{r eval=TRUE,echo=TRUE}
-chip_index<-get_chip_index(TFfilter = c("HIF1A","EPAS1","ARNT")) #restrict the analysis to datasets assaying these factors
+chip_index <- get_chip_index( TFfilter = c( "HIF1A","EPAS1","ARNT" ) ) #restrict the analysis to datasets assaying these factors
 ```
 
 3. Run the GSEA analysis
@@ -153,7 +153,7 @@ The function *GSEA_run* will perform a GSEA-based analysis on the input gene lis
 * When **True**, the function returns a list of three elements. The first element (*Enrichment.table*) is the enrichment data frame previously mentioned. The second element (*RES*) is a list of vectors containing the *Running Enrichment Scores* values (see GSEA documentation, http://software.broadinstitute.org/gsea/doc/GSEAUserGuideTEXT.htm#_Interpreting_GSEA_Results) for each of the sorted genes tested against each one of the analyzed ChIP datasets. The third element (*indicators*) is a list of vectors indicating if the sorted genes were bound by the factor analyzed in each ChIP dataset. 
 
 ```{r eval=TRUE,echo=TRUE,results='hide'}
-GSEA.result <- GSEA_run(hypoxia_table$Genes, hypoxia_table$log2FoldChange, chip_index, get.RES = TRUE) #run GSEA analysis
+GSEA.result <- GSEA_run( hypoxia_table$Genes, hypoxia_table$log2FoldChange, chip_index, get.RES = TRUE) #run GSEA analysis
 ```
 ```{r eval=TRUE,echo=TRUE}
 head(GSEA.result[["Enrichment.table"]])
@@ -172,10 +172,10 @@ TFEA.ChIP includes two functions that use the package *plotly* to generate inter
   We can choose to highlight ChIP-Seq from specific transcription factors plotting them in a particular color.
 
 ```{r eval=FALSE,echo=TRUE}
-TF.hightlight<-c("EPAS1","ARNT")
-names(TF.hightlight)<-c("EPAS1","ARNT")
-col<- c("red","blue")
-plot_ES(GSEA.result,LFC = hypoxia_table$log2FoldChange,specialTF = TF.hightlight,TF_colors = col)
+TF.hightlight <- c( "EPAS1","ARNT" )
+names( TF.hightlight ) <- c( "EPAS1","ARNT" )
+col <- c( "red","blue" )
+plot_ES( GSEA.result, LFC = hypoxia_table$log2FoldChange, specialTF = TF.hightlight, TF_colors = col)
 ```
 ![Snapshot of a plot generated with plot_ES.](GSEAplot1.png)
 
@@ -184,7 +184,9 @@ plot_ES(GSEA.result,LFC = hypoxia_table$log2FoldChange,specialTF = TF.hightlight
   This function will plot **all** the RES stored in the *GSEA_run* output. It is only recommended to restrict output to specific TF and/or datasets by setting the parameters *TF* and/or *Accession* respectively:
     
 ```{r eval=FALSE, echo=TRUE}
-plot_RES(GSEA_result = GSEA.result,LFC = hypoxia_table$log2FoldChange,TF=c("EPAS1"),Accession=c("GSM2390642","GSM1642766"))
+plot_RES( 
+    GSEA_result = GSEA.result, LFC = hypoxia_table$log2FoldChange,
+    TF = c( "EPAS1" ), Accession = c( "GSM2390642", "GSM1642766" ) )
 ```
 ![Snapshot of a plot generatd with plot_RES.](GSEAplot2.png)
 
@@ -205,12 +207,12 @@ Specify the folder where the ChIP-Seq files are stored, create an array with the
 Set a *for* loop to convert all your files to GenomicRanges objects using *txt2GR*. Please note that, by default, only peaks with an associated p-value of 0.05 (for narrow peaks files) or 1e-5 (for MACS files) will be kept. The user can modify the default values by setting the alpha argument to the desired threshold p-value.
 
 ```{r eval=FALSE,echo=TRUE}
-folder<-"~/peak.files.folder"
-File.list<-dir(folder)
-format<-"macs"
+folder <- "~/peak.files.folder"
+File.list<-dir( folder )
+format <- "macs"
 
 gr.list <- lapply(
-    seq_along(File.list),
+    seq_along( File.list ),
     function( File.list, myMetaData, format ){
         
         tmp<-read.table( File.list[i], ..., stringsAsFactors = FALSE )
@@ -228,9 +230,9 @@ gr.list <- lapply(
 ```
 ```{r eval=TRUE,echo=TRUE}
 # As an example of the output
-data("ARNT.peaks.bed","ARNT.metadata",package = "TFEA.ChIP") # Loading example datasets for this function
-ARNT.gr<-txt2GR(ARNT.peaks.bed,"macs1.4",ARNT.metadata)
-head(ARNT.gr,n=2)
+data( "ARNT.peaks.bed","ARNT.metadata", package = "TFEA.ChIP" ) # Loading example datasets for this function
+ARNT.gr <- txt2GR( ARNT.peaks.bed, "macs1.4", ARNT.metadata )
+head( ARNT.gr, n=2 )
 ```
 
 2. [Optional] Dnase Hypersensitive Sites
@@ -241,25 +243,25 @@ The database of gene-associated DHSs is generated from Encode's Master DNaseI HS
   i) Load Encode's Master DNaseI HS and convert it to a Genomic Ranges object.
     
 ```{r eval=FALSE,echo=TRUE}
-dnaseClusters<-read.table(file="~/path.to.file.txt", 
-                          header = TRUE,sep="\t",stringsAsFactors = FALSE)
-dnaseClusters<-makeGRangesFromDataFrame(dnaseClusters,
-                         ignore.strand=TRUE,
-                         seqnames.field="chrom",
-                         start.field="chromStart",
-                         end.field="chromEnd")
+dnaseClusters<-read.table(
+    file="~/path.to.file.txt",
+    header = TRUE, sep="\t", stringsAsFactors = FALSE )
+dnaseClusters<-makeGRangesFromDataFrame(
+    dnaseClusters, ignore.strand=TRUE,
+    seqnames.field="chrom", start.field="chromStart",
+    end.field="chromEnd" )
 ```
 
   ii) Select the Dnase hypersensitive sites that are 1Kb or closer to a gene and assign a gene ID to every Dnase HS that remains.
 
 ```{r eval=FALSE,echo=TRUE}
-txdb<-TxDb.Hsapiens.UCSC.hg19.knownGene
-Genes<-genes(txdb)
+txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+Genes <- genes( txdb )
 
-near.gene<-findOverlaps(dnaseClusters, Genes, maxgap = 1000 )
+near.gene <- findOverlaps( dnaseClusters, Genes, maxgap = 1000 )
 
-dnase.sites.list<-queryHits(near.gene)
-near.gene<-subjectHits(near.gene)
+dnase.sites.list <- queryHits( near.gene )
+near.gene <- subjectHits( near.gene )
 
 gene_ids <- Genes[ near.gene ]$gene_id
 DHS.database <- dnaseClusters[ dnase.sites.list ]
@@ -274,20 +276,20 @@ These steps can be modified to generate a new GRanges object containing custom D
 The function *GR2tfbs_db* assigns the TFBS peaks in the ChIP datasets stored in *gr.list* to a gene. To this end, a ChIP peak overlaping a Dnase HS region receive the gene label associated to that region. By default the function also assigns the gene name when the ChIP peak does not overlap a Dnase region but maps at less than 10 nucleotides from it. This behaviour can be modified by setting the argument *distanceMargin* to the desired value (by default distanceMargin = 10 bases).
 
 ```{r eval=TRUE,echo=TRUE}
-data("DnaseHS_db","gr.list", package="TFEA.ChIP") # Loading example datasets for this function
-TF.gene.binding.db<-GR2tfbs_db( DnaseHS_db, gr.list ) 
-str(TF.gene.binding.db)
+data( "DnaseHS_db", "gr.list", package="TFEA.ChIP" ) # Loading example datasets for this function
+TF.gene.binding.db <- GR2tfbs_db( DnaseHS_db, gr.list ) 
+str( TF.gene.binding.db )
 ```
 
 The function, accepts any Genomic Range object that includes a metacolumn with a gene ID (stored in the @elementMetadata@listdata[["gene_id"]] slot of the object) for each genomic segment. For example, asignation of peaks to genes can be done by providing a list of all the genes in the genome:
 
 ```{r eval=TRUE,echo=TRUE}
 library(TxDb.Hsapiens.UCSC.hg19.knownGene)
-data("gr.list", package="TFEA.ChIP") # Loading example datasets for this function
-txdb<-TxDb.Hsapiens.UCSC.hg19.knownGene
-Genes<-genes(txdb)
-TF.gene.binding.db<-GR2tfbs_db( Genes, gr.list, distanceMargin = 0 )
-str(TF.gene.binding.db)
+data( "gr.list", package="TFEA.ChIP") # Loading example datasets for this function
+txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+Genes <- genes( txdb )
+TF.gene.binding.db <- GR2tfbs_db( Genes, gr.list, distanceMargin = 0 )
+str( TF.gene.binding.db )
 ```
 
 In this case the information about Dnase hypersensitivity is disregarded and peaks are asigned to overlapping genes (or genes closer than *distanceMargin* residues).
@@ -297,12 +299,12 @@ In this case the information about Dnase hypersensitivity is disregarded and pea
 The function *makeTFBSmatrix* generates a binary matrix with a row for each human gene and a column for each independent ChIPseq dataset. The cell of the matrix contain a value of 1 if the gene is bound by the TF and 0 otherwise. This matrix and the metadata table can be used instead of the default TFBS database.
 
 ```{r eval=TRUE,echo=TRUE}
-data("tfbs.database",package = "TFEA.ChIP") # Loading example datasets for this function
-txdb<-TxDb.Hsapiens.UCSC.hg19.knownGene
-gen.list<-genes(txdb)$gene_id # selecting all the genes in knownGene
+data( "tfbs.database", package = "TFEA.ChIP" ) # Loading example datasets for this function
+txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+gen.list <- genes( txdb )$gene_id # selecting all the genes in knownGene
 
-myTFBSmatrix<-makeTFBSmatrix(gen.list,tfbs.database)
-myTFBSmatrix[2530:2533,1:3] # The gene HMGN4 (Entrez ID 10473) has TFBS for this three ChIP-Seq datasets
+myTFBSmatrix <- makeTFBSmatrix( gen.list, tfbs.database )
+myTFBSmatrix[ 2530:2533, 1:3 ] # The gene HMGN4 (Entrez ID 10473) has TFBS for this three ChIP-Seq datasets
 
 ```
 
@@ -311,5 +313,5 @@ myTFBSmatrix[2530:2533,1:3] # The gene HMGN4 (Entrez ID 10473) has TFBS for this
 At the beginning of a session, use the function *set_user_data* to use your TFBS binary matrix and metadata table with the rest of the package.
 
 ```{r eval=FALSE,echo=TRUE}
-set_user_data(binary_matrix = myTFBSmatrix, metadata = myMetaData)
+set_user_data( binary_matrix = myTFBSmatrix, metadata = myMetaData )
 ```
