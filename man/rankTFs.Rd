@@ -4,7 +4,7 @@
 \alias{rankTFs}
 \title{Rank the TFs in the output from 'getCMstats'}
 \usage{
-rankTFs(resultsTable, rankMethod = "gsea", makePlot = F,
+rankTFs(resultsTable, rankMethod = "gsea", makePlot = FALSE,
   plotTitle = "TF ranking")
 }
 \arguments{

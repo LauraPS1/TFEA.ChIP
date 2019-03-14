@@ -1,10 +1,10 @@
 ---
-title: "TFEA.ChIP: a tool kit for transcription factor binding site enrichment analysis capitalizing on ChIP-seq datasets"
+title: "TFEA.ChIP: a tool kit for transcription factor enrichment analysis capitalizing on ChIP-seq datasets"
 author: "Laura Puente-Santamaria, Luis del Peso"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{TFEA.ChIP: a tool kit for transcription factor enrichment}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -30,7 +30,10 @@ For illustration purposes we will derive the input required for both analysis fr
 
 The output of popular packages, such as DESeq2, for detection of differentially expressed genes from the analysis of count data from RNA-seq experiments produce tables with this information. The *hypoxia_DESeq* and *hypoxia* datasets are the output of a differential expression analysis performed on an RNAseq experiment analyzing the response to hypoxia of endothelial cells^[Tiana, M et al. The SIN3A histone deacetylase complex is required for a complete transcriptional response to hypoxia. https://doi.org/10.1101/182691 ] deposited at the NCBI's GEO repository (GSE89831).
 
-To extract the information from a DESeqResults object or a data frame the function *preprocessInputData* is available. Using the uption *from.Mouse = TRUE* will translate mouse gene IDs to their equivalent human gene ID.
+To extract the information from a DESeqResults object or a data frame the function *preprocessInputData* is available. 
+
+Using the option *from.Mouse = TRUE* will convert mouse gene IDs to their equivalent human gene ID, thus taking advantage of the wider abailability of ChIP-seq experiments done on human cells. This strategy relies on the overlap between human and mouse transcription regulatory mechanisms. Nevertheless, we advise to be cautious using this approach, since extrapolating results from one organism to another is not always appropiate.
+
 
 ```{r eval=TRUE,echo=TRUE,message=FALSE}
 library(TFEA.ChIP)
@@ -105,7 +108,7 @@ To know more about the experiments included in TFEA.ChIP's database or the condi
 To summarize the results by transcription factor use *rankTFs*. This function performs Wilcoxon rank-sum test or GSEA to test whether ChIPs belonging to the same TF are, as a group, significantly enriched / depleted in the results of the analysis. Be aware that in the case of transcription factors whose behavior is dependent on cellular context, integrating the results of all the related ChIPs might conceal its enrichment in a particular set of experimental conditions.
 
 ```{r eval=TRUE, echo=TRUE, fig.width=8, fig.height=4}
-TF_ranking <- rankTFs( pval_mat_UP, rankMethod = "gsea", makePlot = T )
+TF_ranking <- rankTFs( pval_mat_UP, rankMethod = "gsea", makePlot = TRUE )
 TF_ranking[[ "TFranking_plot" ]]
 head( TF_ranking[[ "TF_ranking" ]] )
 ```
