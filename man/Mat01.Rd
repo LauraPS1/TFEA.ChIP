@@ -9,9 +9,8 @@
 data("Mat01")
 }
 \description{
-Its rows correspond to all the human genes in the Known Gene database,
-and its columns, to every ChIP-Seq experiment in the database. The values
-are 1 – if the ChIP-Seq has a peak assigned to that gene – or 0 –
-if it hasn’t –.
+Its rows correspond to human genes, and its columns, to every ChIP-Seq
+experiment in the database. The values are 1 – if the ChIP-Seq
+has a peak assigned to that gene – or 0 – if it hasn’t –.
 }
 \keyword{datasets}

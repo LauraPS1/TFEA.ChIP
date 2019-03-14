@@ -14,7 +14,7 @@ test_GeneID2Entrez<-function(){
         GeneID2entrez(c("ENSG00000100644","ENSG00000116016")),
         c("3091","2034"))
     # Checking matrix output and NA return for invalid names
-    RUnit::checkTrue(
+    RUnit::checkException(
         is.na(GeneID2entrez("potato",return.Matrix = TRUE)$ENTREZ.ID))
 }
 
