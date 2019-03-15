@@ -169,7 +169,7 @@
 #' @keywords datasets
 #' @name Mat01
 #' @usage data("Mat01")
-#' @format a matrix of 1154 columns and 23056 rows
+#' @format a matrix of 1060 columns and 16797 rows
 "Mat01"
 
 #' TF-gene binding DB metadata
@@ -190,7 +190,7 @@
 #' @keywords datasets
 #' @name MetaData
 #' @usage data("MetaData")
-#' @format A data frame of 1154 observations of 6 variables
+#' @format A data frame of 1060 observations of 6 variables
 "MetaData"
 
 #' Data frame, output from the function getCMstats from the TFEA.ChIP package
