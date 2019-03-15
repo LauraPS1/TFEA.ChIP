@@ -4,7 +4,7 @@
 \name{Mat01}
 \alias{Mat01}
 \title{TF-gene binding binary matrix}
-\format{a matrix of 1154 columns and 23056 rows}
+\format{a matrix of 1060 columns and 16797 rows}
 \usage{
 data("Mat01")
 }
