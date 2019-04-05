@@ -71,7 +71,7 @@ test_get_chip_index<-function(){
     # Datasets from Encode only
     RUnit::checkEquals(
         nrow(get_chip_index(encodeFilter = TRUE)),
-        nrow(MetaData[grepl("wg",MetaData$Accession),]))
+        nrow(MetaData[grepl("^ENC",MetaData$Accession),]))
     # TF "JUND" only
     RUnit::checkEquals(
         nrow(get_chip_index(TFfilter = "JUND")),
@@ -80,13 +80,13 @@ test_get_chip_index<-function(){
 
 test_contingency_matrix<-function(){
     data("Genes.Upreg",package = "TFEA.ChIP")
-
+    data("Mat01",package = "TFEA.ChIP")
     # Sum of every contingency matrix. Since no control gene list
     # is provided, all genes not included in the test list will
     # be used as control.
     cont_mat<-contingency_matrix(Genes.Upreg)
     RUnit::checkTrue(!(FALSE %in%
-        (sapply(cont_mat,sum) == 23056))
+        (sapply(cont_mat,sum) == nrow(Mat01)))
     )
     # Size of the output when selecting ChIP-Seq datasets
     chip_index<-get_chip_index(TFfilter = "EPAS1")
