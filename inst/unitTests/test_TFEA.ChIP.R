@@ -89,7 +89,7 @@ test_contingency_matrix<-function(){
         (sapply(cont_mat,sum) == nrow(Mat01)))
     )
     # Size of the output when selecting ChIP-Seq datasets
-    chip_index<-get_chip_index(TFfilter = "EPAS1")
+    chip_index<-get_chip_index(TFfilter = "IRF1")
     RUnit::checkEquals(
         length(contingency_matrix(Genes.Upreg,chip_index = chip_index)),
         nrow(chip_index)
