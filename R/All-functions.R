@@ -599,7 +599,7 @@ GeneID2entrez <- function(gene.IDs, return.Matrix = FALSE, mode = "h2h") {
     #' @export GeneID2entrez
     #' @examples
     #' GeneID2entrez(c('TNMD','DPM1','SCYL3','FGR','CFH','FUCA2','GCLC'))
-    #' GeneID2entrez(c('Mcm6', 'Rpl7', 'Itch' ), mode ="m2m")
+    #' # GeneID2entrez(c('Mcm6', 'Rpl7', 'Itch' ), mode ="m2m")
 
     stopifnot( mode %in% c("h2h", "m2m", "m2h"))
 
