@@ -473,6 +473,7 @@ preprocessInputData <- function(inputData, mode = "h2h" ) {
         }
         # If Gene IDs aren't in Entrez Gene ID format or come from mouse genes.
         if ( ! all( grepl("^\\d*$", inputData$Genes)) | mode == "m2h" ) {
+            if( mode== "h2h" ){ inputData$Genes <- toupper( inputData$Genes ) }
             inputData$Genes <- trimws( inputData$Genes )
             genes <- suppressMessages( GeneID2entrez(
                 gene.IDs = inputData$Genes,
@@ -607,7 +608,7 @@ GeneID2entrez <- function(gene.IDs, return.Matrix = FALSE, mode = "h2h") {
     gene.IDs <- trimws( gene.IDs ) # remone any possible white space
 
     if ( mode == 'h2h'){
-        
+
         gene.IDs <- toupper(gene.IDs)  # in case any name is in lowercase.
         # suppressWarnings added to avoid 'select()' returned 1:many
         # mapping between keys and columns
