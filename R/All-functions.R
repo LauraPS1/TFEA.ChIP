@@ -473,7 +473,7 @@ preprocessInputData <- function(inputData, mode = "h2h" ) {
         }
         # If Gene IDs aren't in Entrez Gene ID format or come from mouse genes.
         if ( ! all( grepl("^\\d*$", inputData$Genes)) | mode == "m2h" ) {
-
+            inputData$Genes <- trimws( inputData$Genes )
             genes <- suppressMessages( GeneID2entrez(
                 gene.IDs = inputData$Genes,
                 mode,
