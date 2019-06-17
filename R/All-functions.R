@@ -604,11 +604,11 @@ GeneID2entrez <- function(gene.IDs, return.Matrix = FALSE, mode = "h2h") {
     stopifnot( mode %in% c("h2h", "m2m", "m2h"))
 
     gene.IDs <- gene.IDs[ !is.na( gene.IDs ) ]
-    gene.IDs <- toupper(gene.IDs)  # in case any name is in lowercase.
     gene.IDs <- trimws( gene.IDs ) # remone any possible white space
 
     if ( mode == 'h2h'){
-
+        
+        gene.IDs <- toupper(gene.IDs)  # in case any name is in lowercase.
         # suppressWarnings added to avoid 'select()' returned 1:many
         # mapping between keys and columns
         if ( all( grepl("^ENSG", gene.IDs, perl = TRUE ) ) ) {
