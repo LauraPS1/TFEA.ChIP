@@ -578,7 +578,7 @@ Select_genes <- function(GeneExpression_df, max_pval = 0.05,
 }
 
 GeneID2entrez <- function(gene.IDs, return.Matrix = FALSE, mode = "h2h") {
-
+    
     #' @title Translates gene IDs from Gene Symbol or Ensemble ID to Entrez ID.
     #' @description Translates mouse or human gene IDs from Gene Symbol or
     #' Ensemble Gene ID to Entrez Gene ID using the IDs approved by HGNC.
@@ -600,15 +600,14 @@ GeneID2entrez <- function(gene.IDs, return.Matrix = FALSE, mode = "h2h") {
     #' @export GeneID2entrez
     #' @examples
     #' GeneID2entrez(c('TNMD','DPM1','SCYL3','FGR','CFH','FUCA2','GCLC'))
-    #' # GeneID2entrez(c('Mcm6', 'Rpl7', 'Itch' ), mode ="m2m")
-
+    
     stopifnot( mode %in% c("h2h", "m2m", "m2h"))
-
+    
     gene.IDs <- gene.IDs[ !is.na( gene.IDs ) ]
     gene.IDs <- trimws( gene.IDs ) # remone any possible white space
-
+    
     if ( mode == 'h2h'){
-
+        
         gene.IDs <- toupper(gene.IDs)  # in case any name is in lowercase.
         # suppressWarnings added to avoid 'select()' returned 1:many
         # mapping between keys and columns
@@ -623,18 +622,18 @@ GeneID2entrez <- function(gene.IDs, return.Matrix = FALSE, mode = "h2h") {
                 org.Hs.eg.db,  gene.IDs,
                 c("SYMBOL", "ENTREZID"), keytype = "ALIAS" ))
         }
-
+        
         matched <- match( as.character(gene.IDs), GeneNames[, ID.type] )
         matched_2 <- match( GeneNames[, ID.type], as.character(gene.IDs) )
-
+        
         if ( sum( duplicated( matched_2[ !is.na(matched_2) ] ) ) > 0) {
             warning("Some genes returned 1:many mapping to ENTREZ ID. ",
                     "Genes were assigned the first ENTREZ ID match found.\n",
                     call. = FALSE)
         }
         message("Done! ", sum( !is.na(matched) ), " genes of ",
-                length( matched ), " successfully translated.\n")
-
+                length( matched ), " successfully converted.\n")
+        
         if ( return.Matrix == TRUE ) {
             if ( sum( is.na(matched) ) > 0 ) {
                 message("Couldn't find Entrez IDs for ", sum( is.na(matched) ),
@@ -651,126 +650,127 @@ GeneID2entrez <- function(gene.IDs, return.Matrix = FALSE, mode = "h2h") {
             }
             return( GeneNames[ matched[!is.na(matched)] , "ENTREZID"])
         }
-
+        
     } else if( mode == "m2m" ) {
-
+        
         biomart_test <- tryCatch(
             {R.utils::withTimeout( {tmp <- biomaRt::listMarts()},
                                    timeout = 3, onTimeout = "warning")},
             error = function(w) { return( 0 ) },
             warning = function(w){ return( 0 ) }
         )
-        if( is.numeric(biomart_test) ){
-            if ( biomart_test == 0 ){
-                stop( paste0("We are having trouble reaching biomaRt.\n",
-                             "Please, try again later."))
-            }
+        if ( all(biomart_test == 0) ){
+            stop( paste0("We are having trouble reaching biomaRt.\n",
+                         "Please, try again later."))
         }
-
+        
         mouse <- biomaRt::useMart("ensembl", dataset = "mmusculus_gene_ensembl")
         GeneNames <- biomaRt::getBM(
-            attributes = c("ensembl_gene_id", "mgi_symbol","entrezgene"),
+            attributes = c("ensembl_gene_id", "mgi_symbol","entrezgene_id"),
             values = "*", mart = mouse)
-
+        
         if ( all( grepl("^ENSM", gene.IDs, perl = TRUE ) ) ) {
-
+            
             ids <- GeneNames[ match( gene.IDs, GeneNames$ensembl_gene_id), c(1,3) ]
             colnames(ids)<- c("GENE.ID", "ENTREZ.ID")
-
+            
         } else {
-
+            
             ids <- GeneNames[ match( gene.IDs, GeneNames$mgi_symbol), c(2,3) ]
             colnames(ids)<- c("GENE.ID", "ENTREZ.ID")
         }
-
+        
         message("Done! ", sum( ! is.na( ids$ENTREZ.ID ) ) ,
-                " genes of ", dim( ids )[1], " successfully translated.\n")
-
+                " genes of ", dim( ids )[1], " successfully converted.\n")
+        
         if (return.Matrix == TRUE) {
             if ( sum( is.na( ids$ENTREZ.ID )) > 0) {
                 message("Couldn't find Entrez IDs for ",
-                    sum( is.na( ids$ENTREZ.ID )),
-                    " genes (NAs returned instead).\n")
+                        sum( is.na( ids$ENTREZ.ID )),
+                        " genes (NAs returned instead).\n")
             }
             return( ids )
         } else {
             if ( sum( is.na( ids$ENTREZ.ID )) > 0) {
                 message("Couldn't find human Entrez IDs for ",
-                    sum( is.na( ids$ENTREZ.ID )), " genes.\n")
+                        sum( is.na( ids$ENTREZ.ID )), " genes.\n")
             }
-            return( ids$ENTREZ.ID )
+            return( ids$ENTREZ.ID[ !is.na( ids$ENTREZ.ID ) ] )
         }
-
-
+        
+        
     } else if( mode == "m2h" ){
-
+        
         biomart_test <- tryCatch(
             {R.utils::withTimeout( {tmp <- biomaRt::listMarts()},
                                    timeout = 3, onTimeout = "warning")},
             error = function(w) { return( 0 ) },
             warning = function(w){ return( 0 ) }
         )
-        if (biomart_test == 0 ){
+        if( all(biomart_test == 0) ){
             stop( paste0("We are having trouble reaching biomaRt.\n",
                          "Please, try again later."))
         }
-
-
+        
+        
         human <- biomaRt::useMart("ensembl", dataset = "hsapiens_gene_ensembl")
         mouse <- biomaRt::useMart("ensembl", dataset = "mmusculus_gene_ensembl")
-
+        
         if ( all( grepl("^ENSM", gene.IDs, perl = TRUE ) ) == TRUE) {
-            hs_ids = getLDS(
+            hs_ids = biomaRt::getLDS(
                 attributes = c("ensembl_gene_id"), filters = "ensembl_gene_id",
                 values = gene.IDs , mart = mouse,
-                attributesL = c("entrezgene"), martL = human,
+                attributesL = c("entrezgene_id"), martL = human,
                 uniqueRows = TRUE )
-
-            # re-sorting to set gene IDs in their original order.
-            hs_ids <- hs_ids[ match( gene.IDs, hs_ids$Gene.stable.ID), ]
-            colnames(hs_ids)<- c("mouse.gene.ID", "human.gene.ID")
-
+            hs_ids <- data.frame(
+                mouse.gene.ID=gene.IDs,
+                human.gene.ID=hs_ids$NCBI.gene.ID[match( gene.IDs, hs_ids$Gene.stable.ID )  ],
+                stringsAsFactors = F
+            )
+            
         } else if ( all( grepl("^\\d*$", gene.IDs, perl = TRUE) ) == TRUE ) {
-            hs_ids = getLDS(
-                attributes = c("entrezgene"), filters = "entrezgene",
+            hs_ids = biomaRt::getLDS(
+                attributes = c("entrezgene_id"), filters = "entrezgene_id",
                 values = gene.IDs, mart = mouse,
-                attributesL = c("entrezgene"), martL = human,
+                attributesL = c("entrezgene_id"), martL = human,
                 uniqueRows = TRUE )
-
-            # re-sorting to set gene IDs in their original order.
-            hs_ids <- hs_ids[ match( gene.IDs, hs_ids$NCBI.gene.ID), ]
-            colnames(hs_ids)<- c("mouse.gene.ID", "human.gene.ID")
-
+            hs_ids <- data.frame(
+                mouse.gene.ID=gene.IDs,
+                human.gene.ID=hs_ids$NCBI.gene.ID.1[match( gene.IDs, hs_ids$NCBI.gene.ID )  ],
+                stringsAsFactors = F
+            )
+            
         } else {
-            hs_ids = getLDS(
+            hs_ids = biomaRt::getLDS(
                 attributes = c("mgi_symbol"), filters = "mgi_symbol",
                 values = gene.IDs, mart = mouse,
-                attributesL = c("entrezgene"), martL = human,
+                attributesL = c("entrezgene_id"), martL = human,
                 uniqueRows = TRUE )
-
-            # re-sorting to set gene IDs in their original order.
-            hs_ids <- hs_ids[ match( gene.IDs, hs_ids$MGI.symbol), ]
-            colnames(hs_ids)<- c("mouse.gene.ID", "human.gene.ID")
+            hs_ids <- data.frame(
+                mouse.gene.ID=gene.IDs,
+                human.gene.ID=hs_ids$NCBI.gene.ID[match( gene.IDs, hs_ids$MGI.symbol )  ],
+                stringsAsFactors = F
+            )
         }
-
+        
         message("Done! ", sum( ! is.na( hs_ids$human.gene.ID )),
-            " genes of ", dim(hs_ids)[1], " successfully translated.\n")
-
+                " genes of ", length( gene.IDs ), " successfully converted.\n")
+        
         if (return.Matrix == TRUE) {
-            if ( sum( is.na( hs_ids$human.gene.ID )) > 0) {
+            if ( any( is.na( hs_ids$human.gene.ID )) ) {
                 message("Couldn't find human Entrez IDs for ",
-                    sum( is.na( hs_ids$human.gene.ID )),
-                    " genes (NAs returned instead).\n")
+                        sum(is.na( hs_ids$human.gene.ID )),
+                        " genes (NAs returned instead).\n")
             }
             return( hs_ids )
         } else {
-            if ( sum( is.na( hs_ids$human.gene.ID )) > 0) {
+            if ( any( is.na( hs_ids$human.gene.ID )) ) {
                 message("Couldn't find human Entrez IDs for ",
-                    sum( is.na( hs_ids$human.gene.ID )),  " genes.\n")
+                        sum(is.na( hs_ids$human.gene.ID )),  " genes.\n")
             }
-            return( hs_ids$human.gene.ID )
+            return( hs_ids$human.gene.ID[ !is.na( hs_ids$human.gene.ID ) ] )
         }
-
+        
     }
 }
 
