@@ -73,7 +73,8 @@ In case the input dataset cannot be preprocessed or the user is interested in an
 #Conversion of hgnc to ENTREZ IDs
 GeneID2entrez( gene.IDs = c("EGLN3","NFYA","ALS2","MYC","ARNT" ) )
 # To translate from mouse IDs:
-# GeneID2entrez( gene.IDs = c( "Hmmr", "Tlx3", "Cpeb4" ), from.Mouse = TRUE )
+# GeneID2entrez( gene.IDs = c( "Hmmr", "Tlx3", "Cpeb4" ), mode = "m2h" ) # To get the equivalent human gene IDs
+# GeneID2entrez( gene.IDs = c( "Hmmr", "Tlx3", "Cpeb4" ), mode = "m2m" ) # To get mouse ENTREZ gene IDs
 ```
 
 3.  Association analysis
