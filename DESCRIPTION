@@ -1,7 +1,7 @@
 Package: TFEA.ChIP
 Type: Package
 Title: Analyze Transcription Factor Enrichment
-Version: 1.5.4
+Version: 1.5.5
 Author: Laura Puente Santamaría, Luis del Peso
 Maintainer: Laura Puente Santamaría <lpsantamaria@iib.uam.es>
 Description: Package to analize transcription factor enrichment in a gene set using data from ChIP-Seq experiments.
@@ -19,4 +19,4 @@ VignetteBuilder: knitr
 biocViews: Transcription, GeneRegulation, GeneSetEnrichment,
         Transcriptomics, Sequencing, ChIPSeq, RNASeq, ImmunoOncology
 NeedsCompilation: no
-Packaged: 2019-03-15 10:44:50 UTC; laura
+Packaged: 2019-10-22 06:41:44 UTC; laura
