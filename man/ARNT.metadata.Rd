@@ -4,7 +4,9 @@
 \name{ARNT.metadata}
 \alias{ARNT.metadata}
 \title{Metadata data frame}
-\format{a data frame of one row and 7 variables.}
+\format{
+a data frame of one row and 7 variables.
+}
 \usage{
 data("ARNT.metadata")
 }

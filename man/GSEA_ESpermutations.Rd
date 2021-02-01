@@ -4,8 +4,13 @@
 \alias{GSEA_ESpermutations}
 \title{Calculate enrichment scores for a permutation test.}
 \usage{
-GSEA_ESpermutations(gene.list, gene.set, weighted.score.type = 0,
-  correl.vector = NULL, perms = 1000)
+GSEA_ESpermutations(
+  gene.list,
+  gene.set,
+  weighted.score.type = 0,
+  correl.vector = NULL,
+  perms = 1000
+)
 }
 \arguments{
 \item{gene.list}{Vector of gene Entrez IDs.}

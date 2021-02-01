@@ -4,8 +4,15 @@
 \alias{plot_ES}
 \title{Plots Enrichment Score from the output of GSEA.run.}
 \usage{
-plot_ES(GSEA_result, LFC, plot_title = NULL, specialTF = NULL,
-  TF_colors = NULL, Accession = NULL, TF = NULL)
+plot_ES(
+  GSEA_result,
+  LFC,
+  plot_title = NULL,
+  specialTF = NULL,
+  TF_colors = NULL,
+  Accession = NULL,
+  TF = NULL
+)
 }
 \arguments{
 \item{GSEA_result}{Returned by GSEA_run}
@@ -38,8 +45,8 @@ the ChIPseq binding database.
 }
 \examples{
 data('GSEA.result','log2.FC',package = 'TFEA.ChIP')
-TF.hightlight<-c('EPAS1')
-names(TF.hightlight)<-c('EPAS1')
+TF.hightlight<-c('GATA2')
+names(TF.hightlight)<-c('GATA2')
 col<- c('red')
 plot_ES(GSEA.result,log2.FC,specialTF = TF.hightlight,TF_colors = col)
 }

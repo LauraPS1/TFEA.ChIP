@@ -4,7 +4,9 @@
 \name{gr.list}
 \alias{gr.list}
 \title{List of one ChIP-Seq dataset}
-\format{List of one ChIP-Seq dataset.}
+\format{
+List of one ChIP-Seq dataset.
+}
 \usage{
 data("gr.list")
 }

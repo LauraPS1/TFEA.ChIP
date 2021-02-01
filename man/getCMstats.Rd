@@ -28,6 +28,7 @@ ChIP-Seq experiment, the TF tested in that experiment, the p-value and
 the odds ratio resulting from the test.
 }
 \examples{
-data('CM_list',package = 'TFEA.ChIP')
-stats_mat_UP <- getCMstats(CM_list)
+data('Genes.Upreg',package = 'TFEA.ChIP')
+CM_list_UP <- contingency_matrix(Genes.Upreg)
+stats_mat_UP <- getCMstats(CM_list_UP)
 }

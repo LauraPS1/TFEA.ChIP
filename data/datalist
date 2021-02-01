@@ -1,6 +1,5 @@
 ARNT.metadata
 ARNT.peaks.bed
-CM_list
 DnaseHS_db
 Entrez.gene.IDs
 GSEA.result
@@ -10,5 +9,4 @@ MetaData
 gr.list
 hypoxia
 log2.FC
-stat_mat
 tfbs.database

@@ -40,18 +40,6 @@
 #' @format a data frame of 2140 rows and 4 variables.
 "ARNT.peaks.bed"
 
-#' List of contingency matrix
-#'
-#' Used to run examples. List of 10 contingency matrix, output of
-#' the function "contingency_matrix" from the TFEA.ChIP package.
-#'
-#' @docType data
-#' @keywords datasets
-#' @name CM_list
-#' @usage data("CM_list")
-#' @format a list of 10 contingency matrix.
-"CM_list"
-
 #' DHS databse
 #'
 #' Used to run examples. Part of a DHS database storing 76 sites
@@ -193,29 +181,6 @@
 #' @format A data frame of 1060 observations of 6 variables
 "MetaData"
 
-#' Data frame, output from the function getCMstats from the TFEA.ChIP package
-#'
-#' Used to run examples. Output of the function getCMstats from the
-#' TFEA.ChIP package, is a data frame storing the following fields:
-#' \itemize{
-#'   \item Accession: GEO or Encode accession ID for each ChIP-Seq dataset.
-#'   \item Cell: cell type on which the ChIP-Seq experiment was performed
-#'   \item Treatment: treatment used on the cells
-#'   \item TF: Transcription Factor tested.
-#'   \item p.value: raw p-value of the Fisher test performed on a contingency matrix for each ChIP-Seq experiment.
-#'   \item OR: Odds Ratio on the contingency matrix done for each ChIP-Seq experiment.
-#'   \item log2.OR
-#'   \item adj.p.value: p-value adjusted by FDR
-#'   \item log10.adj.pVal
-#'   \item distance: euclidean distance from (log10.adj.pval, log2.OR) to the coordinates origin.
-#' }
-#'
-#' @docType data
-#' @keywords datasets
-#' @name stat_mat
-#' @usage data("stat_mat")
-#' @format a data frame of 10 rows and 6 variables
-"stat_mat"
 
 #' TFBS database for 3 ChIP-Seq datasets.
 #'

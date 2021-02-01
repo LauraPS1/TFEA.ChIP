@@ -4,7 +4,9 @@
 \name{DnaseHS_db}
 \alias{DnaseHS_db}
 \title{DHS databse}
-\format{GenomicRanges object with 76 elements}
+\format{
+GenomicRanges object with 76 elements
+}
 \usage{
 data("DnaseHS_db")
 }

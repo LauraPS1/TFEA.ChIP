@@ -102,8 +102,9 @@ test_contingency_matrix<-function(){
 }
 
 test_getCMstats<-function(){
-    data("CM_list",package = "TFEA.ChIP")
-
+    data('Genes.Upreg',package = 'TFEA.ChIP')
+    CM_list <- contingency_matrix(Genes.Upreg)
+ 
     # Checking output size
     RUnit::checkEquals(
         nrow(getCMstats(CM_list)),

@@ -4,8 +4,12 @@
 \alias{rankTFs}
 \title{Rank the TFs in the output from 'getCMstats'}
 \usage{
-rankTFs(resultsTable, rankMethod = "gsea", makePlot = FALSE,
-  plotTitle = "TF ranking")
+rankTFs(
+  resultsTable,
+  rankMethod = "gsea",
+  makePlot = FALSE,
+  plotTitle = "TF ranking"
+)
 }
 \arguments{
 \item{resultsTable}{Output from the function 'getCMstats'}
@@ -30,6 +34,8 @@ Rank the TFs in the output from 'getCMstats' using
 Wilcoxon rank-sum test or a GSEA-like approach.
 }
 \examples{
-data('stat_mat',package = 'TFEA.ChIP')
-rankTFs( stat_mat )
+data('Genes.Upreg',package = 'TFEA.ChIP')
+CM_list_UP <- contingency_matrix(Genes.Upreg)
+stats_mat_UP <- getCMstats(CM_list_UP)
+rankTFs( stats_mat_UP )
 }

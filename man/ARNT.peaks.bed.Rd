@@ -4,7 +4,9 @@
 \name{ARNT.peaks.bed}
 \alias{ARNT.peaks.bed}
 \title{ChIP-Seq dataset}
-\format{a data frame of 2140 rows and 4 variables.}
+\format{
+a data frame of 2140 rows and 4 variables.
+}
 \usage{
 data("ARNT.peaks.bed")
 }

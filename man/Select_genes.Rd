@@ -4,8 +4,13 @@
 \alias{Select_genes}
 \title{Extracts genes according to logFoldChange and p-val limits}
 \usage{
-Select_genes(GeneExpression_df, max_pval = 0.05, min_pval = 0,
-  max_LFC = NULL, min_LFC = NULL)
+Select_genes(
+  GeneExpression_df,
+  max_pval = 0.05,
+  min_pval = 0,
+  max_LFC = NULL,
+  min_LFC = NULL
+)
 }
 \arguments{
 \item{GeneExpression_df}{A data frame with the folowing fields:

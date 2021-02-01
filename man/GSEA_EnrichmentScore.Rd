@@ -4,8 +4,12 @@
 \alias{GSEA_EnrichmentScore}
 \title{Computes the weighted GSEA score of gene.set in gene.list.}
 \usage{
-GSEA_EnrichmentScore(gene.list, gene.set, weighted.score.type = 0,
-  correl.vector = NULL)
+GSEA_EnrichmentScore(
+  gene.list,
+  gene.set,
+  weighted.score.type = 0,
+  correl.vector = NULL
+)
 }
 \arguments{
 \item{gene.list}{The ordered gene list}

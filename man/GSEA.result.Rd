@@ -4,7 +4,9 @@
 \name{GSEA.result}
 \alias{GSEA.result}
 \title{Output of the function GSEA.run from the TFEA.ChIP package}
-\format{list of three elements, an erihcment table (data frame), and two list of arrays.}
+\format{
+list of three elements, an erihcment table (data frame), and two list of arrays.
+}
 \usage{
 data("GSEA.result")
 }
