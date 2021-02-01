@@ -908,8 +908,9 @@ getCMstats <- function(contMatrix_list, chip_index = get_chip_index()) {
   #' and FDR-adjusted p-values (-10*log10 adj.pvalue).
   #' @export getCMstats
   #' @examples
-  #' data('CM_list',package = 'TFEA.ChIP')
-  #' stats_mat_UP <- getCMstats(CM_list)
+  #' data('Genes.Upreg',package = 'TFEA.ChIP')
+  #' CM_list_UP <- contingency_matrix(Genes.Upreg)
+  #' stats_mat_UP <- getCMstats(CM_list_UP)
 
   pvals <- sapply(seq_along(contMatrix_list),
                   function(lista,i) {
@@ -994,8 +995,10 @@ rankTFs <- function( resultsTable,
     #'   p-value, number of ChIPs}
     #' @export rankTFs
     #' @examples
-    #' data('stat_mat',package = 'TFEA.ChIP')
-    #' rankTFs( stat_mat )
+    #' data('Genes.Upreg',package = 'TFEA.ChIP')
+    #' CM_list_UP <- contingency_matrix(Genes.Upreg)
+    #' stats_mat_UP <- getCMstats(CM_list_UP)
+    #' rankTFs( stats_mat_UP )
 
 
     #### Input format
@@ -1067,25 +1070,27 @@ rankTFs <- function( resultsTable,
             }
 
             p <- ggplot2::ggplot( ) +
-                ggplot2::geom_point(
-                    mapping=ggplot2::aes(x=plot_df$arg.ES, y=plot_df$ES, color=plot_df$TF) ) +
-                ggplot2::ylim( -1.5, 1.5 ) +
-                ggrepel::geom_text_repel(
-                    ggplot2::aes( x=sub1$arg.ES, y=sub1$ES, label=sub1$TF,
-                                  color=sub1$TF),
-                    data = sub1, nudge_y = 1,
-                    angle = 90, direction = "x" ) +
-                ggrepel::geom_text_repel(
-                    ggplot2::aes( x=sub2$arg.ES, y=sub2$ES, label=sub2$TF,
-                                  color=sub2$TF),
-                    data = sub2, nudge_y = -1,
-                    angle = 90, direction = "x" ) +
-                ggplot2::theme_minimal() +
-                ggplot2::geom_hline( yintercept = 0 ) +
-                ggplot2::geom_point( ggplot2::aes( x=mid, y=0 ),  color="black" ) +
-                ggplot2::guides( color = FALSE ) +
-                ggplot2::labs( title = plotTitle,
-                    y = "Enrichment Score", x= "ChIP-seq ranking")
+              ggplot2::geom_point(
+                  ggplot2::aes( x = arg.ES, y = ES, color = TF),
+                  data = plot_df ) +
+              ggplot2::ylim( -1.5, 1.5 ) +
+              ggrepel::geom_text_repel( 
+                  ggplot2::aes( x = arg.ES, y = ES, label = TF,
+                                  color = TF),
+                  data = sub1, nudge_y = 1,
+                  angle = 90, direction = "x" ) +
+              ggrepel::geom_text_repel(
+                  ggplot2::aes( x = arg.ES, y = ES, label = TF,
+                                  color = TF),
+                  data = sub2, nudge_y = -1,
+                  angle = 90, direction = "x" ) +
+              ggplot2::theme_minimal() +
+              ggplot2::geom_hline( yintercept = 0 ) +
+              ggplot2::geom_point( ggplot2::aes( x=mid, y=0 ), 
+                                   color="black" ) +
+              ggplot2::guides( color = FALSE ) +
+              ggplot2::labs( title = plotTitle,
+                  y = "Enrichment Score", x= "ChIP-seq ranking")
             p
             return( list( TF_ranking=TFrank, TFranking_plot = p ))
         } else{ return(TFrank) }
@@ -1279,7 +1284,7 @@ GSEA_run <- function(gene.list, LFC, chip_index = get_chip_index(),
     #' @export GSEA_run
     #' @examples
     #' data('hypoxia',package = 'TFEA.ChIP')
-    #' preprocessInputData(hypoxia)
+    #' hypoxia <- preprocessInputData(hypoxia)
     #' chip_index<-get_chip_index(TFfilter = c('HIF1A','EPAS1','ARNT'))
     #' GSEA.result <- GSEA_run( hypoxia$Genes, hypoxia$log2FoldChange, chip_index, get.RES = TRUE)
 
@@ -1373,9 +1378,9 @@ GSEA_run <- function(gene.list, LFC, chip_index = get_chip_index(),
     }
 }
 
-plot_CM <- function(CM.statMatrix, plot_title = NULL,
-                    specialTF = NULL, TF_colors = NULL) {
-
+plot_CM <- function( CM.statMatrix, plot_title = NULL,
+    specialTF = NULL, TF_colors = NULL ) {
+    
     #' @title Makes an interactive html plot from an enrichment table.
     #' @description Function to generate an interactive html plot from a
     #' transcription factor enrichment table, output of the function
@@ -1392,129 +1397,119 @@ plot_CM <- function(CM.statMatrix, plot_title = NULL,
     #' @return plotly scatter plot.
     #' @export plot_CM
     #' @examples
-    #' data('stat_mat',package = 'TFEA.ChIP')
-    #' plot_CM(stat_mat)
-
+    #' data('Genes.Upreg',package = 'TFEA.ChIP')
+    #' CM_list_UP <- contingency_matrix( Genes.Upreg )
+    #' stats_mat_UP <- getCMstats( CM_list_UP )
+    #' plot_CM( stats_mat_UP )
+    
     if (!requireNamespace("plotly", quietly = TRUE)) {
         stop("plotly package needed for this function to work. ",
-            "Please install it.", call. = FALSE)
+             "Please install it.", call. = FALSE)
     }
-
+    
     # Checking input variables
     if (is.null(plot_title)) {
         plot_title <- "Transcription Factor Enrichment"
     }
-    if (is.null(specialTF)) {
+    if( is.null( specialTF ) ) {
         CM.statMatrix$highlight <- rep("Other", dim(CM.statMatrix)[1])
         markerColors <- c("azure4")
         names(markerColors) <- c("Other")
     }
-    if (!is.null(specialTF) & is.null(TF_colors)) {
-        TF_colors <- c("red", "blue", "green", "hotpink", "cyan",
-            "greenyellow", "gold", "darkorchid", "chocolate1",
-            "black", "lightpink", "seagreen")
-        TF_colors <- TF_colors[1:length(unique(names(specialTF)))]
-        highlight_list <- highlight_TF(CM.statMatrix, 4, specialTF,
-            TF_colors)
-        CM.statMatrix$highlight <- highlight_list[[1]]
-        markerColors <- highlight_list[[2]]
+    if( !is.null( specialTF ) & is.null( TF_colors ) ) {
+        TF_colors <- c(
+            "red", "blue", "green", "hotpink", "cyan", "greenyellow", "gold",
+            "darkorchid", "chocolate1", "black", "lightpink", "seagreen")
+        TF_colors <- TF_colors[ 1 : length( unique( names( specialTF ) ) ) ]
+        color_list <- highlight_TF( CM.statMatrix, 4, specialTF, TF_colors ) 
+        CM.statMatrix$highlight <- color_list[[ 1 ]]
+        markerColors <- color_list[[ 2 ]]
     }
     if (!is.null(specialTF) & !is.null(TF_colors)) {
-        highlight_list <- highlight_TF(CM.statMatrix, 4, specialTF,
-            TF_colors)
-        CM.statMatrix$highlight <- highlight_list[[1]]
-        markerColors <- highlight_list[[2]]
+        color_list <- highlight_TF( CM.statMatrix, 4, specialTF, TF_colors )
+        CM.statMatrix$highlight <- color_list[[ 1 ]]
+        markerColors <- color_list[[ 2 ]]
     }
     if (!exists("MetaData")) {
         MetaData <- NULL
         data("MetaData", package = "TFEA.ChIP", envir = environment())
     }
-
+    
     # Adding metadata for the plot
-    MetaData <- MetaData[MetaData$Accession %in% CM.statMatrix$Accession, ]
     MetaData <- MetaData[
         match( CM.statMatrix$Accession, MetaData$Accession), ]
     CM.statMatrix$Treatment <- MetaData$Treatment
     CM.statMatrix$Cell <- MetaData$Cell
     rm(MetaData)
-
-    # Cheking if any plot variables have an Inf value.
-    if (length(CM.statMatrix[CM.statMatrix$OR == Inf, 1]) > 0) {
-
-        warn_number <- length(CM.statMatrix[CM.statMatrix$OR == Inf, 1])
-
+    
+    # Cheking if any plot variables have a Inf values.
+    if ( sum( CM.statMatrix$OR == Inf ) > 0 ) {
+        
+        warn_number <- sum( CM.statMatrix$OR == Inf )
+        
         # Substitute Inf OR values for the maximum finite value
-        CM.statMatrix[CM.statMatrix$OR == Inf, ]$OR <-
-            rep(max(CM.statMatrix[CM.statMatrix$OR != Inf, ]$OR),
-                length(CM.statMatrix[CM.statMatrix$OR == Inf, 1]))
-
+        finMax <- max( CM.statMatrix$OR[ CM.statMatrix$OR != Inf ] )
+        CM.statMatrix[CM.statMatrix$OR == Inf, ]$OR <- finMax
+        
         warning(warn_number, " elements have an Odds Ratio of Inf.",
-            " Maximum value for OR introduced instead.")
+                " Maximum value for OR introduced instead.")
     }
-    if (length(CM.statMatrix[CM.statMatrix$OR == -Inf, 1]) > 0) {
-
-        warn_number <- dim(CM.statMatrix[CM.statMatrix$OR == -Inf,][1])
-
+    if ( sum( CM.statMatrix$OR == -Inf ) > 0) {
+        
+        warn_number <- sum( CM.statMatrix$OR == -Inf )
+        
         # Substitute -Inf OR values for the minimum finite value
-        CM.statMatrix[CM.statMatrix$OR == -Inf, ]$OR <-
-            rep(min(CM.statMatrix[CM.statMatrix$OR != -Inf, ]$OR),
-                dim(CM.statMatrix[CM.statMatrix$OR == -Inf, ])[1])
-
+        finMin <- min( CM.statMatrix$OR[ CM.statMatrix$OR != -Inf ] )
+        CM.statMatrix$OR[CM.statMatrix$OR == -Inf, ]$OR <- finMin
+        
         warning(warn_number, " elements have an Odds Ratio of -Inf. Minimum",
-            " value for OR introduced instead.")
+                " value for OR introduced instead.")
     }
-    if (dim(CM.statMatrix[CM.statMatrix$adj.p.value == 0,])[1] > 0) {
-        warn_number <- dim(CM.statMatrix[CM.statMatrix$adj.p.value == 0,][1])
-
+    if ( sum( CM.statMatrix$adj.p.value == 0 ) > 0) {
+        warn_number <- sum( CM.statMatrix$adj.p.value == 0 )
+        
         # Substitute Inf -log(pval) values for the maximum finite value
-        CM.statMatrix[CM.statMatrix$p.value == 0, "log.adj.pVal"] <-
-            rep(max(CM.statMatrix[CM.statMatrix$adj.p.value != 0, "log.adj.pVal"]),
-            dim(CM.statMatrix[CM.statMatrix$adj.p.value == 0,])[1])
-
+        finMax <- max( CM.statMatrix$log.adj.pVal[ CM.statMatrix$p.value != 0])
+        CM.statMatrix$log.adj.pVal[ CM.statMatrix$p.value == 0] <- finMax
+        
         warning(warn_number, " elements have a -log(p-Value) of Inf. ",
-            "Maximum value for -log(p-Val) introduced instead.")
+                "Maximum value for -log(p-Val) introduced instead.")
     }
-
+    
+    CM.statMatrix$pointText <- paste0(
+        CM.statMatrix$Accession, ": ", CM.statMatrix$TF,
+        "<br>Treatment: ", CM.statMatrix$Treatment,
+        "<br>Cell: ", CM.statMatrix$Cell)
+    
     if (length(markerColors) > 1) {
-        CM.statMatrix_highlighted <- CM.statMatrix[CM.statMatrix$highlight !=
-            "Other", ]
-        CM.statMatrix_other <- CM.statMatrix[CM.statMatrix$highlight ==
-            "Other", ]
-
-        p <- plotly::plot_ly(CM.statMatrix_other, x = ~log10.adj.pVal,
-            y = ~log2.OR, type = "scatter", mode = "markers",
-            text = paste0(
-                CM.statMatrix_other$Accession, ": ", CM.statMatrix_other$TF,
-                "<br>Treatment: ", CM.statMatrix_other$Treatment,
-                "<br>Cell: ", CM.statMatrix_other$Cell),
-            color = ~highlight, colors = markerColors)
-
-        p <- plotly::add_markers(p, x = CM.statMatrix_highlighted$log10.adj.pVal,
-            y = CM.statMatrix_highlighted$log2.OR, type = "scatter", mode = "markers",
-            text = paste0(
-                CM.statMatrix_highlighted$Accession, ": ", CM.statMatrix_highlighted$TF,
-                "<br>Treatment: ", CM.statMatrix_highlighted$Treatment,
-                "<br>Cell: ", CM.statMatrix_highlighted$Cell),
-            color = CM.statMatrix_highlighted$highlight,
-            colors = markerColors) %>%
-        plotly::layout(title = plot_title)
-
+        colorPoints <- CM.statMatrix[ CM.statMatrix$highlight != "Other", ]
+        bgPoints <- CM.statMatrix[ CM.statMatrix$highlight == "Other", ]
+        
+        p <- plotly::plot_ly( bgPoints, 
+            x = ~log10.adj.pVal, y = ~log2.OR, type = "scatter",
+            mode = "markers", text = ~pointText, color = ~highlight,
+            colors = markerColors )
+        
+        p <- plotly::add_markers( p,
+            x = colorPoints$log10.adj.pVal, y = colorPoints$log2.OR,
+            type = "scatter", mode = "markers", text = colorPoints$pointText,
+            color = colorPoints$highlight, colors = markerColors ) %>%
+            plotly::layout( title = plot_title )
+        
     } else {
-        p <- plotly::plot_ly(CM.statMatrix, x = ~log10.adj.pVal,
-            y = ~log2.OR, type = "scatter", mode = "markers",
-            text = paste0(CM.statMatrix$Accession, ": ", CM.statMatrix$TF,
-                "<br>Treatment: ", CM.statMatrix$Treatment,
-                "<br>Cell: ", CM.statMatrix$Cell), color = ~highlight,
-            colors = markerColors) %>%
-        plotly::layout(title = plot_title)
+        p <- plotly::plot_ly( CM.statMatrix, 
+            x = ~log10.adj.pVal, y = ~log2.OR, type = "scatter", 
+            mode = "markers", text = ~pointText, color = ~highlight,
+            colors = markerColors ) %>%
+            plotly::layout( title = plot_title )
     }
     p
     return(p)
 }
 
-plot_ES <- function(GSEA_result, LFC, plot_title = NULL, specialTF = NULL,
-                    TF_colors = NULL, Accession = NULL, TF = NULL) {
-
+plot_ES <- function( GSEA_result, LFC, plot_title = NULL, specialTF = NULL,
+    TF_colors = NULL, Accession = NULL, TF = NULL ) {
+    
     #' @title Plots Enrichment Score from the output of GSEA.run.
     #' @description Function to plot the Enrichment Score of every member of
     #' the ChIPseq binding database.
@@ -1536,140 +1531,124 @@ plot_ES <- function(GSEA_result, LFC, plot_title = NULL, specialTF = NULL,
     #' @export plot_ES
     #' @examples
     #' data('GSEA.result','log2.FC',package = 'TFEA.ChIP')
-    #' TF.hightlight<-c('EPAS1')
-    #' names(TF.hightlight)<-c('EPAS1')
+    #' TF.hightlight<-c('GATA2')
+    #' names(TF.hightlight)<-c('GATA2')
     #' col<- c('red')
     #' plot_ES(GSEA.result,log2.FC,specialTF = TF.hightlight,TF_colors = col)
-
+    
     if (!requireNamespace("plotly", quietly = TRUE)) {
         stop("plotly package needed for this function to work. ",
-            "Please install it.", call. = FALSE)
+             "Please install it.", call. = FALSE)
     }
-
+    
     if (is.data.frame(GSEA_result) == TRUE) {
-        enrichmentTable <- GSEA_result
+        enrichTab <- GSEA_result
     } else if (is.list(GSEA_result) == TRUE) {
-        enrichmentTable <- GSEA_result[["Enrichment.table"]]
+        enrichTab <- GSEA_result[["Enrichment.table"]]
     }
-
+    
+    # If plotting selected points only
     if (!is.null(Accession) | !is.null(TF)) {
         if (is.null(Accession)) {
-            Accession <- enrichmentTable[ enrichmentTable$TF %in% TF,]$Accession
+            Accession <- enrichTab[ enrichTab$TF %in% TF,]$Accession
         }
         if (is.null(TF)) {
-            TF <- enrichmentTable[ enrichmentTable$Accession %in% Accession,]$TF
+            TF <- enrichTab[ enrichTab$Accession %in% Accession,]$TF
         }
-        SS <- ((enrichmentTable$Accession %in% Accession) &
-            (enrichmentTable$TF %in% TF))
-        enrichmentTable <- enrichmentTable[which(SS), ]
+        SS <- ((enrichTab$Accession %in% Accession) &
+                   (enrichTab$TF %in% TF))
+        enrichTab <- enrichTab[which(SS), ]
     }
-
+    
+    # Default options
     if (is.null(plot_title)) {
         plot_title <- "Transcription Factor Enrichment"
     }
-
+    
     if (is.null(specialTF)) {
-        highlight_list <- rep("Other", dim(enrichmentTable)[1])
-        enrichmentTable$highlight <- highlight_list
+        color_list <- rep("Other", dim(enrichTab)[1])
+        enrichTab$highlight <- color_list
         markerColors <- c("azure4")
         names(markerColors) <- c("Other")
     }
-
+    
+    # No colors selected
     if (!is.null(specialTF) & is.null(TF_colors)) {
-        TF_colors <- c("red", "blue", "green", "hotpink", "cyan",
-            "greenyellow", "gold", "darkorchid", "chocolate1",
-            "black", "lightpink", "seagreen")
-        TF_colors <- TF_colors[1:length(unique(names(specialTF)))]
-        highlight_list <- highlight_TF(enrichmentTable, 4, specialTF,
-            TF_colors)
-        enrichmentTable$highlight <- highlight_list[[1]]
-        markerColors <- highlight_list[[2]]
+        TF_colors <- c(
+            "red", "blue", "green", "hotpink", "cyan", "greenyellow","gold",
+            "darkorchid", "chocolate1", "black", "lightpink", "seagreen")
+        TF_colors <- TF_colors[ 1 : length( unique( names( specialTF ) ) ) ]
+        color_list <- highlight_TF( enrichTab, 4, specialTF, TF_colors )
+        enrichTab$highlight <- color_list[[ 1 ]]
+        markerColors <- color_list[[ 2 ]]
     }
     if (!is.null(specialTF) & !is.null(TF_colors)) {
-        highlight_list <- highlight_TF(enrichmentTable, 4, specialTF,
-            TF_colors)
-        enrichmentTable$highlight <- highlight_list[[1]]
-        markerColors <- highlight_list[[2]]
+        color_list <- highlight_TF(enrichTab, 4, specialTF, TF_colors)
+        enrichTab$highlight <- color_list[[1]]
+        markerColors <- color_list[[2]]
     }
-
-    simbolo<-sapply(seq_along(enrichmentTable[,1]),
-        function(EnrTable,i){
-            if (EnrTable$pval.adj[i] <= 0.05) {
-                sym<-"pVal<=0.05"
-            }else{ sym<-"pVal>0.05" }
-            return(sym)
-        },
-        EnrTable = enrichmentTable)
-    enrichmentTable$symbol <- simbolo
-
+    
+    enrichTab$symbol <- "pVal>0.05"
+    enrichTab$symbol[ enrichTab$pval.adj <= 0.05 ] <- "pVal<=0.05"
+    
     # Adding metadata
     if (!exists("MetaData")) {
         MetaData <- NULL
         data("MetaData", package = "TFEA.ChIP", envir = environment())
     }
-
-    MetaData <- MetaData[MetaData$Accession %in% enrichmentTable$Accession, ]
-    MetaData <- MetaData[
-        match( enrichmentTable$Accession, MetaData$Accession), ]
-    enrichmentTable$Treatment <- MetaData$Treatment
-    enrichmentTable$Cell <- MetaData$Cell
+    
+    MetaData <- MetaData[ match( enrichTab$Accession, MetaData$Accession), ]
+    enrichTab$Treatment <- MetaData$Treatment
+    enrichTab$Cell <- MetaData$Cell
     rm(MetaData)
-
-    if (length(markerColors) > 1 &
-        length(unique(enrichmentTable$TF)) > length( specialTF ) ) {
-        enrichmentTable_highlighted <- enrichmentTable[enrichmentTable$highlight !=
-            "Other", ]
-        enrichmentTable_other <- enrichmentTable[enrichmentTable$highlight ==
-            "Other", ]
-
-        p <- plotly::plot_ly(enrichmentTable_other, x = enrichmentTable_other$Arg.ES,
-            y = enrichmentTable_other$ES, type = "scatter", mode = "markers",
-            text = paste0(
-                enrichmentTable_other$Accession, ": ", enrichmentTable_other$TF,
-                "<br>Adjusted p-value: ", round(enrichmentTable_other$pval.adj, 3),
-                "<br>Treatment: ", enrichmentTable_other$Treatment,
-                "<br>Cell: ", enrichmentTable_other$Cell),
-            color = enrichmentTable_other$highlight,
-            colors = markerColors, symbol = enrichmentTable_other$symbol,
-            symbols = c("x", "circle"))
-
-        p <- plotly::add_markers(p, x = enrichmentTable_highlighted$Arg.ES,
-            y = enrichmentTable_highlighted$ES, type = "scatter", mode = "markers",
-            text = paste0(
-                enrichmentTable_highlighted$Accession, ": ", enrichmentTable_highlighted$TF,
-                "<br>Pval: ", round(enrichmentTable_highlighted$pval.adj, 3),
-                "<br>Treatment: ", enrichmentTable_highlighted$Treatment,
-                "<br>Cell: ", enrichmentTable_highlighted$Cell),
-            color = enrichmentTable_highlighted$highlight, colors = markerColors,
-            symbol = enrichmentTable_highlighted$symbol, symbols = c("x",
-                "circle")) %>%
-        plotly::layout(title = plot_title,
-            xaxis = list(title = "Argument"), yaxis = list(title = "ES"))
-
+    
+    
+    enrichTab$pointText = paste0(
+        enrichTab$Accession, ": ", enrichTab$TF, "<br>Adjusted p-value: ",
+        round( enrichTab$pval.adj, 3 ), "<br>Treatment: ", enrichTab$Treatment,
+        "<br>Cell: ", enrichTab$Cell )
+    
+    multicolor <- length(markerColors) > 1 &
+        length( unique( enrichTab$TF ) ) > length( specialTF )
+    
+    if ( multicolor ) {
+        colorPoints <- enrichTab[ enrichTab$highlight != "Other", ]
+        bgPoints <- enrichTab[ enrichTab$highlight == "Other", ]
+        
+        p <- plotly::plot_ly( bgPoints,
+            x = bgPoints$Arg.ES, y = bgPoints$ES, type = "scatter",
+            mode = "markers", text = bgPoints$pointText,
+            color = bgPoints$highlight, colors = markerColors,
+            symbol = bgPoints$symbol, symbols = c( "x", "circle" ) )
+        
+        p <- plotly::add_markers( p, 
+            x = colorPoints$Arg.ES, y = colorPoints$ES, type = "scatter",
+            mode = "markers", text = colorPoints$pointText,
+            color = colorPoints$highlight, colors = markerColors,
+            symbol = colorPoints$symbol, symbols = c("x", "circle") ) %>%
+            plotly::layout( title = plot_title,
+                xaxis = list(title = "Argument"), yaxis = list(title = "ES") )
+        
     } else {
-        p <- plotly::plot_ly(enrichmentTable, x = enrichmentTable$Arg.ES,
-            y = enrichmentTable$ES, type = "scatter", mode = "markers",
-            text = paste0(
-                enrichmentTable$Accession, ": ", enrichmentTable$TF,
-                "<br>Pval: ", round(enrichmentTable$pval.adj, 3),
-                "<br>Treatment: ", enrichmentTable$Treatment,
-                "<br>Cell: ", enrichmentTable$Cell),
-            color = enrichmentTable$highlight,
-            colors = markerColors, symbol = enrichmentTable$symbol,
-            symbols = c("x", "circle")) %>%
-        plotly::layout(title = plot_title,
-            xaxis = list(title = "Argument"), yaxis = list(title = "ES"))
+        p <- plotly::plot_ly(enrichTab,
+            x = enrichTab$Arg.ES, y = enrichTab$ES, type = "scatter", 
+            mode = "markers", text = enrichTab$text, 
+            color = enrichTab$highlight, colors = markerColors, 
+            symbol = enrichTab$symbol, symbols = c( "x", "circle" ) ) %>%
+            plotly::layout( title = plot_title,
+                xaxis = list( title = "Argument"), yaxis = list(title = "ES"))
     }
     # Adding log2(Fold Change) bar to the plot
-    LFC.bar <- get_LFC_bar(LFC)
-    graf <- plotly::subplot(p, LFC.bar, shareX = TRUE, nrows = 2,
-        heights = c(0.95, 0.05), titleY = TRUE)
+    LFCbar <- get_LFC_bar( LFC )
+    graf <- plotly::subplot( p, 
+        LFCbar, shareX = TRUE, nrows = 2, heights = c(0.95, 0.05),
+        titleY = TRUE)
     graf
     return(graf)
 }
 
-plot_RES <- function(GSEA_result, LFC, plot_title = NULL, line.colors = NULL,
-                     line.styles = NULL, Accession = NULL, TF = NULL) {
+plot_RES <- function( GSEA_result, LFC, plot_title = NULL, line.colors = NULL,
+    line.styles = NULL, Accession = NULL, TF = NULL ) {
 
     #' @title Plots all the RES stored in a GSEA_run output.
     #' @description Function to plot all the RES stored in a GSEA_run output.
@@ -1689,8 +1668,9 @@ plot_RES <- function(GSEA_result, LFC, plot_title = NULL, line.colors = NULL,
     #' @export plot_RES
     #' @examples
     #' data('GSEA.result','log2.FC',package = 'TFEA.ChIP')
-    #' plot_RES(GSEA.result,log2.FC,TF=c('STAT1'),
-    #'     Accession=c('GSM2390642','wgEncodeEH002867'))
+    #' plot_RES(GSEA.result,log2.FC,TF=c('GATA3'),
+    #'     Accession=c('ENCSR000BMX.GATA3.T47D',
+    #'     'ENCSR000EVW.GATA2.ENDOTHELIAL_UMBILICAL_VEIN'))
 
     if (!requireNamespace("plotly", quietly = TRUE)) {
         stop("plotly package needed for this function to work.",
@@ -1701,117 +1681,102 @@ plot_RES <- function(GSEA_result, LFC, plot_title = NULL, line.colors = NULL,
         MetaData <- NULL
         data("MetaData", package = "TFEA.ChIP", envir = environment())
     }
-        # Accession or TF filters
-    if (!is.null(Accession) | !is.null(TF)) {
+    
+    enrichTab <- GSEA_result[["Enrichment.table"]]
+    rSums <- GSEA_result[["RES"]]
+    rm( GSEA_result )
+    
+    # Accession or TF filters
+    if ( !is.null( Accession ) | !is.null( TF ) ) {
 
-        tmp <- GSEA_result[["Enrichment.table"]]
+        if( is.null( Accession ) ) { 
+            Accession <- enrichTab$Accession[ enrichTab$TF %in% TF ] }
+        if( is.null( TF ) ) { 
+            TF <- enrichTab$TF[ enrichTab$Accession %in% Accession ] }
 
-        if (is.null(Accession)) { Accession <- tmp[tmp$TF %in% TF,]$Accession }
-        if (is.null(TF)) { TF <- tmp[tmp$Accession %in% Accession,]$TF }
+        enrichTab <- enrichTab[ match( Accession, enrichTab$Accession ), ]
+        rSums <- rSums[ match( Accession, names( rSums ) ) ]
 
-        GSEA_result[["Enrichment.table"]] <- tmp[
-            tmp$Accession %in% Accession &
-            tmp$TF %in% TF, ]
-
-        GSEA_result[["RES"]] <- GSEA_result$RES[
-            names(GSEA_result[["RES"]]) %in% Accession]
-
-        GSEA_result[["indicators"]] <- GSEA_result[["indicators"]][
-            names(GSEA_result[["indicators"]] %in% Accession)]
-
-    } else {
-        Accession <- GSEA_result[["Enrichment.table"]]$Accession
-    }
-        # line parameters & plot title
-    if (is.null(line.colors)) {
+    } else { Accession <- enrichTab$Accession }
+    
+    # line parameters & plot title
+    if( is.null( line.colors ) ) {
         line.colors <- c("red", "blue", "green", "hotpink", "cyan",
             "greenyellow", "gold", "darkorchid", "chocolate1",
             "black", "lightpink", "seagreen")
-        line.colors <- line.colors[1:length(names(GSEA_result[["RES"]]))]
+        line.colors <- line.colors[ 1 : length( Accession ) ]
     }
-    if (is.null(line.styles)) {
-        line.styles <- rep("solid", length(names(GSEA_result[["RES"]])))
+    if( is.null( line.styles ) ) {
+        line.styles <- rep("solid", length( Accession ))
     }
-    if (is.null(plot_title)) {
+    if( is.null( plot_title ) ) {
         plot_title <- "Transcription Factor Enrichment"
     }
 
-    GSEA.runningSum <- GSEA_result[["RES"]]
-
     # Getting metadata for the plot
-    MetaData <- MetaData[ match(Accession, MetaData$Accession), ]
-    RES <- lapply(
-    	seq_along (Accession),
-    	function(result, i){
-    		tmp <- result[ names(result) %in% Accession[i] ][[1]]
-    		return (tmp)
-    	},
-    	result = GSEA.runningSum
-    )
-    names( RES ) <- MetaData$Accession
+    MetaData <- MetaData[ match( Accession, MetaData$Accession ), ]
 
-    tabla <- data.frame(
+    plotTab <- data.frame(
     	Accession = MetaData$Accession,
     	Cell = MetaData$Cell,
     	Treatment = MetaData$Treatment,
     	TF = MetaData$TF,
     	stringsAsFactors = FALSE)
 
-    tabla$RES <- RES
+    plotTab$RES <- rSums
+    rm( MetaData, rSums )
+    
+    plotTab$lineName <- paste0( plotTab$Accession, " - ", plotTab$TF )
+    plotTab$lineText <- paste0(
+        plotTab$Accession, " - ", plotTab$TF,
+        "<br>Cell: ", plotTab$Cell, "<br>Treatment: ", plotTab$Treatment )
 
-    rm (MetaData, RES)
-
-    if (dim(tabla)[1] > 1) { # plot multiple lines
+    if ( dim( plotTab )[ 1 ] > 1 ) { # plot multiple lines
         for (i in seq_along(Accession)) {
-            if (i == 1) {
-                grafica <- plotly::plot_ly(tabla, x = c(1:length(tabla$RES[[1]])),
-                    y = tabla$RES[[Accession[1]]], type = "scatter", mode = "lines",
+            if (i == 1) { # First line
+                grafica <- plotly::plot_ly( plotTab,
+                    x = c( 1 : length( plotTab$RES[[ 1 ]] ) ),
+                    y = plotTab$RES[[ Accession[ 1 ] ]], 
+                    type = "scatter", mode = "lines", 
                     line = list(color = line.colors[1], dash = line.styles[1]),
-                    name = paste0( tabla$Accession[1], " - ", tabla$TF[1]),
-                    text = paste0(
-                        tabla$Accession[1], " - ", tabla$TF[1],
-                        "<br>Cell: ", tabla$Cell[1],
-                        "<br>Treatment: ", tabla$Treatment[1]))
-            } else if (i > 1 & i < length(Accession)) {
-                grafica <- plotly::add_trace(p = grafica, y = tabla$RES[[Accession[i]]],
+                    name = plotTab$lineName[ 1 ], text = plotTab$lineText[ 1 ])
+                
+            } else if ( i > 1 & i < length( Accession ) ) {
+                grafica <- plotly::add_trace( grafica,
+                    y = plotTab$RES[[ Accession[ i ] ]],
                     type = "scatter", mode = "lines",
                     line = list(color = line.colors[i], dash = line.styles[i]),
-                    name = paste0(tabla$Accession[i], " - ", tabla$TF[i]),
-                    text = paste0(
-                        tabla$Accession[i], " - ", tabla$TF[i],
-                        "<br>Cell: ", tabla$Cell[i],
-                        "<br>Treatment: ", tabla$Treatment[i]))
-            } else if (i == length(Accession)) {
-                grafica <- plotly::add_trace(p = grafica, y = tabla$RES[[Accession[i]]],
+                    name = plotTab$lineName[ i ], text = plotTab$lineText[ i ])
+                
+            } else if (i == length(Accession)) { # Last line
+                grafica <- plotly::add_trace( grafica,
+                    y = plotTab$RES[[Accession[i]]],
                     type = "scatter", mode = "lines",
                     line = list(color = line.colors[i], dash = line.styles[i]),
-                    name = paste0(tabla$Accession[i], " - ", tabla$TF[i]),
-                    text = paste0(
-                        tabla$Accession[i], " - ", tabla$TF[i],
-                        "<br>Cell: ", tabla$Cell[i],
-                        "<br>Treatment: ", tabla$Treatment[i])) %>%
-                plotly::layout(title = plot_title, xaxis = list(title = "Argument"),
+                    name = plotTab$lineName[ i ],
+                    text = plotTab$lineText[ i ] ) %>%
+                plotly::layout(
+                    title = plot_title, xaxis = list(title = "Argument"),
                     yaxis = list(title = "ES"))
             }
         }
     } else { # plot one line
-        grafica <- plotly::plot_ly(tabla, x = c(1:length(tabla$RES[[1]])),
-            y = tabla$RES[[Accession[1]]], type = "scatter", mode = "lines",
+        grafica <- plotly::plot_ly( plotTab, 
+            x = c( 1 : length( plotTab$RES[[ 1 ]] ) ),
+            y = plotTab$RES[[ Accession[ 1 ] ]], 
+            type = "scatter", mode = "lines",
             line = list(color = line.colors[1], dash = line.styles[1]),
-            name = paste0(tabla$Accession[1],
-                " - ", tabla$TF[1]), text = paste0(tabla$Accession[1],
-                " - ", tabla$TF[1], "<br>Cell: ", tabla$Cell[1],
-                "<br>Treatment: ", tabla$Treatment[1])) %>%
+            name = plotTab$lineText ) %>%
         plotly::layout(title = plot_title,
             xaxis = list(title = "Argument"), yaxis = list(title = "ES"))
     }
 
     # Adding log2(Fold Change) bar to the plot
-    LFC.bar <- get_LFC_bar(LFC)
-    graf <- plotly::subplot(grafica, LFC.bar, shareX = TRUE,
-        nrows = 2, heights = c(0.95, 0.05), titleY = TRUE)
+    LFC.bar <- get_LFC_bar( LFC )
+    graf <- plotly::subplot( grafica, LFC.bar, shareX = TRUE,
+        nrows = 2, heights = c(0.95, 0.05), titleY = TRUE )
     graf
-    return(graf)
+    return( graf )
 }
 
 highlight_TF <- function(table, column, specialTF, markerColors) {
@@ -1832,27 +1797,25 @@ highlight_TF <- function(table, column, specialTF, markerColors) {
     #' group of every row.
     #' A named vector connecting each color group to the chosen color.
     # examples
-    # highlight_TF(CM.statMatrix_UP,4,specialTF,colors)
+    # highlight_TF( CM.statMatrix_UP, 4, specialTF, colors )
 
     highlight <- sapply( seq_along(table[,1]),
-        function (tmp.table, tmp.column, tmp.TF, i) {
-            if (table[i, tmp.column] %in% tmp.TF){
-                color.group <- names(tmp.TF[tmp.TF == table[i, tmp.column] ] )
+        function (table, column, TF, i) {
+            if (table[i, column] %in% TF){
+                color.group <- names( TF[ TF == table[i, column] ] )
             }else{
                 color.group <- "Other"
             }
             return(color.group) },
-        tmp.table = table,
-        tmp.colum = column,
-        tmp.TF = specialTF
+        table = table, column = column, TF = specialTF
         )
 
-    markerColors <- c("azure4", markerColors)
-    names(markerColors) <- c("Other", unique(names(specialTF)))
-    return(list(highlight, markerColors))
+    markerColors <- c( "azure4", markerColors )
+    names( markerColors ) <- c( "Other", unique( names( specialTF ) ) )
+    return( list( highlight, markerColors ) )
 }
 
-get_LFC_bar <- function(LFC) {
+get_LFC_bar <- function( LFC ) {
 
     #' @title Plots a color bar from log2(Fold Change) values.
     #' @description Function to plot a color bar from log2(Fold Change)
@@ -1861,7 +1824,7 @@ get_LFC_bar <- function(LFC) {
     #' to lower. Use ony the values of genes that have an Entrez ID.
     #' @return Plotly heatmap plot -log2(fold change) bar-.
     # examples
-    # get_LFC_bar(arranged.log2FC.array)
+    # get_LFC_bar( arranged.log2FC.array )
 
     if (!requireNamespace("scales", quietly = TRUE)) {
         stop("scales package needed for this function to work. ",
@@ -1873,23 +1836,29 @@ get_LFC_bar <- function(LFC) {
     }
 
     # Rescaling log Fold Change values to get a -1 to 1 scale
-    vals <- scales::rescale(LFC)
-    o <- order(vals, decreasing = FALSE)
+    vals <- scales::rescale( LFC )
+    o <- order( vals, decreasing = FALSE )
+
+    posLen <- sum( LFC > 0 )
 
     # Building a red-blue scale adapted to the log Fold Change
-    cols1 <- (scales::col_numeric(grDevices::colorRamp(c("mistyrose",
-        "red3")), domain = NULL))(vals[1:length(LFC[LFC > 0])])
-    cols2 <- (scales::col_numeric(grDevices::colorRamp(c("navy",
-        "lightcyan")), domain = NULL))(vals[length(LFC[LFC >
-        0]) + 1:length(LFC)])
+    cols1 <- ( scales::col_numeric(
+        grDevices::colorRamp( c( "mistyrose", "red3" ) ),
+        domain = NULL) )( vals[ 1 : posLen ] )
+    
+    cols2 <- ( scales::col_numeric(
+        grDevices::colorRamp(c("navy", "lightcyan")),
+        domain = NULL)
+        )( vals[ posLen+1 : length(LFC) ] )
+    
     cols <- c(cols1, cols2)
 
-    colz <- data.frame(vals[o], cols[o])
+    colorValues <- data.frame( vals[ o ], cols[ o ] )
 
-    LFC.bar <- plotly::plot_ly(x = c(1:length(LFC)), y = rep(1,
-        length(LFC)), z = LFC, type = "heatmap", colorscale = colz,
-        showscale = FALSE) %>%
+    LFC.bar <- plotly::plot_ly(
+        x = c( 1 : length( LFC ) ), y = rep( 1, length( LFC ) ), z = LFC,
+        type = "heatmap", colorscale = colorValues, showscale = FALSE) %>%
     plotly::layout(yaxis = list(visible = FALSE))
 
-    return(LFC.bar)
+    return( LFC.bar )
 }

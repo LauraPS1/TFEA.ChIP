@@ -4,8 +4,7 @@
 \alias{plot_CM}
 \title{Makes an interactive html plot from an enrichment table.}
 \usage{
-plot_CM(CM.statMatrix, plot_title = NULL, specialTF = NULL,
-  TF_colors = NULL)
+plot_CM(CM.statMatrix, plot_title = NULL, specialTF = NULL, TF_colors = NULL)
 }
 \arguments{
 \item{CM.statMatrix}{Output of the function 'getCMstats'.
@@ -30,6 +29,8 @@ transcription factor enrichment table, output of the function
 'getCMstats'.
 }
 \examples{
-data('stat_mat',package = 'TFEA.ChIP')
-plot_CM(stat_mat)
+data('Genes.Upreg',package = 'TFEA.ChIP')
+CM_list_UP <- contingency_matrix( Genes.Upreg )
+stats_mat_UP <- getCMstats( CM_list_UP )
+plot_CM( stats_mat_UP )
 }

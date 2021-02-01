@@ -4,7 +4,9 @@
 \name{Genes.Upreg}
 \alias{Genes.Upreg}
 \title{List of Entrez Gene IDs}
-\format{Array of 2754 Entrez Gene IDs.}
+\format{
+Array of 2754 Entrez Gene IDs.
+}
 \usage{
 data("Genes.Upreg")
 }

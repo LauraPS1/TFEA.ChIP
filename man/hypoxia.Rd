@@ -4,7 +4,9 @@
 \name{hypoxia}
 \alias{hypoxia}
 \title{RNA-Seq experiment}
-\format{a data frame of 17527 observations of 4 variables.}
+\format{
+a data frame of 17527 observations of 4 variables.
+}
 \usage{
 data("hypoxia")
 }

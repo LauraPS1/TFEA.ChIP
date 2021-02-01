@@ -4,7 +4,9 @@
 \name{Entrez.gene.IDs}
 \alias{Entrez.gene.IDs}
 \title{List of Entrez Gene IDs}
-\format{Array of 2754 Entrez Gene IDs.}
+\format{
+Array of 2754 Entrez Gene IDs.
+}
 \usage{
 data("Entrez.gene.IDs")
 }

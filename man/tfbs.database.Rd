@@ -4,7 +4,9 @@
 \name{tfbs.database}
 \alias{tfbs.database}
 \title{TFBS database for 3 ChIP-Seq datasets.}
-\format{a data frame of 10 rows and 6 variables}
+\format{
+a data frame of 10 rows and 6 variables
+}
 \usage{
 data("tfbs.database")
 }

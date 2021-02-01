@@ -33,5 +33,4 @@ first match and a warning is displayed.
 }
 \examples{
 GeneID2entrez(c('TNMD','DPM1','SCYL3','FGR','CFH','FUCA2','GCLC'))
-GeneID2entrez(c('Mcm6', 'Rpl7', 'Itch' ), mode ="m2m")
 }

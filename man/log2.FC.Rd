@@ -4,7 +4,9 @@
 \name{log2.FC}
 \alias{log2.FC}
 \title{List of Entrez Gene IDs}
-\format{Array of 2754 log2(Fold Change) values.}
+\format{
+Array of 2754 log2(Fold Change) values.
+}
 \usage{
 data("log2.FC")
 }

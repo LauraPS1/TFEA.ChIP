@@ -4,8 +4,15 @@
 \alias{plot_RES}
 \title{Plots all the RES stored in a GSEA_run output.}
 \usage{
-plot_RES(GSEA_result, LFC, plot_title = NULL, line.colors = NULL,
-  line.styles = NULL, Accession = NULL, TF = NULL)
+plot_RES(
+  GSEA_result,
+  LFC,
+  plot_title = NULL,
+  line.colors = NULL,
+  line.styles = NULL,
+  Accession = NULL,
+  TF = NULL
+)
 }
 \arguments{
 \item{GSEA_result}{Returned by GSEA_run}
@@ -35,6 +42,7 @@ Function to plot all the RES stored in a GSEA_run output.
 }
 \examples{
 data('GSEA.result','log2.FC',package = 'TFEA.ChIP')
-plot_RES(GSEA.result,log2.FC,TF=c('STAT1'),
-    Accession=c('GSM2390642','wgEncodeEH002867'))
+plot_RES(GSEA.result,log2.FC,TF=c('GATA3'),
+    Accession=c('ENCSR000BMX.GATA3.T47D',
+    'ENCSR000EVW.GATA2.ENDOTHELIAL_UMBILICAL_VEIN'))
 }

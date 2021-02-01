@@ -4,7 +4,9 @@
 \name{hypoxia_DESeq}
 \alias{hypoxia_DESeq}
 \title{RNA-Seq experiment}
-\format{a DESeqResults objtec}
+\format{
+a DESeqResults objtec
+}
 \usage{
 hypoxia_DESeq
 }
