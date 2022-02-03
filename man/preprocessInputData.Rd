@@ -30,5 +30,5 @@ using the variable "mode".
 }
 \examples{
 data('hypoxia_DESeq',package='TFEA.ChIP')
-preprocessInputData(hypoxia_DESeq)
+preprocessInputData( hypoxia_DESeq )
 }

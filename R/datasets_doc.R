@@ -155,10 +155,10 @@
 #'
 #' @docType data
 #' @keywords datasets
-#' @name Mat01
-#' @usage data("Mat01")
+#' @name ChIPDB
+#' @usage data("ChIPDB")
 #' @format a matrix of 1060 columns and 16797 rows
-"Mat01"
+"ChIPDB"
 
 #' TF-gene binding DB metadata
 #'
@@ -181,17 +181,4 @@
 #' @format A data frame of 1060 observations of 6 variables
 "MetaData"
 
-
-#' TFBS database for 3 ChIP-Seq datasets.
-#'
-#' Used to run examples. Output of the function GR2tfbs_db from the
-#' TFEA.ChIP package. Contains a list of three vectors of Entrez Gene
-#' IDs assoctiated to three ChIP-Seq experiments
-#'
-#' @docType data
-#' @keywords datasets
-#' @name tfbs.database
-#' @usage data("tfbs.database")
-#' @format a data frame of 10 rows and 6 variables
-"tfbs.database"
 

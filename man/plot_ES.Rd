@@ -45,8 +45,7 @@ the ChIPseq binding database.
 }
 \examples{
 data('GSEA.result','log2.FC',package = 'TFEA.ChIP')
-TF.hightlight<-c('GATA2')
-names(TF.hightlight)<-c('GATA2')
-col<- c('red')
-plot_ES(GSEA.result,log2.FC,specialTF = TF.hightlight,TF_colors = col)
+TF.hightlight <- c('E2F1' = 'E2F1')
+col <- c('red')
+plot_ES( GSEA.result, log2.FC, "Example", TF.hightlight, col )
 }

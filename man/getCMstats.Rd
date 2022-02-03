@@ -4,11 +4,11 @@
 \alias{getCMstats}
 \title{Generate statistical parameters from a contingency_matrix output}
 \usage{
-getCMstats(contMatrix_list, chip_index = get_chip_index())
+getCMstats(CM_list, chip_index = get_chip_index())
 }
 \arguments{
-\item{contMatrix_list}{Output of “contingency_matrix”, a list of
-contingency matrix.}
+\item{CM_list}{Output of “contingency_matrix”, a list of
+contingency matrices.}
 
 \item{chip_index}{Output of the function “get_chip_index”, a data frame
 containing accession IDs of ChIPs on the database and the TF each one
@@ -29,6 +29,6 @@ the odds ratio resulting from the test.
 }
 \examples{
 data('Genes.Upreg',package = 'TFEA.ChIP')
-CM_list_UP <- contingency_matrix(Genes.Upreg)
-stats_mat_UP <- getCMstats(CM_list_UP)
+CM_list_UP <- contingency_matrix( Genes.Upreg )
+stats_mat_UP <- getCMstats( CM_list_UP )
 }

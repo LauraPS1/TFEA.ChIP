@@ -42,7 +42,7 @@ Function to plot all the RES stored in a GSEA_run output.
 }
 \examples{
 data('GSEA.result','log2.FC',package = 'TFEA.ChIP')
-plot_RES(GSEA.result,log2.FC,TF=c('GATA3'),
-    Accession=c('ENCSR000BMX.GATA3.T47D',
-    'ENCSR000EVW.GATA2.ENDOTHELIAL_UMBILICAL_VEIN'))
+plot_RES(GSEA.result, log2.FC, TF = c('E2F4',"E2F1"),
+    Accession=c('ENCSR000DYY.E2F4.GM12878',
+    'ENCSR000EVJ.E2F1.HeLa-S3'))
 }
