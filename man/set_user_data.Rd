@@ -4,28 +4,29 @@
 \alias{set_user_data}
 \title{Sets the data objects as default.}
 \usage{
-set_user_data(metadata, binary_matrix)
+set_user_data(metadata, ChIPDB)
 }
 \arguments{
 \item{metadata}{Data frame/matrix/array contaning the following fields:
 'Name','Accession','Cell','Cell Type','Treatment','Antibody','TF'.}
 
-\item{binary_matrix}{Matrix[n,m] which rows correspond to all the human
-genes that have been assigned an Entrez ID, and its columns, to every
-ChIP-Seq experiment in the database. The values are 1 – if the ChIP-Seq
-has a peak assigned to that gene – or 0 – if it hasn’t –.}
+\item{ChIPDB}{List containing two elements:
+- Gene Keys: vector of gene IDs
+- ChIP Targets: list of vectors, one per ChIP-seq experiment in the,
+  database, containing the putative targets assigned. Each target is
+  coded as its position in the vector 'Gene Keys'.}
 }
 \value{
 sets the user's metadata table and TFBS matrix as the variables
-'MetaData' and 'Mat01', used by the rest of the package.
+'MetaData' and 'ChIPDB', used by the rest of the package.
 }
 \description{
 Function to set the data objects provided by the user
 as default to the rest of the functions.
 }
 \examples{
-data('MetaData','Mat01',package='TFEA.ChIP')
+data( 'MetaData', 'ChIPDB', package='TFEA.ChIP' )
 # For this example, we will usethe variables already included in the
 # package.
-set_user_data(MetaData,Mat01)
+set_user_data( MetaData, ChIPDB )
 }

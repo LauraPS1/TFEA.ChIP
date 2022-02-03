@@ -1,19 +1,19 @@
 Package: TFEA.ChIP
 Type: Package
 Title: Analyze Transcription Factor Enrichment
-Version: 1.15.1
+Version: 2.1.1
 Author: Laura Puente Santamaría, Luis del Peso
 Maintainer: Laura Puente Santamaría <lpsantamaria@iib.uam.es>
 Description: Package to analize transcription factor enrichment in a gene set using data from ChIP-Seq experiments.
-Depends: R (>= 3.3)
+Depends: R (>= 3.5)
 License: Artistic-2.0
 Encoding: UTF-8
 LazyData: false
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.2
 Imports: GenomicRanges, IRanges, biomaRt, GenomicFeatures, grDevices,
         dplyr, stats, utils, R.utils, methods, org.Hs.eg.db
 Suggests: knitr, rmarkdown, S4Vectors, plotly, scales, tidyr, ggplot2,
-        GSEABase, DESeq2, BiocGenerics, ggrepel, rcompanion,
+        DESeq2, BiocGenerics, ggrepel, rcompanion,
         TxDb.Hsapiens.UCSC.hg19.knownGene
 VignetteBuilder: knitr
 biocViews: Transcription, GeneRegulation, GeneSetEnrichment,

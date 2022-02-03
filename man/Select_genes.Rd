@@ -8,8 +8,8 @@ Select_genes(
   GeneExpression_df,
   max_pval = 0.05,
   min_pval = 0,
-  max_LFC = NULL,
-  min_LFC = NULL
+  max_LFC = Inf,
+  min_LFC = -Inf
 )
 }
 \arguments{

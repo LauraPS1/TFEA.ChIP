@@ -192,9 +192,9 @@ plot_ES( GSEA.result, LFC = hypoxia_table$log2FoldChange, specialTF = TF.hightli
 ```{r eval=FALSE, echo=TRUE}
 plot_RES( 
     GSEA_result = GSEA.result, LFC = hypoxia_table$log2FoldChange,
-    TF = c( "EPAS1" ), Accession = c(
-        "GSE43109.EPAS1.MACROPHAGE_HYPO_IL",
-        "GSE43109.EPAS1.MACROPHAGE_NORMO_IL" ) )
+    TF = c( "ARNT", "EPAS1" ), Accession = c(
+        "GSE89836.ARNT.HUVEC-C",
+        "GSE89836.EPAS1.HUVEC-C" ) )
 ```
 ![Snapshot of a plot generatd with plot_RES.](GSEAplot2.png)
 
@@ -202,7 +202,7 @@ plot_RES(
 
 # Building a TF-gene binding database
 
-If the user wants to generate their own database of ChIPseq datasets, the functions *txt2gr* and *GR2tfbs_db* automate most of the process. The required inputs are:
+If the user wants to generate their own database of ChIPseq datasets, the functions *txt2gr* and *makeChIPGeneDB* automate most of the process. The required inputs are:
 
 - A Metadata table (storing at least, Accession ID, name of the file, and TF tested in the ChIP-Seq experiment). The metadata table included with this package has the following fields: "Name", "Accession", "Cell", "Cell Type", "Treatment", "Antibody", and "TF".
 
@@ -245,8 +245,9 @@ head( ARNT.gr, n=2 )
 
 2. [Optional] Dnase Hypersensitive Sites
 
-By default (see step 3), TFEA.ChIP filters the ChIPseq peaks in each dataset to select those overlapping or near to (by default max. distance 10 nucleotides) DNase HS regions located within 1Kb of genes. 
-The database of gene-associated DHSs is generated from Encode's Master DNaseI HS as follows:
+By default (see step 3), TFEA.ChIP filters the ChIPseq peaks in each dataset to select those overlapping or near to (by default max. distance 10 nucleotides) regions in a reference associated to a gene. This reference can have any number of sources, such as gene coordinates, transcription starting sites, or regulatory regions defined in projects such as GeneHancer. 
+
+As an example, we will build a reference with Dnase hypersensitive sites associated to overlapping genes using Encode's Master DNaseI HS:
 
   i) Load Encode's Master DNaseI HS and convert it to a Genomic Ranges object.
     
@@ -278,15 +279,18 @@ mcols(DHS.database)$gene_id <- gene_ids
 
 ```
 
-These steps can be modified to generate a new GRanges object containing custom DNAse HS sites.
+These steps can be modified to generate a new GRanges object containing custom sites.
 
 3. Assign TFBS peaks from ChIP dataset to specific genes
 
-The function *GR2tfbs_db* assigns the TFBS peaks in the ChIP datasets stored in *gr.list* to a gene. To this end, a ChIP peak overlaping a Dnase HS region receive the gene label associated to that region. By default the function also assigns the gene name when the ChIP peak does not overlap a Dnase region but maps at less than 10 nucleotides from it. This behaviour can be modified by setting the argument *distanceMargin* to the desired value (by default distanceMargin = 10 bases).
+The function *makeChIPGeneDB* assigns the TFBS peaks in the ChIP datasets stored in *gr.list* to a gene. To this end, a ChIP peak overlaping a regulatory region region receive the gene label associated to said region. By default the function also assigns the gene name when the ChIP peak does not overlap a regulatory region but maps at less than 10 nucleotides from it. This behaviour can be modified by setting the argument *distanceMargin* to the desired value (by default distanceMargin = 10 bases).
 
+The resulting ChIP-Gene data base is a list containing two elements:
+  - Gene Keys: vector of gene IDs.
+  - ChIP Targets: list of vectors, one per element in gr.list, containing the putative targets assigned. Each target is coded as its position in the vector 'Gene Keys'.
 ```{r eval=TRUE,echo=TRUE}
 data( "DnaseHS_db", "gr.list", package="TFEA.ChIP" ) # Loading example datasets for this function
-TF.gene.binding.db <- GR2tfbs_db( DnaseHS_db, gr.list ) 
+TF.gene.binding.db <- makeChIPGeneDB( DnaseHS_db, gr.list ) 
 str( TF.gene.binding.db )
 ```
 
@@ -297,27 +301,13 @@ library(TxDb.Hsapiens.UCSC.hg19.knownGene)
 data( "gr.list", package="TFEA.ChIP") # Loading example datasets for this function
 txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
 Genes <- genes( txdb )
-TF.gene.binding.db <- GR2tfbs_db( Genes, gr.list, distanceMargin = 0 )
+TF.gene.binding.db <- makeChIPGeneDB( Genes, gr.list, distanceMargin = 0 )
 str( TF.gene.binding.db )
 ```
 
 In this case the information about Dnase hypersensitivity is disregarded and peaks are asigned to overlapping genes (or genes closer than *distanceMargin* residues).
 
-4. Generation of the TFBS database.
-
-The function *makeTFBSmatrix* generates a binary matrix with a row for each human gene and a column for each independent ChIPseq dataset. The cell of the matrix contain a value of 1 if the gene is bound by the TF and 0 otherwise. This matrix and the metadata table can be used instead of the default TFBS database.
-
-```{r eval=TRUE,echo=TRUE}
-data( "tfbs.database", package = "TFEA.ChIP" ) # Loading example datasets for this function
-txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
-gen.list <- genes( txdb )$gene_id # selecting all the genes in knownGene
-
-myTFBSmatrix <- makeTFBSmatrix( gen.list, tfbs.database )
-myTFBSmatrix[ 2530:2533, 1:3 ] # The gene HMGN4 (Entrez ID 10473) has TFBS for this three ChIP-Seq datasets
-
-```
-
-5. Sustitute the default database by a custom generated table.
+4. Sustitute the default database by a custom generated table.
 
 At the beginning of a session, use the function *set_user_data* to use your TFBS binary matrix and metadata table with the rest of the package.
 

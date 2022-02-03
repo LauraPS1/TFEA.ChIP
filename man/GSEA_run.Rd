@@ -28,13 +28,13 @@ Enrichment Scores of all/some TF.}
 \item{RES.filter}{(Optional) chr vector. When get.RES==TRUE, allows to
 choose which TF's Running Enrichment Score to store.}
 
-\item{perms}{Number of permutations for a permutation test.}
+\item{perms}{(Optional) integer. Number of permutations for the enrichment test.}
 }
 \value{
 a list of:
 Enrichment.table: data frame containing accession ID, Cell type, ChIP-Seq
-treatment, transcription factor tested, enrichment score, raw and
-adjusted p-value, and argument of every ChIP-Seq experiment.
+treatment, transcription factor tested, enrichment score, adjusted p-value,
+and argument of every ChIP-Seq experiment.
 RES (optional): list of running sums of every ChIP-Seq
 indicators (optional): list of 0/1 vectors that stores the matches (1)
 and mismatches (0) between the gene list and the gene set.
@@ -44,8 +44,8 @@ Function to run a GSEA to analyze the distribution of TFBS
 across a sorted list of genes.
 }
 \examples{
-data('hypoxia',package = 'TFEA.ChIP')
-hypoxia <- preprocessInputData(hypoxia)
-chip_index<-get_chip_index(TFfilter = c('HIF1A','EPAS1','ARNT'))
+data( 'hypoxia', package = 'TFEA.ChIP' )
+hypoxia <- preprocessInputData( hypoxia )
+chip_index <- get_chip_index( TFfilter = c('HIF1A','EPAS1','ARNT' ) )
 GSEA.result <- GSEA_run( hypoxia$Genes, hypoxia$log2FoldChange, chip_index, get.RES = TRUE)
 }

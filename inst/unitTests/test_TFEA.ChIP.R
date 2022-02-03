@@ -80,16 +80,16 @@ test_get_chip_index<-function(){
 
 test_contingency_matrix<-function(){
     data("Genes.Upreg",package = "TFEA.ChIP")
-    data("Mat01",package = "TFEA.ChIP")
+    data("ChIPDB",package = "TFEA.ChIP")
     # Sum of every contingency matrix. Since no control gene list
     # is provided, all genes not included in the test list will
     # be used as control.
     cont_mat<-contingency_matrix(Genes.Upreg)
     RUnit::checkTrue(!(FALSE %in%
-        (sapply(cont_mat,sum) == nrow(Mat01)))
+        (sapply(cont_mat,sum) == nrow(ChIPDB)))
     )
     # Size of the output when selecting ChIP-Seq datasets
-    chip_index<-get_chip_index(TFfilter = "IRF1")
+    chip_index<-get_chip_index(TFfilter = "JUN")
     RUnit::checkEquals(
         length(contingency_matrix(Genes.Upreg,chip_index = chip_index)),
         nrow(chip_index)
@@ -147,14 +147,17 @@ test_txt2GR<-function(){
 
 }
 
-test_GR2tfbs_db<-function(){
+test_makeChIPGeneDB<-function(){
     data("DnaseHS_db","gr.list", package="TFEA.ChIP")
     # Using this toy datasets, the expected result is a
     # list of one gene set with only two gene IDs: 2782 and 23261
-    RUnit::checkEquals(length(GR2tfbs_db(DnaseHS_db, gr.list)),1)
+    
+    ChIPDB <- makeChIPGeneDB( DnaseHS_db, gr.list )
+    
+    RUnit::checkEquals( length( ChIPDB[["ChIP Targets"]] ),1)
     RUnit::checkEquals(
-        GR2tfbs_db(DnaseHS_db, gr.list)[[1]]@geneIds[1],
-        c("6009"))
+        length(ChIPDB[["ChIP Targets"]][[ 1 ]]),
+        54 )
 }
 
 test_GSEA_run<-function(){
@@ -181,23 +184,6 @@ test_GSEA_run<-function(){
 
 }
 
-test_makeTFBSmatrix<-function(){
-    data("tfbs.database","Entrez.gene.IDs",package = "TFEA.ChIP")
-    # Checking output size
-    RUnit::checkEquals(
-        nrow(makeTFBSmatrix(Entrez.gene.IDs,tfbs.database)),
-        length(Entrez.gene.IDs))
-    RUnit::checkEquals(
-        ncol(makeTFBSmatrix(Entrez.gene.IDs,tfbs.database)),
-        length(tfbs.database))
-    # Checking at least one gene is assigned to every ChIP-Seq
-    RUnit::checkTrue(!(FALSE %in% (
-        colSums(makeTFBSmatrix(Entrez.gene.IDs,tfbs.database))>0)))
-    # Checking gene assignment is correct
-    tmp<-makeTFBSmatrix(Entrez.gene.IDs,tfbs.database)[,1]
-    RUnit::checkTrue(!(FALSE %in% (
-        names(tmp[tmp==1]) %in% tfbs.database[[1]]@geneIds)))
-}
 
 
 

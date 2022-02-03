@@ -1,6 +1,6 @@
 ################### IMPORTS ###################
 #' @importFrom GenomicFeatures genes
-#' @importFrom GenomicRanges GRanges distanceToNearest
+#' @importFrom GenomicRanges GRanges distanceToNearest mcols
 #' @importFrom IRanges IRanges
 #' @importFrom biomaRt select useMart getLDS getBM
 #' @importFrom dplyr '%>%' arrange
@@ -12,7 +12,8 @@
 #' @import org.Hs.eg.db
 ################### FUNCTIONS #################
 
-txt2GR <- function(fileTable, format, fileMetaData, alpha = NULL) {
+##### Create a ChIP-Gene data base ####
+txt2GR <- function( fileTable, format, fileMetaData, alpha = NULL ) {
 
     #' @title Function to filter a ChIP-Seq input.
     #' @description Function to filter a ChIP-Seq output (in .narrowpeak or
@@ -213,181 +214,164 @@ txt2GR <- function(fileTable, format, fileMetaData, alpha = NULL) {
     }
 }
 
-GR2tfbs_db <- function(Ref.db, gr.list, distanceMargin = 10, outputAsVector = FALSE) {
-
-    #' @title Makes a TFBS-gene binding database
-    #' @description GR2tfbs_db generates a TFBS-gene binding database
+makeChIPGeneDB <- function( Ref.db, gr.list, distanceMargin = 10,
+                            min.Targets = 10 ){
+    #' @title Make a ChIP - target database
+    #' @description makeChIPGeneDB generates a ChIP-seq - target database
     #' through the association of ChIP-Seq peak coordinates (provided
     #' as a GenomicRange object) to overlapping genes or gene-associated
-    #' Dnase regions (Ref.db).
+    #' genomic regions (Ref.db).
     #' @param Ref.db GenomicRanges object containing a database of reference
-    #' elements (either Genes or gene-associate Dnase regions) including
-    #' a gene_id metacolumn
+    #' elements (either Genes or gene-associated regions) including a gene_id
+    #' metacolumn
     #' @param gr.list List of GR objects containing ChIP-seq peak coordinates
     #' (output of txt2GR).
-    #' @param distanceMargin Maximum distance allowed between a gene or DHS to
-    #' assign a gene to a ChIP-seq peak. Set to 10 bases by default.
-    #' @param outputAsVector when 'TRUE', the output is a list of vectors
-    #' instrad of a list of GeneSet objects
-    #' @return List of GeneSe objetcs or vectors, one for every ChIP-Seq,
-    #' storing the IDs of the genes to which the TF bound in the ChIP-Seq.
-    #' @export GR2tfbs_db
+    #' @param distanceMargin Maximum distance allowed between a gene or 
+    #' regulatory element to assign a gene to a ChIP-seq peak. Set to 10 bases
+    #' by default.
+    #' @param min.Targets Minimum number of putative targets per ChIP-seq in
+    #' gr.list. ChIPs with fewer targets will be discarded.
+    #' regulatory element to assign a gene to a ChIP-seq peak. Set to 10 bases
+    #' by default.
+    #' @return List containing two elements:
+    #'    - Gene Keys: vector of gene IDs
+    #'    - ChIP Targets: list of vectors, one per element in gr.list, 
+    #'      containing the putative targets assigned. Each target is coded as
+    #'      its position in the vector 'Gene Keys'.
+    #' @export makeChIPGeneDB
     #' @examples
-    #' data('DnaseHS_db','gr.list', package='TFEA.ChIP')
-    #' GR2tfbs_db(DnaseHS_db, gr.list)
-
-    if (!requireNamespace("S4Vectors", quietly = TRUE)) {
-        stop("S4Vectors package needed for this function to work. ",
-            "Please install it.", call. = FALSE)
-    }
-    if (!requireNamespace("GSEABase", quietly = TRUE)) {
-        stop("GSEABase package needed for this function to work. ",
-            "Please install it.", call. = FALSE)
-    }
-
-    TFgenes_list <- lapply(
-        seq_along(gr.list),
-        function( gr.list, dm, Ref.db, i ){
-
-            gr <- gr.list[[i]]
-            nearest_index <- suppressWarnings(
-                GenomicRanges::findOverlaps(gr, Ref.db, maxgap = dm ))
-            inSubject <- S4Vectors::subjectHits(nearest_index)
-
-            # in case any ChIP-Seq dataset does not have any genes to be assigned
-            if (length( Ref.db[unique(inSubject)]$gene_id ) < 10) {
-                NULL
-            } else {
-
-                assigned_genes <- Ref.db[inSubject]$gene_id
-
-                if (outputAsVector == TRUE) {
-                    return(assigned_genes)
-
-                } else {
-
-                    gene_set <- GSEABase::GeneSet(unique(assigned_genes))
-                    gene_set@geneIdType@type <- "Entrez Gene ID"
-                    gene_set@setName <- as.character(
-                        gr.list[[i]]@elementMetadata@listData[["mcols.Accession"]][1] )
-                    gene_set@setIdentifier <- as.character(
-                        gr.list[[i]]@elementMetadata@listData[["mcols.Accession"]][1] )
-                    gene_set@organism <- "Homo sapiens"
-                    gene_set@shortDescription <- "Genes assigned to ChIP-seq"
-                    gene_set@longDescription <- paste0(
-                        "Cell: ", gr.list[[i]]@elementMetadata@listData[["mcols.Cell"]][1],
-                        ", Treatment: ", gr.list[[i]]@elementMetadata@listData[["mcols.Treatment"]][1],
-                        ", TF: ", gr.list[[i]]@elementMetadata@listData[["mcols.TF"]][1])
-
-                    return(gene_set)
-                }
-            }
-        },
-        gr.list = gr.list,
-        dm = distanceMargin,
-        Ref.db = Ref.db
-        )
-    # Removing list elements that didn't have any genes assigned
-    TFgenes_list[!vapply(TFgenes_list, is.null, logical(1))]
-
-    # Naming every GeneSet / array in the list with their accession ID
-    if ( outputAsVector == FALSE ){
-        if( !is.null( names( gr.list ))){
-            names(TFgenes_list) <- names(gr.list)
-        }else {
-            list.names <- sapply(
-                TFgenes_list,
-                function( i ){
-                    return( i@setName )
-                }
-            )
-            names(TFgenes_list) <- list.names
+    #' data( 'DnaseHS_db','gr.list', package = 'TFEA.ChIP' )
+    #' makeChIPGeneDB( DnaseHS_db, gr.list )
+  
+  
+  if (!requireNamespace("S4Vectors", quietly = TRUE)) {
+    stop("S4Vectors package needed for this function to work. ",
+         "Please install it.", call. = FALSE)
+  }
+  
+  referenceIDs <- sort(unique( Ref.db$gene_id ))
+  
+  ChIPtarget_list <- lapply(
+    gr.list,
+    function( gr.list, dm, Ref.db, IDs, min.Targets ,i ){
+      
+      nearest_index <- suppressWarnings(
+        GenomicRanges::findOverlaps( i, Ref.db, maxgap = dm ))
+      inSubject <- S4Vectors::subjectHits( nearest_index )
+      
+      assigned_genes <- unique( Ref.db[ inSubject ]$gene_id )
+      
+      # in case any ChIP-Seq dataset does not have enough targets
+      if ( length( assigned_genes ) < min.Targets ) {
+        NULL
+      } else {
+        sort( match( assigned_genes, IDs ) )
+      }
+    },
+    gr.list = gr.list,
+    dm = distanceMargin,
+    Ref.db = Ref.db, 
+    IDs = referenceIDs,
+    min.Targets = min.Targets
+  )
+  
+  # naming elements
+  if( !is.null( names( gr.list ))){
+    names( ChIPtarget_list ) <- names( gr.list )
+  }else {
+    # if gr.list is not named, search for an 'Accession' in GR metadata
+    # or create names.
+    ChIP_acc_col <- grep(
+      "accession",
+      tolower( colnames( mcols( gr.list[[ 1 ]] ) ) ) )[1]
+    
+    if ( length( ChIP_acc_col > 0 ) ){
+      ChIP_acc_col <- ChIP_acc_col[ 1 ]
+      cat("Using '", ChIP_acc_col, "' as ChIP-seq identifiers." )
+      
+      chipNames <- sapply(
+        gr.list,
+        function(i){
+          mcols( i )@listData[[ ChIP_acc_col ]][ 1 ]
         }
+      )
+      names( ChIPtarget_list ) <- chipNames 
+      
     } else {
-        if( !is.null( names( gr.list ))){
-            names(TFgenes_list) <- names(gr.list)
-        }else {
-
-            list.names <- sapply(
-                gr.list,
-                function(i){
-                    tmp <- as.character( i@elementMetadata@listData[["mcols.Accession"]][1])
-                    if (length(tmp) ==0){
-                        tmp <- as.character( i@elementMetadata@listData[["Accession"]][1])
-                    }
-                    return( tmp )
-                })
-             names(TFgenes_list) <- list.names
-        }
+      names( ChIPtarget_list ) <- paste0("ChIPseq_", 1:length(gr.list ) )
     }
-    TFgenes_list[ sapply( TFgenes_list, is.null ) ] <- NULL
-    return( TFgenes_list )
+  }
+  
+  ChIPtarget_list[ sapply( ChIPtarget_list, is.null ) ] <- NULL
+  
+  return( list(
+    "Gene Keys" = referenceIDs,
+    "ChIP Targets" = ChIPtarget_list
+  ) )
+  
 }
 
-makeTFBSmatrix <- function(GeneList, id_db, geneSetAsInput = TRUE) {
-
-    #' @title Function to search for a list of entrez gene IDs.
-    #' @description Function to search for a list of entrez gene IDs
-    #' in a  TF-gene binding data base.
-    #' @param GeneList Array of gene Entrez IDs
-    #' @param id_db TF - gene binding database.
-    #' @param geneSetAsInput TRUE for lists of GeneSet objects,
-    #' FALSE for lists of vectors.
-    #' @return 1/0 matrix. Each row represents a gene, each column,
-    #' a ChIP-Seq file.
-    #' @export makeTFBSmatrix
+matrixDB_to_listDB <- function( Mat01 ){
+    #' @title Re-formatting ChIP-Gene database
+    #' @description Function to transform a ChIP-gene data base from the former
+    #' binary matrix to the current list-based format.
+    #' @param Mat01 Matrix[n,m] which rows correspond to all the human
+    #' genes that have been assigned an Entrez ID, and its columns, to every
+    #' ChIP-Seq experiment in the database. The values are 1 – if the ChIP-Seq
+    #' has a peak assigned to that gene – or 0 – if it hasn’t –.
+    #' @return List containing two elements:
+    #'    - Gene Keys: vector of gene IDs
+    #'    - ChIP Targets: list of vectors, one per ChIP-seq experiment in the,
+    #'      database, containing the putative targets assigned. Each target is
+    #'      coded as its position in the vector 'Gene Keys'.
+    #' @export matrixDB_to_listDB
     #' @examples
-    #' data('tfbs.database','Entrez.gene.IDs',package = 'TFEA.ChIP')
-    #' makeTFBSmatrix(Entrez.gene.IDs,tfbs.database)
-
-
-    TF_matrix <- sapply(
-        seq_along(id_db),
-        function(id_db, GeneList, i){
-
-            TF_vector <- rep(0, length(GeneList))
-            names(TF_vector) <- GeneList
-
-            if ( is.vector( id_db[[1]]) ){
-                TF_vector[ names(TF_vector) %in% id_db[[i]] ] <- 1
-            } else { # if id_db is a list of GeneSets
-                TF_vector[ names(TF_vector) %in% id_db[[i]]@geneIds ] <- 1
-            }
-
-            return(TF_vector)
-        },
-        id_db = id_db,
-        GeneList = GeneList
+    #' Mat01 <- matrix( 
+    #'     round( runif(9) ), nrow = 3,
+    #'     dimnames= list( paste0("Gene ", 1:3), paste0("ChIPseq ", 1:3))  )
+    #' matrixDB_to_listDB( Mat01 )
+    
+    ChIPDB <- list(
+      "Gene Keys" = rownames( Mat01 )
     )
-    colnames(TF_matrix) <- names(id_db)
-    rownames(TF_matrix) <- GeneList
-    return(TF_matrix)
+    ChIPDB <- c( ChIPDB, "ChIP Targets" = list( sapply(
+        seq_len( ncol( Mat01 ) ),
+        function(i){
+            unname( which( Mat01[, i] == 1 ) )
+        }
+    )) )
+    names( ChIPDB[["ChIP Targets"]] ) <- colnames( Mat01 )
+    
+    return( ChIPDB )
 }
 
-set_user_data <- function(metadata, binary_matrix) {
+#### Prepare input data and options ####
+
+set_user_data <- function( metadata, ChIPDB ) {
     #' @title Sets the data objects as default.
     #' @description Function to set the data objects provided by the user
     #' as default to the rest of the functions.
     #' @param metadata Data frame/matrix/array contaning the following fields:
     #' 'Name','Accession','Cell','Cell Type','Treatment','Antibody','TF'.
-    #' @param binary_matrix Matrix[n,m] which rows correspond to all the human
-    #' genes that have been assigned an Entrez ID, and its columns, to every
-    #' ChIP-Seq experiment in the database. The values are 1 – if the ChIP-Seq
-    #' has a peak assigned to that gene – or 0 – if it hasn’t –.
+    #' @param ChIPDB List containing two elements:
+    #'    - Gene Keys: vector of gene IDs
+    #'    - ChIP Targets: list of vectors, one per ChIP-seq experiment in the,
+    #'      database, containing the putative targets assigned. Each target is
+    #'      coded as its position in the vector 'Gene Keys'.
     #' @return sets the user's metadata table and TFBS matrix as the variables
-    #' 'MetaData' and 'Mat01', used by the rest of the package.
+    #' 'MetaData' and 'ChIPDB', used by the rest of the package.
     #' @export set_user_data
     #' @examples
-    #' data('MetaData','Mat01',package='TFEA.ChIP')
+    #' data( 'MetaData', 'ChIPDB', package='TFEA.ChIP' )
     #' # For this example, we will usethe variables already included in the
     #' # package.
-    #' set_user_data(MetaData,Mat01)
+    #' set_user_data( MetaData, ChIPDB )
 
     pos <- 1
     envir = as.environment(pos)
 
     assign("MetaData", metadata, envir = envir)
-    assign("Mat01", binary_matrix, envir = envir)
+    assign("ChIPDB", ChIPDB, envir = envir)
 }
 
 preprocessInputData <- function(inputData, mode = "h2h" ) {
@@ -410,7 +394,7 @@ preprocessInputData <- function(inputData, mode = "h2h" ) {
     #' @export preprocessInputData
     #' @examples
     #' data('hypoxia_DESeq',package='TFEA.ChIP')
-    #' preprocessInputData(hypoxia_DESeq)
+    #' preprocessInputData( hypoxia_DESeq )
 
     if ( methods::is(inputData, "DESeqResults") ){
         # Extracting data from a DESeqResults object
@@ -501,7 +485,7 @@ preprocessInputData <- function(inputData, mode = "h2h" ) {
 }
 
 Select_genes <- function(GeneExpression_df, max_pval = 0.05,
-                         min_pval = 0, max_LFC = NULL, min_LFC = NULL) {
+                         min_pval = 0, max_LFC = Inf, min_LFC = -Inf) {
     #' @title Extracts genes according to logFoldChange and p-val limits
     #' @description Function to extract Gene IDs from a dataframe according
     #' to the established limits for log2(FoldChange) and p-value.
@@ -517,64 +501,35 @@ Select_genes <- function(GeneExpression_df, max_pval = 0.05,
     #' @examples
     #' data('hypoxia',package='TFEA.ChIP')
     #' Select_genes(hypoxia)
-
-    # Checking input variables
-
-    if (max_pval < min_pval) {
-        stop("'max_pval' has to be greater than 'min_pval'. ",
-            call. = FALSE)
-    } else if (!(is.null(max_LFC)) & !(is.null(min_LFC))) {
-        if (max_LFC < min_LFC) {
-            stop("'max_LFC' has to be greater than 'min_LFC'.",
-                call. = FALSE)
-        }
-    }
-    # If only one log2(Fold Change) limit is defined
-    if (is.null(max_LFC) & !is.null(min_LFC)) {
-
-        max_LFC <- max(GeneExpression_df$log2FoldChange)
-
-        if (min_LFC == 0) {
-            min_LFC <- min(GeneExpression_df[
-                GeneExpression_df$log2FoldChange > 0, ]$log2FoldChange)
-        }
-
-    } else if (is.null(min_LFC) & !is.null(max_LFC)) {
-
-        min_LFC <- min(GeneExpression_df$log2FoldChange)
-
-        if (max_LFC == 0) {
-            max_LFC <- max(GeneExpression_df[
-                GeneExpression_df$log2FoldChange < 0, ]$log2FoldChange)
-        }
-    }
-
-    # Selecting by p-value
-    if ("pval.adj" %in% colnames(GeneExpression_df)) {
-        geneSelection <- GeneExpression_df[
-            GeneExpression_df$pval.adj >= min_pval &
-            GeneExpression_df$pval.adj <= max_pval, ]
-    } else if ("pvalue" %in% colnames(GeneExpression_df)) {
-        geneSelection <- GeneExpression_df[
-            GeneExpression_df$pvalue >= min_pval &
-            GeneExpression_df$pvalue <= max_pval, ]
-    } else {
-        stop("No 'pvalue' or 'pval.adj' field in the input data. ")
-    }
-
-    # Selecting by log2(FoldChange)
-    if (!is.null(min_LFC) & !is.null(max_LFC)) {
-        if( "log2FoldChange" %in% colnames(GeneExpression_df) ){
-            geneSelection <- geneSelection[
-                geneSelection$log2FoldChange >= min_LFC &
-                geneSelection$log2FoldChange <= max_LFC, ]
-        }else{
-            stop("No 'log2FoldChange' field in the input data. ")
-        }
-    }
-
-    geneSelection <- geneSelection$Genes
-    return(geneSelection)
+  
+  # Checking input variables
+  if (max_pval < min_pval) {
+    stop("'max_pval' has to be greater than 'min_pval'. ", call. = FALSE)
+  }
+  if (max_LFC < min_LFC) {
+    stop("'max_LFC' has to be greater than 'min_LFC'.", call. = FALSE)
+  }
+  if( ! "log2FoldChange" %in% colnames( GeneExpression_df ) ) {
+    stop("No 'log2FoldChange' field in the input data. ")
+  } 
+  if( ! any(c( "pvalue","pval.adj" ) %in%  colnames( GeneExpression_df ) ) ){
+    stop("No 'pvalue' or 'pval.adj' field in the input data. ")
+  }
+  
+  # Selecting by p-value
+  if ("pval.adj" %in% colnames( GeneExpression_df ) ) {
+    g_pv <- GeneExpression_df$pval.adj >= min_pval &
+      GeneExpression_df$pval.adj <= max_pval
+  } else if ("pvalue" %in% colnames(GeneExpression_df)) {
+    g_pv <- GeneExpression_df$pvalue >= min_pval &
+      GeneExpression_df$pvalue <= max_pval
+  }
+  
+  # Selecting by log2(FoldChange) 
+  g_lfc <- GeneExpression_df$log2FoldChange >= min_LFC &
+    GeneExpression_df$log2FoldChange <= max_LFC
+  
+  GeneExpression_df$Gene[ g_pv & g_lfc ]
 }
 
 GeneID2entrez <- function(gene.IDs, return.Matrix = FALSE, mode = "h2h") {
@@ -827,9 +782,11 @@ get_chip_index <- function(encodeFilter = FALSE, TFfilter = NULL) {
     }
 }
 
+#### Run TFEA ####
+
 contingency_matrix <- function(test_list, control_list,
                                chip_index = get_chip_index()) {
-
+  
     #' @title Computes 2x2 contingency matrices
     #' @description Function to compute contingency 2x2 matrix by the partition
     #' of the two gene ID lists according to the presence or absence of the
@@ -846,133 +803,130 @@ contingency_matrix <- function(test_list, control_list,
     #' @examples
     #' data('Genes.Upreg',package = 'TFEA.ChIP')
     #' CM_list_UP <- contingency_matrix(Genes.Upreg)
-
-    if (!exists("Mat01")) {
-        Mat01 <- NULL
-        data("Mat01", package = "TFEA.ChIP", envir = environment())
+  
+    if ( ! exists( "ChIPDB" )) {
+        ChIPDB <- NULL
+        data( "ChIPDB", package = "TFEA.ChIP", envir = environment() )
     }
-    if (missing(control_list)) {
+    if( is.matrix( ChIPDB ) ){
+        ChIPDB <- matrixDB_to_listDB( ChIPDB )
+    }
+    
+    if ( missing( control_list ) ) {
         # Generating control gene list in case is not provided.
-        control_list <- rownames(Mat01)
+        control_list <- ChIPDB[["Gene Keys"]]  
     }
-
-    control_list <- control_list[!(control_list %in% test_list)]
-
-    Matrix1 <- Mat01[rownames(Mat01) %in% test_list, colnames(Mat01) %in%
-        chip_index$Accession]
-    Matrix2 <- Mat01[rownames(Mat01) %in% control_list, colnames(Mat01) %in%
-        chip_index$Accession]
-
-    contMatrix_list <- lapply(
+    control_list <- control_list[ !( control_list %in% test_list ) ]
+    
+    CM_list <- lapply(
         seq_along(chip_index$Accession),
-
-        function(accs, m1, m2, i){
-            chip.vector1 <- m1[, accs[i] ]
-            chip.vector2 <- m2[, accs[i] ]
-
-            pos1 <- sum( chip.vector1 == 1 )
-            pos2 <- sum(chip.vector2 == 1 )
-            neg1 <- sum( chip.vector1 == 0 )
-            neg2 <- sum( chip.vector2 == 0 )
-
+        
+        function( i, g1, g2, accs, ChIPDB ){
+            
+            acc <- which( names( ChIPDB[[ "ChIP Targets" ]] ) == accs[ i ] )
+            chip.targets <- ChIPDB[["Gene Keys"]][
+                ChIPDB[[ "ChIP Targets" ]][[ acc ]] ]
+            
+            pos1 <- sum( g1 %in% chip.targets )
+            pos2 <- sum( g2 %in% chip.targets )
+            neg1 <- sum( ! g1 %in% chip.targets )
+            neg2 <- sum( ! g2 %in% chip.targets )
+            
             contMatrix <- cbind(c(pos1, pos2), c(neg1, neg2))
             rownames(contMatrix) <- c("Test", "Control")
             colnames(contMatrix) <- c("Positive", "Negative")
-
+            
             return(contMatrix)
         },
+        g1 = test_list,
+        g2 = control_list,
         accs = chip_index$Accession,
-        m1 = Matrix1,
-        m2 = Matrix2
+        ChIPDB = ChIPDB
     )
-    names(contMatrix_list) <- as.character(chip_index$Accession)
-    return(contMatrix_list)
+    
+    names(CM_list) <- chip_index$Accession
+    
+    return(CM_list)
 }
 
-getCMstats <- function(contMatrix_list, chip_index = get_chip_index()) {
+getCMstats <- function( CM_list, chip_index = get_chip_index()) {
 
-  #' @title Generate statistical parameters from a contingency_matrix output
-  #' @description From a list of contingency matrices, such as the output
-  #' from “contingency_matrix”, this function computes a fisher's exact test
-  #' for each matrix and generates a data frame that stores accession ID of a
-  #' ChIP-Seq experiment, the TF tested in that experiment, the p-value and
-  #' the odds ratio resulting from the test.
-  #' @param contMatrix_list Output of “contingency_matrix”, a list of
-  #' contingency matrix.
-  #' @param chip_index Output of the function “get_chip_index”, a data frame
-  #' containing accession IDs of ChIPs on the database and the TF each one
-  #' tests. If not provided, the whole internal database will be used
-  #' @return Data frame containing accession ID of a ChIP-Seq experiment and
-  #' its experimental conditions, the TF tested in that experiment, raw and
-  #' adjusted p-values, odds-ratio, and euclidean distance.
-  #' and FDR-adjusted p-values (-10*log10 adj.pvalue).
-  #' @export getCMstats
-  #' @examples
-  #' data('Genes.Upreg',package = 'TFEA.ChIP')
-  #' CM_list_UP <- contingency_matrix(Genes.Upreg)
-  #' stats_mat_UP <- getCMstats(CM_list_UP)
+    #' @title Generate statistical parameters from a contingency_matrix output
+    #' @description From a list of contingency matrices, such as the output
+    #' from “contingency_matrix”, this function computes a fisher's exact test
+    #' for each matrix and generates a data frame that stores accession ID of a
+    #' ChIP-Seq experiment, the TF tested in that experiment, the p-value and
+    #' the odds ratio resulting from the test.
+    #' @param CM_list Output of “contingency_matrix”, a list of
+    #' contingency matrices.
+    #' @param chip_index Output of the function “get_chip_index”, a data frame
+    #' containing accession IDs of ChIPs on the database and the TF each one
+    #' tests. If not provided, the whole internal database will be used
+    #' @return Data frame containing accession ID of a ChIP-Seq experiment and
+    #' its experimental conditions, the TF tested in that experiment, raw and
+    #' adjusted p-values, odds-ratio, and euclidean distance.
+    #' and FDR-adjusted p-values (-10*log10 adj.pvalue).
+    #' @export getCMstats
+    #' @examples
+    #' data('Genes.Upreg',package = 'TFEA.ChIP')
+    #' CM_list_UP <- contingency_matrix( Genes.Upreg )
+    #' stats_mat_UP <- getCMstats( CM_list_UP )
+    
+    
+    fishTests <- do.call( rbind, lapply(
+        seq_along( CM_list ),
+        function(CM_list,i) {
+            data.frame( stats::fisher.test(
+                CM_list[[ i ]] )[ c("estimate","p.value") ] )
+        },
+        CM_list = CM_list ) )
+    rownames( fishTests ) <- names( CM_list )
+    
+    chip_index <- chip_index[ match( names(CM_list), chip_index$Accession ),]
+    
+    statMat <- data.frame(
+        Accession = chip_index$Accession, TF = chip_index$TF,
+        p.value = fishTests$p.value, OR = fishTests$estimate,
+        stringsAsFactors = FALSE)
+    
+    statMat$log2.OR <- log2(statMat$OR)
+    statMat$log2.OR[ abs( statMat$log2.OR ) == Inf ] <- NA
 
-  pvals <- sapply(seq_along(contMatrix_list),
-                  function(lista,i) {
-                    pval <- stats::fisher.test(lista[[names(lista)[i]]])[["p.value"]]
-                    return(pval)
-                  },
-                  lista = contMatrix_list)
+    statMat$adj.p.value <- stats::p.adjust( statMat$p.value, "fdr" )
+    statMat$log10.adj.pVal <- ( -1 * ( log10( statMat$adj.p.value ) ) )
+    statMat$log10.adj.pVal[ abs( statMat$log2.OR ) == Inf ] <- NA
+    
+    tmpOR <- statMat$OR
+    tmpOR[ statMat$OR == Inf ] <-  max( statMat$OR, na.rm = TRUE )
+    tmpOR[ statMat$OR == -Inf ] <- min( statMat$OR, na.rm = TRUE )
 
-  oddsRatios <- sapply(seq_along(contMatrix_list),
-                       function(lista,i) {
-                         pval <- stats::fisher.test(lista[[names(lista)[i]]])[["estimate"]]
-                         return(pval)
-                       },
-                       lista = contMatrix_list)
+    statMat$distance <- sapply(
+        seq_along( statMat$Accession ),
+        function(i){
+            if( statMat$OR[i] > 1 ){
+                x1 <- c( 0, 1 )
+                x2 <- c( statMat$log10.adj.pVal[ i ], tmpOR[ i ] )
+                d <- sqrt( sum( (x2-x1)**2 ) )
+                
+            } else if ( statMat$OR[ i ] <= 1 & statMat$OR[ i ] > 0 ) {
+                x1 <- c( 0, 1 )
+                x2 <- c( statMat$log10.adj.pVal[ i ], 1 / tmpOR[ i ] )
+                d <- -1 * sqrt( sum( (x2-x1)**2 ) )
+            } else { d <- 0 }
+            
+            return(d)
+        }
+    )
 
-  chip_index <- chip_index[chip_index$Accession %in% names(contMatrix_list),]
-  chip_index <- chip_index[ match(
-    names(contMatrix_list), chip_index$Accession ),]
-
-  statMat <- data.frame(Accession = chip_index$Accession, TF = chip_index$TF,
-                        p.value = pvals, OR = oddsRatios, stringsAsFactors = FALSE)
-
-  statMat$log2.OR <- log2(statMat$OR)
-  statMat$log2.OR[which(!is.finite(statMat$log2.OR))]<-NA
-
-  statMat$adj.p.value <- stats::p.adjust(statMat$p.value, "fdr")
-  statMat$log10.adj.pVal <- (-1 * (log10(statMat$adj.p.value)))
-  statMat$log10.adj.pVal[which(!is.finite(statMat$log10.adj.pVal))]<-NA
-
-  maxOR <- max(statMat$OR[ statMat$OR != Inf ])
-  minOR <- min(statMat$OR[ statMat$OR != -Inf ])
-
-  statMat$tmpOR <- statMat$OR
-  statMat$tmpOR[ statMat$OR == Inf ] <- maxOR
-  statMat$tmpOR[ statMat$OR == -Inf ] <- minOR
-
-  statMat$distance <- sapply(
-    seq_along(statMat$Accession),
-    function(i){
-        if( statMat$OR[i] > 1 ){
-            x1 <- c( 0, 1 )
-            x2 <- c( statMat$log10.adj.pVal[i], statMat$tmpOR[i])
-            d <- sqrt( sum( (x2-x1)**2 ) )
-
-        } else if ( statMat$OR[i] <= 1 & statMat$OR[i] > 0 ) {
-            x1 <- c( 0, 1 )
-            x2 <- c( statMat$log10.adj.pVal[i], 1/statMat$tmpOR[i] )
-            d <- -1 * sqrt( sum( (x2-x1)**2 ) )
-        } else { d <- 0 }
-
-        return(d)
+    if (!exists("MetaData")) {
+        MetaData <- NULL
+        data("MetaData", package = "TFEA.ChIP", envir = environment())
     }
-  )
-  statMat <- statMat[, colnames(statMat)!="tmpOR" ]
-
-  if (!exists("MetaData")) {
-    MetaData <- NULL
-    data("MetaData", package = "TFEA.ChIP", envir = environment())
-  }
-  statMat <- merge(MetaData[,c("Accession","Cell","Treatment")],statMat,by="Accession")
-  statMat <- statMat[order(statMat$distance,decreasing = TRUE,na.last = TRUE),]
-  return( statMat )
+    statMat <- merge(
+        MetaData[, c( "Accession", "Cell", "Treatment" ) ],
+        statMat, by = "Accession" )
+    statMat <- statMat[ order( statMat$distance, decreasing = TRUE, na.last = TRUE ), ]
+    return( statMat )
 }
 
 rankTFs <- function( resultsTable,
@@ -1259,8 +1213,8 @@ GSEA_ESpermutations <- function(gene.list, gene.set, weighted.score.type = 0,
 }
 
 GSEA_run <- function(gene.list, LFC, chip_index = get_chip_index(),
-                     get.RES = FALSE, RES.filter = NULL, perms = 1000 ) {
-
+                     get.RES = FALSE, RES.filter = NULL, perms = 1000) {
+  
     #' @title Function to run a GSEA analysis
     #' @description Function to run a GSEA to analyze the distribution of TFBS
     #' across a sorted list of genes.
@@ -1273,110 +1227,114 @@ GSEA_run <- function(gene.list, LFC, chip_index = get_chip_index(),
     #' Enrichment Scores of all/some TF.
     #' @param RES.filter (Optional) chr vector. When get.RES==TRUE, allows to
     #' choose which TF's Running Enrichment Score to store.
-    #' @param perms Number of permutations for a permutation test.
+    #' @param perms (Optional) integer. Number of permutations for the enrichment test.
     #' @return a list of:
     #' Enrichment.table: data frame containing accession ID, Cell type, ChIP-Seq
-    #' treatment, transcription factor tested, enrichment score, raw and
-    #' adjusted p-value, and argument of every ChIP-Seq experiment.
+    #' treatment, transcription factor tested, enrichment score, adjusted p-value,
+    #' and argument of every ChIP-Seq experiment.
     #' RES (optional): list of running sums of every ChIP-Seq
     #' indicators (optional): list of 0/1 vectors that stores the matches (1)
     #' and mismatches (0) between the gene list and the gene set.
     #' @export GSEA_run
     #' @examples
-    #' data('hypoxia',package = 'TFEA.ChIP')
-    #' hypoxia <- preprocessInputData(hypoxia)
-    #' chip_index<-get_chip_index(TFfilter = c('HIF1A','EPAS1','ARNT'))
+    #' data( 'hypoxia', package = 'TFEA.ChIP' )
+    #' hypoxia <- preprocessInputData( hypoxia )
+    #' chip_index <- get_chip_index( TFfilter = c('HIF1A','EPAS1','ARNT' ) )
     #' GSEA.result <- GSEA_run( hypoxia$Genes, hypoxia$log2FoldChange, chip_index, get.RES = TRUE)
-
-    if (!exists("Mat01")) {
-        Mat01 <- NULL
-        data("Mat01", package = "TFEA.ChIP", envir = environment())
+  
+    if (!exists("ChIPDB")) {
+        ChIPDB <- NULL
+        data("ChIPDB", package = "TFEA.ChIP", envir = environment())
+    }
+    if( is.matrix( ChIPDB ) ){
+        ChIPDB <- matrixDB_to_listDB( ChIPDB )
     }
     if (!exists("MetaData")) {
         MetaData <- NULL
         data("MetaData", package = "TFEA.ChIP", envir = environment())
     }
-    Mat01 <- Mat01[, colnames(Mat01) %in% chip_index$Accession]
-
+    
     enrichmentScore <- vector()
     pval <- vector()
     enrichmentArg <- vector()
-
+    
     if (get.RES == TRUE) {
         res <- list()
         ind <- list()
     }
     # create progress bar
-    pbar <- txtProgressBar(min = 0, max = length(chip_index$Accession),
-        style = 3)
-
-    chip_index$done <- rep(FALSE, nrow(chip_index))
-
+    pbar <- txtProgressBar(
+        min = 0, max = length(chip_index$Accession), style = 3)
+    
     for (i in seq_along(chip_index$Accession)) {
-
-        if (is.matrix(Mat01)){
-            chip.genes <- Mat01[, colnames(Mat01) == chip_index$Accession[i]]
-        } else { chip.genes <- Mat01 }
-        chip.genes <- names(chip.genes[chip.genes == 1])
-
-        if (length(chip.genes) > 10) {
-
-            result <- GSEA_EnrichmentScore(gene.list, chip.genes,
-                weighted.score.type = 1, correl.vector =  LFC)
-
-            shuffled.ES <- GSEA_ESpermutations( gene.list , chip.genes,
-                weighted.score.type = 1, correl.vector =  LFC, perms )
-
-            shuffled.ES <- shuffled.ES[ !is.na(shuffled.ES) ]
-
-            enrichmentScore <- c(enrichmentScore, result$ES)
-            pval <- c(pval, sum( shuffled.ES >= abs(result$ES))/ length(shuffled.ES))
-            enrichmentArg <- c(enrichmentArg, result$arg.ES)
-            chip_index$done[i] <- TRUE
-
-            if (get.RES == TRUE & missing(RES.filter)) {
-                # Store running sums of all TFs.
-                res <- c(res, list(result$RES))
-                names(res)[length(res)] <- chip_index$Accession[i]
-                ind <- c(ind, list(result$indicator))
-                names(ind)[length(ind)] <- chip_index$Accession[i]
-            } else if (get.RES == TRUE & !missing(RES.filter) ) {
-                # Store running sums of TF in RES.filter
-                if (chip_index$TF[i] %in% RES.filter) {
-                    res <- c(res, list(result$RES))
-                    names(res)[length(res)] <- chip_index$Accession[i]
-                    ind <- c(ind, list(result$indicator))
-                    names(ind)[length(ind)] <- chip_index$Accession[i]
+        
+        acc <- chip_index$Accession[i] 
+        targets <- ChIPDB[["Gene Keys"]][ ChIPDB[["ChIP Targets"]][[acc]] ]
+        
+        if ( sum( targets %in% gene.list ) > 10 ) {
+            
+            result <- GSEA_EnrichmentScore( gene.list, targets, 1, LFC )
+            
+            shuffled.ES <- GSEA_ESpermutations( 
+                gene.list , targets, 1, LFC, perms )
+            shuffled.ES <- shuffled.ES[ !is.na( shuffled.ES ) ]
+            
+            enrichmentScore <- c( enrichmentScore, result$ES )
+            pval <- c( pval,
+                       sum( shuffled.ES >= abs(result$ES))/ length(shuffled.ES))
+            enrichmentArg <- c( enrichmentArg, result$arg.ES )
+            
+            if( get.RES ==TRUE ){
+                
+                if ( missing( RES.filter ) ) {
+                    # Store running sums of all TFs.
+                    res <- c( res, list( result$RES ) )
+                    names( res )[ length( res )] <- acc
+                    ind <- c( ind, list( result$indicator ) )
+                    names( ind )[ length( ind ) ] <- acc
+                    
+                } else {
+                    # Store running sums of TF in RES.filter
+                    if ( acc %in% RES.filter) {
+                        res <- c( res, list( result$RES ) )
+                        names( res )[ length( res )] <- acc
+                        ind <- c( ind, list( result$indicator ) )
+                        names( ind )[ length( ind )] <- acc
+                    }
                 }
             }
+            
+        } else {
+            chip_index <- chip_index[-i, ]
+            i <- i-1
         }
         # update progress bar
         setTxtProgressBar(pbar, i)
     }
-    chip_index <- chip_index[ chip_index$done == TRUE, ]
-
     close(pbar)
     pval.adj <- stats::p.adjust(pval, "fdr")  # Adjust pvalues
-
+    
     enrichmentTable <- data.frame(
         Accession = chip_index$Accession, TF = chip_index$TF,
         ES = enrichmentScore, p.val = pval, pval.adj = pval.adj,
-        Arg.ES = enrichmentArg, stringsAsFactors = FALSE )
-
-    enrichmentTable <- enrichmentTable[!is.na(enrichmentTable$pval.adj), ]
-
+        Arg.ES = enrichmentArg, stringsAsFactors = F )
+    
     enrichmentTable <- merge(
         MetaData[,c("Accession","Cell","Treatment")],
         enrichmentTable, by="Accession")
-
-    if (get.RES == TRUE) {
-        GSEA_results <- list(enrichmentTable, res, ind)
-        names(GSEA_results) <- c("Enrichment.table", "RES", "indicators")
-        return(GSEA_results)
+    
+    enrichmentTable <- enrichmentTable[ !is.na( enrichmentTable$pval.adj ), ]
+    
+    if ( get.RES == TRUE) {
+        GSEA_results <- list( enrichmentTable, res, ind )
+        names( GSEA_results ) <- c("Enrichment.table", "RES", "indicators")
+        return( GSEA_results )
     } else {
-        return(enrichmentTable)
+        return( enrichmentTable )
     }
 }
+
+#### Plotting functions ####
 
 plot_CM <- function( CM.statMatrix, plot_title = NULL,
     specialTF = NULL, TF_colors = NULL ) {
@@ -1531,68 +1489,63 @@ plot_ES <- function( GSEA_result, LFC, plot_title = NULL, specialTF = NULL,
     #' @export plot_ES
     #' @examples
     #' data('GSEA.result','log2.FC',package = 'TFEA.ChIP')
-    #' TF.hightlight<-c('GATA2')
-    #' names(TF.hightlight)<-c('GATA2')
-    #' col<- c('red')
-    #' plot_ES(GSEA.result,log2.FC,specialTF = TF.hightlight,TF_colors = col)
+    #' TF.hightlight <- c('E2F1' = 'E2F1')
+    #' col <- c('red')
+    #' plot_ES( GSEA.result, log2.FC, "Example", TF.hightlight, col )
     
     if (!requireNamespace("plotly", quietly = TRUE)) {
         stop("plotly package needed for this function to work. ",
              "Please install it.", call. = FALSE)
     }
     
-    if (is.data.frame(GSEA_result) == TRUE) {
+    if ( is.data.frame( GSEA_result ) ) {
         enrichTab <- GSEA_result
-    } else if (is.list(GSEA_result) == TRUE) {
+    } else {
         enrichTab <- GSEA_result[["Enrichment.table"]]
     }
     
     # If plotting selected points only
-    if (!is.null(Accession) | !is.null(TF)) {
-        if (is.null(Accession)) {
-            Accession <- enrichTab[ enrichTab$TF %in% TF,]$Accession
+    if ( ! is.null( Accession ) | ! is.null( TF ) ) {
+        if ( is.null( Accession ) ) {
+            Accession <- enrichTab$Accession[ enrichTab$TF %in% TF ]
         }
         if (is.null(TF)) {
-            TF <- enrichTab[ enrichTab$Accession %in% Accession,]$TF
+            TF <- enrichTab$TF[ enrichTab$Accession %in% Accession ]
         }
-        SS <- ((enrichTab$Accession %in% Accession) &
-                   (enrichTab$TF %in% TF))
-        enrichTab <- enrichTab[which(SS), ]
+        sel <- enrichTab$Accession %in% Accession & enrichTab$TF %in% TF
+        enrichTab <- enrichTab[ which( sel ), ]
     }
     
     # Default options
-    if (is.null(plot_title)) {
+    if ( is.null(plot_title) ) {
         plot_title <- "Transcription Factor Enrichment"
     }
     
-    if (is.null(specialTF)) {
-        color_list <- rep("Other", dim(enrichTab)[1])
-        enrichTab$highlight <- color_list
-        markerColors <- c("azure4")
-        names(markerColors) <- c("Other")
+    if ( is.null( specialTF ) ) {
+        enrichTab$highlight <- "Other"
+        markerColors <- c( "Other"="azure4")
+    } else {
+        if ( is.null( TF_colors ) ) {
+            TF_colors <- c(
+                "red", "blue", "green", "hotpink", "cyan", "greenyellow",
+                "gold", "darkorchid", "chocolate1", "black", "lightpink",
+                "seagreen" )
+            TF_colors <- TF_colors[ 1 : length( unique( names( specialTF ) ) ) ]
+            color_list <- highlight_TF( enrichTab, 4, specialTF, TF_colors )
+            enrichTab$highlight <- color_list[[ 1 ]]
+            markerColors <- color_list[[ 2 ]]
+        } else {
+            color_list <- highlight_TF( enrichTab, 4, specialTF, TF_colors )
+            enrichTab$highlight <- color_list[[ 1 ]]
+            markerColors <- color_list[[ 2 ]]
+        }
     }
-    
-    # No colors selected
-    if (!is.null(specialTF) & is.null(TF_colors)) {
-        TF_colors <- c(
-            "red", "blue", "green", "hotpink", "cyan", "greenyellow","gold",
-            "darkorchid", "chocolate1", "black", "lightpink", "seagreen")
-        TF_colors <- TF_colors[ 1 : length( unique( names( specialTF ) ) ) ]
-        color_list <- highlight_TF( enrichTab, 4, specialTF, TF_colors )
-        enrichTab$highlight <- color_list[[ 1 ]]
-        markerColors <- color_list[[ 2 ]]
-    }
-    if (!is.null(specialTF) & !is.null(TF_colors)) {
-        color_list <- highlight_TF(enrichTab, 4, specialTF, TF_colors)
-        enrichTab$highlight <- color_list[[1]]
-        markerColors <- color_list[[2]]
-    }
-    
+
     enrichTab$symbol <- "pVal>0.05"
     enrichTab$symbol[ enrichTab$pval.adj <= 0.05 ] <- "pVal<=0.05"
     
     # Adding metadata
-    if (!exists("MetaData")) {
+    if ( ! exists( "MetaData" ) ) {
         MetaData <- NULL
         data("MetaData", package = "TFEA.ChIP", envir = environment())
     }
@@ -1602,11 +1555,12 @@ plot_ES <- function( GSEA_result, LFC, plot_title = NULL, specialTF = NULL,
     enrichTab$Cell <- MetaData$Cell
     rm(MetaData)
     
-    
+   
     enrichTab$pointText = paste0(
         enrichTab$Accession, ": ", enrichTab$TF, "<br>Adjusted p-value: ",
         round( enrichTab$pval.adj, 3 ), "<br>Treatment: ", enrichTab$Treatment,
         "<br>Cell: ", enrichTab$Cell )
+    print( enrichTab )
     
     multicolor <- length(markerColors) > 1 &
         length( unique( enrichTab$TF ) ) > length( specialTF )
@@ -1632,7 +1586,7 @@ plot_ES <- function( GSEA_result, LFC, plot_title = NULL, specialTF = NULL,
     } else {
         p <- plotly::plot_ly(enrichTab,
             x = enrichTab$Arg.ES, y = enrichTab$ES, type = "scatter", 
-            mode = "markers", text = enrichTab$text, 
+            mode = "markers", text = enrichTab$pointText, 
             color = enrichTab$highlight, colors = markerColors, 
             symbol = enrichTab$symbol, symbols = c( "x", "circle" ) ) %>%
             plotly::layout( title = plot_title,
@@ -1668,9 +1622,9 @@ plot_RES <- function( GSEA_result, LFC, plot_title = NULL, line.colors = NULL,
     #' @export plot_RES
     #' @examples
     #' data('GSEA.result','log2.FC',package = 'TFEA.ChIP')
-    #' plot_RES(GSEA.result,log2.FC,TF=c('GATA3'),
-    #'     Accession=c('ENCSR000BMX.GATA3.T47D',
-    #'     'ENCSR000EVW.GATA2.ENDOTHELIAL_UMBILICAL_VEIN'))
+    #' plot_RES(GSEA.result, log2.FC, TF = c('E2F4',"E2F1"),
+    #'     Accession=c('ENCSR000DYY.E2F4.GM12878',
+    #'     'ENCSR000EVJ.E2F1.HeLa-S3'))
 
     if (!requireNamespace("plotly", quietly = TRUE)) {
         stop("plotly package needed for this function to work.",
