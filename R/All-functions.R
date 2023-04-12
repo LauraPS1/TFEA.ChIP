@@ -1560,7 +1560,7 @@ plot_ES <- function( GSEA_result, LFC, plot_title = NULL, specialTF = NULL,
         enrichTab$Accession, ": ", enrichTab$TF, "<br>Adjusted p-value: ",
         round( enrichTab$pval.adj, 3 ), "<br>Treatment: ", enrichTab$Treatment,
         "<br>Cell: ", enrichTab$Cell )
-    print( enrichTab )
+    
     
     multicolor <- length(markerColors) > 1 &
         length( unique( enrichTab$TF ) ) > length( specialTF )

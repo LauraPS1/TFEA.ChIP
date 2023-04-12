@@ -14,7 +14,7 @@ Imports: GenomicRanges, IRanges, biomaRt, GenomicFeatures, grDevices,
         dplyr, stats, utils, R.utils, methods, org.Hs.eg.db
 Suggests: knitr, rmarkdown, S4Vectors, plotly, scales, tidyr, ggplot2,
         DESeq2, BiocGenerics, ggrepel, rcompanion,
-        TxDb.Hsapiens.UCSC.hg19.knownGene
+        TxDb.Hsapiens.UCSC.hg19.knownGene, RUnit
 VignetteBuilder: knitr
 biocViews: Transcription, GeneRegulation, GeneSetEnrichment,
         Transcriptomics, Sequencing, ChIPSeq, RNASeq, ImmunoOncology
