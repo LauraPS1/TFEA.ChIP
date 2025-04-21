@@ -105,7 +105,8 @@ txt2GR <- function( fileTable, format, fileMetaData, alpha = NULL ) {
       fileTable <- fileTable[, c(1, 2, 3, 8)]
       colnames(fileTable) <- c("chr", "start", "end", "score")
       fileTable$score <- 10 ^ (-1 * (fileTable$score ) )
-      fileTable$score <- p.adjust( fileTable$score, "fdr" ) # adjust p-values using Benjamini & Hochberg correction.
+      # adjust p-values using Benjamini & Hochberg correction
+      fileTable$score <- p.adjust( fileTable$score, "fdr" ) 
       Stat <- "corrected p-Value"
       if (is.null(alpha)) {
         valLimit <- 0.05
@@ -134,7 +135,8 @@ txt2GR <- function( fileTable, format, fileMetaData, alpha = NULL ) {
                              "Treatment", "Antibody", "TF", "Score Type")
       
       gr <- GenomicRanges::GRanges(seqnames = fileTable$chr,
-                                   ranges = IRanges::IRanges(fileTable$start, end = fileTable$end),
+                                   ranges = IRanges::IRanges(fileTable$start, 
+                                                          end = fileTable$end),
                                    score = fileTable$score, mcols = MDframe)
       return(gr)
     } else {
@@ -156,11 +158,13 @@ txt2GR <- function( fileTable, format, fileMetaData, alpha = NULL ) {
       colnames(fileTable) <- c("chr", "start", "end", "score")
       
       if (format == "macs1.4") {
-        fileTable$score <- 10 ^ (-1 * (fileTable$score / 10 ) ) # -10 * log10(p-value)
+        # -10 * log10(p-value)
+        fileTable$score <- 10 ^ (-1 * (fileTable$score / 10 ) ) 
       } else if (format == "macs2"){
         fileTable$score <- 10 ^ (-1 * (fileTable$score ) ) # -log10(p-value)
       }
-      fileTable$score <- p.adjust( fileTable$score, "fdr" ) # adjust p-values using Benjamini & Hochberg correction.
+      # adjust p-values using Benjamini & Hochberg correction
+      fileTable$score <- p.adjust( fileTable$score, "fdr" ) 
       
       fileTable <- fileTable[fileTable$score < valLimit, ]
       Stat <- "corrected p-Value"
@@ -182,12 +186,14 @@ txt2GR <- function( fileTable, format, fileMetaData, alpha = NULL ) {
       colnames(fileTable) <- c("chr", "start", "end", "score")
       
       if (format == "macs1.4") {
-        fileTable$score <- 10 ^ (-1 * (fileTable$score / 10 ) ) # -10 * log10(p-value)
+        # -10 * log10(p-value)
+        fileTable$score <- 10 ^ (-1 * (fileTable$score / 10 ) ) 
       } else if (format == "macs2"){
         fileTable$score <- 10 ^ (-1 * (fileTable$score ) ) # -log10(p-value)
       }
       
-      fileTable$score <- p.adjust( fileTable$score, "fdr" ) # adjust p-values using Benjamini & Hochberg correction.
+      # adjust p-values using Benjamini & Hochberg correction
+      fileTable$score <- p.adjust( fileTable$score, "fdr" ) 
       fileTable <- fileTable[fileTable$score < valLimit, ]
       Stat <- "corrected p-Value"
     }
@@ -200,7 +206,8 @@ txt2GR <- function( fileTable, format, fileMetaData, alpha = NULL ) {
                              "Treatment", "Antibody", "TF", "Score Type")
       
       gr <- GenomicRanges::GRanges(seqnames = fileTable$chr,
-                                   ranges = IRanges::IRanges(fileTable$start, end = fileTable$end),
+                                   ranges = IRanges::IRanges(fileTable$start, 
+                                   end = fileTable$end),
                                    score = fileTable$score, mcols = MDframe)
       return(gr)
     } else {
@@ -364,7 +371,7 @@ set_user_data <- function( metadata, ChIPDB ) {
   #' @export set_user_data
   #' @examples
   #' data( 'MetaData', 'ChIPDB', package='TFEA.ChIP' )
-  #' # For this example, we will usethe variables already included in the
+  #' # For this example, we will use the variables already included in the
   #' # package.
   #' set_user_data( MetaData, ChIPDB )
   
@@ -429,7 +436,8 @@ preprocessInputData <- function(inputData, mode = "h2h" ) {
       
     } else {
       gene_symbols <- rownames(inputData)
-      entrez_ids <- gene_symbols  # No translation needed if already in Entrez format
+      # No translation needed if already in Entrez format
+      entrez_ids <- gene_symbols  
     }
     # get the rest of the variables
     log2FoldChange <- inputData[["log2FoldChange"]]
@@ -474,7 +482,8 @@ preprocessInputData <- function(inputData, mode = "h2h" ) {
       
     } else {
       gene_symbols <- rownames(inputData)
-      entrez_ids <- gene_symbols  # No translation needed if already in Entrez format
+      # No translation needed if already in Entrez format
+      entrez_ids <- gene_symbols  
     }
     # get the rest of the variables
     log2FoldChange <- inputData$logFC
@@ -482,7 +491,8 @@ preprocessInputData <- function(inputData, mode = "h2h" ) {
     pval.adj <- inputData$FDR
     
     Table <- data.frame(Symbol = gene_symbols, Genes = entrez_ids, 
-                        log2FoldChange = log2FoldChange, pvalue = pvalue, pval.adj = pval.adj)
+                        log2FoldChange = log2FoldChange, pvalue = pvalue, 
+                                                        pval.adj = pval.adj)
     Table$Genes <- as.character(Table$Genes)
     Table <- Table[!is.na(Table$log2FoldChange), ]
     Table <- Table[order(Table$log2FoldChange, decreasing = TRUE), ]
@@ -490,7 +500,7 @@ preprocessInputData <- function(inputData, mode = "h2h" ) {
     return(Table)
     
   } else if ( methods::is(inputData, "data.frame") ) {
-    # Extracting data from a data frame.
+    # Extracting data from a data frame
     # Checkig if all the necessary columns are present
     if (!(all(c("Genes", "pvalue", "log2FoldChange") %in% colnames(inputData))) && 
         !(all(c("Genes", "pval.adj", "log2FoldChange") %in% colnames(inputData)))) {
@@ -561,20 +571,24 @@ Select_genes <- function(GeneExpression_df, max_pval = 0.05,
   
   # Checking input variables
   if (max_pval < min_pval) {
-    stop("'max_pval' must be greater than or equal to 'min_pval'.", call. = FALSE)
+    stop("'max_pval' must be greater than or equal to 'min_pval'.",
+                                                         call. = FALSE)
   }
   if (max_LFC < min_LFC) {
-    stop("'max_LFC' must be greater than or equal to 'min_LFC'.", call. = FALSE)
+    stop("'max_LFC' must be greater than or equal to 'min_LFC'.", 
+                                                         call. = FALSE)
   }
   
   # Ensure required columns are present
   if (!all(c("Genes", "log2FoldChange") %in% colnames(GeneExpression_df))) {
-    stop("The input data must contain 'Genes' and 'log2FoldChange'.", call. = FALSE)
+    stop("The input data must contain 'Genes' and 'log2FoldChange'.", 
+                                                           call. = FALSE)
   }
   
   # Ensure at least one p-value column is present
   if (!any(c("pval.adj", "pvalue") %in% colnames(GeneExpression_df))) {
-    stop("The input data must contain either 'pval.adj' or 'pvalue'.", call. = FALSE)
+    stop("The input data must contain either 'pval.adj' or 'pvalue'.", 
+                                                             call. = FALSE)
   }
   
   # Selecting genes based on p-value and log2(FoldChange)
@@ -584,7 +598,8 @@ Select_genes <- function(GeneExpression_df, max_pval = 0.05,
     g_pv <- with(GeneExpression_df, pvalue >= min_pval & pvalue <= max_pval)
   }
   
-  g_lfc <- with(GeneExpression_df, log2FoldChange >= min_LFC & log2FoldChange <= max_LFC)
+  g_lfc <- with(GeneExpression_df,
+                      log2FoldChange >= min_LFC & log2FoldChange <= max_LFC)
   
   # Extracting gene names
   g_names <- GeneExpression_df$Genes[g_pv & g_lfc]
@@ -614,7 +629,7 @@ GeneID2entrez <- function(gene.IDs, return.Matrix = FALSE, mode = "h2h") {
   stopifnot(mode %in% c("h2h", "m2m", "m2h"))
   
   gene.IDs <- gene.IDs[!is.na(gene.IDs)]
-  gene.IDs <- trimws(gene.IDs)  # remove any possible white spaces
+  gene.IDs <- trimws(gene.IDs)  # Remove any possible white spaces
   
   # Helper function to handle warnings for many-to-one mappings
   handle_warning <- function(matched_2) {
@@ -763,22 +778,33 @@ get_chip_index <- function(encodeFilter = FALSE, TFfilter = NULL) {
 
 #### Run TFEA ####
 
-contingency_matrix <- function(test_list, control_list = NULL,
+contingency_matrix <- function(test_list, control_list = NULL,                   # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                                chip_index = get_chip_index()) {
   
-  #' @title Computes 2x2 contingency matrices
-  #' @description Function to compute a 2x2 contingency matrix based on the
-  #' presence or absence of gene IDs in a ChIP-Seq binding database.
-  #' @param test_list List of gene Entrez IDs for the test group.
-  #' @param control_list List of gene Entrez IDs for the control group. If not 
-  #' provided, all human genes not in test_list will be used as control.
-  #' @param chip_index Data frame containing accession IDs of ChIPs and their
-  #' associated transcription factors. Default is obtained from get_chip_index().
-  #' @return A list of contingency matrices, one per element in chip_index.
-  #' @export contingency_matrix
+  #' @title Compute 2x2 Contingency Matrices for ChIP-Seq Enrichment
+  #' @description
+  #' This function computes 2x2 contingency matrices to assess the overlap between 
+  #' a test set of genes and TF binding targets derived from a ChIP-Seq database. 
+  #' The matrices are constructed for each ChIP experiment listed in the 
+  #' provided index, comparing the number of test and control genes 
+  #' that are bound (or not bound) by each transcription factor.
+  #' @param test_list A vector of Entrez gene IDs representing the test group 
+  #' (e.g., differentially expressed genes).
+  #' @param control_list A vector of Entrez gene IDs to be used as the control group. 
+  #'   If NULL (default), all genes in the ChIP database not present in `test_list` are used.
+  #' @param chip_index A data frame containing metadata for ChIP experiments. Must contain 
+  #'   an `Accession` column matching entries in the ChIP database. Defaults to 
+  #' the result of `get_chip_index()`.
+  #'   `test_list` and `control_list` to simulate a null distribution.
+  #' @return A named list of 2x2 contingency matrices, one per ChIP experiment. 
+  #'   Each matrix has:
+  #'   - Rows: Test group, Control group
+  #'   - Columns: Number of genes bound (Positive), and not bound (Negative) by the TF
   #' @examples
   #' data('Genes.Upreg', package = 'TFEA.ChIP')
-  #' CM_list_UP <- contingency_matrix(Genes.Upreg)
+  #' cm_list <- contingency_matrix(Genes.Upreg)
+  #' @export
+
   
   # Load ChIPDB if not already available
   if (!exists("ChIPDB")) {
@@ -797,11 +823,13 @@ contingency_matrix <- function(test_list, control_list = NULL,
   
   # Generate control gene list if not provided
   if (is.null(control_list)) {
-    control_list <- setdiff(ChIPDB[["Gene Keys"]], test_list)  # Exclude test_list from control
+    # Exclude test_list from control
+    control_list <- setdiff(ChIPDB[["Gene Keys"]], test_list)  
   } else {
-    control_list <- setdiff(control_list, test_list)  # Exclude test_list from provided control_list
+    # Exclude test_list from provided control_list
+    control_list <- setdiff(control_list, test_list)  
   }
-  
+
   # Ensure chip_index is valid
   if (is.null(chip_index) || nrow(chip_index) == 0) {
     stop("The chip_index is empty or does not contain valid accession IDs. Please check the input.")
@@ -848,7 +876,8 @@ getCMstats <- function(CM_list, chip_index = get_chip_index()) {
   #' It returns a data frame containing ChIP-Seq experiment accession IDs,
   #' tested transcription factors, p-values, odds ratios, and adjusted values.
   #' @param CM_list A list of contingency matrices, typically from `contingency_matrix`.
-  #' @param chip_index A data frame with ChIP accession IDs and TFs from the `get_chip_index` function.
+  #' @param chip_index A data frame with ChIP accession IDs and TFs from 
+  #' the `get_chip_index` function.
   #' If not provided, the entire internal database is used.
   #' @return A data frame with the ChIP experiment ID, TF, p-value, odds-ratio, 
   #' and other derived statistics.
@@ -922,8 +951,6 @@ getCMstats <- function(CM_list, chip_index = get_chip_index()) {
   return(statMat)
 }
 
-
-
 rankTFs <- function(resultsTable,
                     rankMethod = "gsea", makePlot = FALSE,
                     plotTitle = "TF ranking") {
@@ -933,14 +960,14 @@ rankTFs <- function(resultsTable,
   #' Wilcoxon rank-sum test or a GSEA-like approach.
   #' @param resultsTable Output from the function 'getCMstats'
   #' @param rankMethod "wilcoxon" or "gsea".
-  #' @param makePlot (Optional) For rankMethod="gsea". If TRUE, generates a plot for
-  #' TFs with a p-value < 0.05.
+  #' @param makePlot (Optional) For rankMethod="gsea". If TRUE, generates 
+  #' a plot for TFs with a p-value < 0.05.
   #' @param plotTitle (Optional) Title for the plot.
   #' @return data frame containing:
   #' For Wilcoxon rank-sum test: rank, TF name, test statistic
   #' ('wilc_W), p-value, Freeman's theta, epsilon-squared, and effect size
   #' For GSEA-like ranking: TF name, enrichment score, argument,
-  #'   p-value, number of ChIPs}
+  #'   p-value, number of ChIPs
   #' @export rankTFs
   #' @examples
   #' data('Genes.Upreg', package = 'TFEA.ChIP')
@@ -952,7 +979,7 @@ rankTFs <- function(resultsTable,
   rankMethod <- tolower(rankMethod)
   stopifnot(rankMethod %in% c("wilcoxon", "gsea"))
   
-  # Check the input type (TFEA.ChIP association analysis)
+  # Check the input type (TFEA.ChIP ORA analysis)
   cols_needed <- c("Accession", "TF", "distance")
   if (any(!cols_needed %in% colnames(resultsTable))) {
     stop("Input error: resultsTable doesn't contain all",
@@ -969,7 +996,7 @@ rankTFs <- function(resultsTable,
     TFrank <- lapply(chipSets, function(acc_list, statMat) {
       tf <- statMat$TF[statMat$Accession == acc_list[1]]
       res <- GSEA_EnrichmentScore(statMat$Accession, acc_list, 1, 
-                                                           statMat$distance)
+                                  statMat$distance)
       
       shuffled <- rep( list( statMat$Accession ), 100)
       shuffled <- lapply( shuffled, sample )
@@ -1011,23 +1038,18 @@ rankTFs <- function(resultsTable,
           data = plot_df, size = 3, alpha = .5
         ) +
         ggplot2::ylim(-1.5, 1.5) +
-        ggrepel::geom_text_repel(data = sub1, xlim = c(0, 250),
-                                 max.overlaps = 100,
-                                 ggplot2::aes(x = arg.ES, y = ES, label = TF,
-                                              color = TF)) +
-        ggrepel::geom_text_repel(data = sub2, xlim = c(250, NA),
-                                 max.overlaps = 100,
-                                 ggplot2::aes(x = arg.ES, y = ES, label = TF,
-                                              color = TF)) +
         ggplot2::theme_bw() +
         ggplot2::geom_hline(yintercept = 0) +
         ggplot2::geom_point(ggplot2::aes(x = mid, y = 0), color = "black") +  
         ggplot2::theme(legend.position = 'none',
                        plot.title = ggplot2::element_text(hjust = .5, 
-                                                face = "bold", size = 16)) +
+                                                          face = "bold", size = 16)) +
         ggplot2::labs(title = plotTitle, 
                       y = "Enrichment Score", 
                       x = "ChIP-seq ranking")
+      
+      p <- plotly::ggplotly(p)            
+      
       
       return(list(TF_ranking = TFrank, TFranking_plot = p))
     } else {
@@ -1070,7 +1092,6 @@ rankTFs <- function(resultsTable,
     return(TF_wilcox)
   }
 }
-
 
 
 GSEA_EnrichmentScore <- function(gene.list, gene.set,
@@ -1154,8 +1175,8 @@ GSEA_ESpermutations <- function(gene.list, gene.set, weighted.score.type = 0,
                                 correl.vector = NULL, perms = 1000) {
   
   #' @title Calculate enrichment scores for a permutation test.
-  #' @description Function to calculate enrichment scores over a randomly ordered
-  #' gene list.
+  #' @description Function to calculate enrichment scores over a randomly 
+  #' ordered gene list.
   #' @param gene.list Vector of gene Entrez IDs.
   #' @param gene.set A gene set, e.g. gene IDs corresponding to a ChIP-Seq
   #' experiment's peaks.
@@ -1358,6 +1379,7 @@ plot_CM <- function(CM.statMatrix, plot_title = NULL,
   # Prepare highlighting for transcription factors
   if (is.null(specialTF)) {
     CM.statMatrix$highlight <- "Others"
+    TF_colors <- "grey"
   } else {
     if (is.null(TF_colors)) {
       TF_colors <- c(setNames(RColorBrewer::brewer.pal(min(length(specialTF),
@@ -1434,12 +1456,16 @@ plot_ES <- function(GSEA_result, LFC, plot_title = NULL, specialTF = NULL,
   #' @description Function to plot the Enrichment Score of every member of
   #' the ChIPseq binding database.
   #' @param GSEA_result Returned by GSEA_run.
-  #' @param LFC Vector with log2(Fold Change) of every gene with an Entrez ID, ordered from highest to lowest.
+  #' @param LFC Vector with log2(Fold Change) of every gene with an Entrez ID, 
+  #' ordered from highest to lowest.
   #' @param plot_title (Optional) Title for the plot.
-  #' @param specialTF (Optional) Named vector of transcription factors (TF) to highlight in the plot.
+  #' @param specialTF (Optional) Named vector of transcription factors (TF)
+  #'  to highlight in the plot.
   #' @param Accession (Optional) Vector of dataset IDs to restrict the plot to.
-  #' @param TF (Optional) Vector of transcription factor names to restrict the plot to.
-  #' @return Plotly object combining scatter plot of enrichment scores and a log2(fold change) heatmap.
+  #' @param TF (Optional) Vector of transcription factor names to restrict 
+  #' the plot to.
+  #' @return Plotly object combining scatter plot of enrichment scores and a 
+  #' log2(fold change) heatmap.
   #' @export
   
   # Extract enrichment table from GSEA result
@@ -1464,7 +1490,7 @@ plot_ES <- function(GSEA_result, LFC, plot_title = NULL, specialTF = NULL,
     plot_title <- "Transcription Factor Enrichment"
   }
   
-  # Handle special transcription factors for highlighting
+  # Handle special TFs for highlighting
   if (is.null(specialTF)) {
     enrichTab$highlight <- "Other"
     markerColors <- c("Other" = "azure4")
@@ -1487,12 +1513,6 @@ plot_ES <- function(GSEA_result, LFC, plot_title = NULL, specialTF = NULL,
   # Prepare data for ggplot
   enrichTab$Treatment <- MetaData$Treatment[match(enrichTab$Accession, MetaData$Accession)]
   enrichTab$Cell <- MetaData$Cell[match(enrichTab$Accession, MetaData$Accession)]
-  
-  # Create hover text for plotly
-  enrichTab$pointText <- paste("Accession:", enrichTab$Accession,
-                               "<br>Adj.P.value:", round(enrichTab$pval.adj, 3),
-                               "<br>Treatment:", enrichTab$Treatment,
-                               "<br>Cell:", enrichTab$Cell)
   
   # Create scatter plot using ggplot2
   es_plot <- ggplot2::ggplot(enrichTab, ggplot2::aes(x = Arg.ES, y = ES, 
@@ -1522,7 +1542,7 @@ plot_ES <- function(GSEA_result, LFC, plot_title = NULL, specialTF = NULL,
   lfc_bar <- ggplot2::ggplot(lfc_df, ggplot2::aes(x = x, y = y)) +
     ggplot2::geom_bar(stat = "identity", color = "grey40") +
     ggplot2::theme_bw() +
-    ggplot2::labs(x = "", y = "Log2(FC)") +
+    ggplot2::labs(x = "Rank", y = "Log2(FC)") +
     ggplot2::theme(
       axis.text.x = ggplot2::element_blank(),
       axis.ticks.x = ggplot2::element_blank(),
@@ -1545,13 +1565,16 @@ plot_ES <- function(GSEA_result, LFC, plot_title = NULL, specialTF = NULL,
 
 highlight_TF <- function(enrichTab, column, specialTF) {
   
-  #' @title Highlight Special Transcription Factors (TFs) in Enrichment Table.
+  #' @title Highlight special TFs in enrichment table.
   #' @description Function to assign special TFs to specific colors and 
   #' highlight them in the enrichment table.
   #' @param enrichTab Data frame containing the enrichment results.
-  #' @param column The column index or name of the enrichment table used for matching TFs.
-  #' @param specialTF A named vector of transcription factors to highlight in the plot.
-  #' @return A list containing the updated highlight column and the color mapping for each TF.
+  #' @param column The column index or name of the enrichment table used 
+  #' for matching TFs.
+  #' @param specialTF A named vector of transcription factors to highlight
+  #'  in the plot.
+  #' @return A list containing the updated highlight column and the color 
+  #' mapping for each TF.
   #' @export
   
   enrichTab$highlight <- "Other"
@@ -1565,7 +1588,7 @@ highlight_TF <- function(enrichTab, column, specialTF) {
   # Generate colors for each special TF
   colors.plot <- rainbow(length(unique(specialTF)))
   
-  # Map the transcription factors to colors
+  # Map the TFs to colors
   markerColors <- c(setNames(colors.plot, specialTF), "Other" = "azure4")
   
   return(list(enrichTab$highlight, markerColors))
@@ -1578,13 +1601,11 @@ plot_RES <- function(GSEA_result, LFC, plot_title = NULL, line.colors = NULL,
   #' @title Plot Running Enrichment Scores (RES) and Log2 Fold Change (LFC)
   #' @description This function plots the running enrichment scores (RES) from 
   #' a GSEA result, with an additional bar plot showing the log2 fold change 
-  #' (LFC) of genes. The RES plot can be filtered by transcription factors (TF) 
-  #' or accession IDs.
+  #' (LFC) of genes. The RES plot can be filtered by TFs or accession IDs.
   #' @param GSEA_result List returned by GSEA_run, containing the enrichment 
   #' table and RES.
   #' @param LFC Numeric vector containing the log2(Fold Change) of every gene 
-  #' with an Entrez ID, ordered
-  #' from highest to lowest.
+  #' with an Entrez ID, ordered from highest to lowest.
   #' @param plot_title (Optional) String specifying the title for the plot.
   #'  Default is "Transcription Factor Enrichment".
   #' @param line.colors (Optional) Character vector specifying colors for each 
@@ -1593,12 +1614,11 @@ plot_RES <- function(GSEA_result, LFC, plot_title = NULL, line.colors = NULL,
   #' each RES line. Possible values are 'solid', 'dash', or 'longdash'.
   #' @param Accession (Optional) Character vector specifying accession IDs to
   #' restrict the plot to. If NULL, all accession IDs will be plotted.
-  #' @param TF (Optional) Character vector specifying transcription factor 
-  #' names to restrict the plot to. If NULL, all transcription factors will 
-  #' be plotted.
+  #' @param TF (Optional) Character vector specifying TF names to restrict 
+  #' the plot to. If NULL, all transcription factors will be plotted.
   #' @return A Plotly object containing two subplots: the top one showing the 
   #' running enrichment scores (RES) for the filtered accession IDs or 
-  #' transcription factors, and the bottom one displaying the log2 fold
+  #' TFs, and the bottom one displaying the log2 fold
   #' change (LFC) as a bar plot.
   #' @export plot_RES
   #' @examples
@@ -1648,15 +1668,16 @@ plot_RES <- function(GSEA_result, LFC, plot_title = NULL, line.colors = NULL,
   
   # Create a long-format data frame
   plotTab <- data.frame(
-    x = unlist(lapply(rSums, seq_along)),  # x-axis values for each RES
+    x = unlist(lapply(rSums, seq_along)),  
     RES = unlist(rSums),                  # RES values
-    Accession = rep(Accession, lengths(rSums)), # Repeated Accession for grouping
-    TF = rep(MetaData$TF, lengths(rSums)), # Repeated TF for annotation
+    Accession = rep(Accession, lengths(rSums)), 
+    TF = rep(MetaData$TF, lengths(rSums)), 
     stringsAsFactors = FALSE
   )
   
   # Create ggplot with multiple RES lines
-  res_plot <- ggplot2::ggplot(plotTab, ggplot2::aes(x = x, y = RES, color = Accession)) +
+  res_plot <- ggplot2::ggplot(plotTab, 
+                  ggplot2::aes(x = x, y = RES, color = Accession)) +
     ggplot2::geom_line(size = 1) +
     ggplot2::geom_hline(yintercept = 0, color = "grey30", size = .5) + 
     ggplot2::theme_bw() +
@@ -1687,169 +1708,141 @@ plot_RES <- function(GSEA_result, LFC, plot_title = NULL, line.colors = NULL,
   res_plotly <- plotly::ggplotly(res_plot)
   lfc_plotly <- plotly::ggplotly(lfc_bar)
   
-  # Combine the plots using plotly::subplot
-  combined_plot <- plotly::subplot(res_plotly, lfc_plotly, nrows = 2, shareX = TRUE,
+  # Combine the plots 
+  combined_plot <- plotly::subplot(res_plotly, lfc_plotly, 
+                                   nrows = 2, shareX = TRUE,
                                    heights = c(0.8, 0.2), titleY = TRUE)
   
   return(combined_plot)
 }
 
-
-get_LFC_bar <- function(LFC) {
-  
-  #' @title Plots a color bar from log2(Fold Change) values.
-  #' @description Function to plot a color bar from log2(Fold Change)
-  #' values from an expression experiment.
-  #' @param LFC Vector of log2(fold change) values arranged from higher
-  #' to lower. Use only the values of genes that have an Entrez ID.
-  #' @return Plotly heatmap plot -log2(fold change) bar-.
-  #' @examples
-  #' get_LFC_bar(arranged.log2FC.array)
-  
-  # Check for required packages
-  if (!requireNamespace("scales", quietly = TRUE)) {
-    stop("The 'scales' package is required. Please install it.", call. = FALSE)
-  }
-  if (!requireNamespace("plotly", quietly = TRUE)) {
-    stop("The 'plotly' package is required. Please install it.", call. = FALSE)
-  }
-  
-  # Rescale log Fold Change values to a range of -1 to 1
-  vals <- scales::rescale(LFC)
-  o <- order(vals, decreasing = FALSE)
-  
-  # Count positive log2(fold change) values
-  posLen <- sum(LFC > 0)
-  
-  # Generate colors for positive and negative values
-  cols1 <- scales::col_numeric(grDevices::colorRamp(c("mistyrose", "red3")), 
-                                                  domain = NULL)(vals[1:posLen])
-  cols2 <- scales::col_numeric(grDevices::colorRamp(c("navy", "lightcyan")), 
-                                       domain = NULL)(vals[(posLen + 1):length(LFC)])
-  
-  # Combine colors
-  cols <- c(cols1, cols2)
-  
-  # Prepare data for the heatmap
-  colorValues <- data.frame(value = vals[o], color = cols[o])
-  
-  # Create the heatmap plot
-  LFC.bar <- plotly::plot_ly(
-    x = 1:length(LFC), 
-    y = rep(1, length(LFC)), 
-    z = LFC,
-    type = "heatmap", 
-    colorscale = colorValues, 
-    showscale = FALSE
-  ) %>%
-    plotly::layout(yaxis = list(visible = FALSE))
-  
-  return(LFC.bar)
-}
-
-
 metaanalysis_fx <- function(dat) {
-  
-  #' @title Perform Meta-Analysis for Each Database
-  #' @description This function performs a meta-analysis on odds ratios (OR) 
-  #' and their standard errors (OR.SE)
-  #' for transcription factors (TF) across different datasets, using a 
-  #' random-effects model. The results are
-  #' ordered by a computed distance metric based on OR and adjusted p-value 
-  #' (adj.pval).
-  #' @param dat A data frame containing the following columns: TF 
-  #' (Transcription Factor names), OR (Odds Ratio), 
-  #' OR.SE (Standard Error of the Odds Ratio), Accession (Dataset identifiers), 
-  #' and adj.pval (adjusted p-value).
-  #' @return A data frame containing the meta-analysis results for each 
-  #' transcription factor, including:
-  #' TF, Transcription Factor name.
-  #' k, Number of datasets (k) included in the meta-analysis.
-  #' OR, Estimated random effects Odds Ratio (OR).
-  #' OR.SE, Standard error of the random effects Odds Ratio (OR.SE).
-  #' CI95lower, Lower bound of the 95% confidence interval for the random 
-  #' effects OR.
-  #' CI95upper, Upper bound of the 95% confidence interval for the random 
-  #' effects OR.
-  #' pval, P-value for the random effects model.
-  #' distance, A computed distance metric based on OR and adjusted p-value.
+  #' @title Perform Meta-analysis for each TF
+  #' @description Conducts a random-effects meta-analysis of odds ratios (OR) 
+  #' and standard errors (OR.SE) for each TF using the `meta` package.
+  #' @param dat A data frame with columns: TF, OR, OR.SE, Accession, adj.pval.
+  #' @return A list with:
+  #'   - summary: a data frame of ranked meta-analysis results per TF
+  #'   - results: a named list of raw meta-analysis objects from the 
+  #'    `meta` package
   #' @export
-  #' @examples
-  #' data <- data.frame(
-  #'   TF = c('TF1', 'TF1', 'TF2', 'TF2'),
-  #'   OR = c(1.5, 1.2, 0.9, 1.1),
-  #'   OR.SE = c(0.2, 0.3, 0.1, 0.25),
-  #'   Accession = c('D1', 'D2', 'D3', 'D4'),
-  #'   adj.pval = c(0.01, 0.02, 0.05, 0.03)
-  #' )
-  #' metaanalysis_fx(data)
   
-  # Initialize a vector to store dataset IDs with errors
-  error.tfs <- character()  
+  error_tfs <- character()
+  tf_list <- unique(dat$TF)
+  meta_results <- list()
   
-  # Unique TFs in the dataset
-  tfs <- unique(dat$TF)
-  
-  # Perform meta-analysis for each TF
-  res_list <- lapply(tfs, function(tf) {
-    dat2 <- subset(dat, TF == tf)
+  result_df <- purrr::map_dfr(tf_list, function(tf) {
+    tf_data <- dplyr::filter(dat, TF == tf)
     
-    # Try to perform meta-analysis using a random-effects model
-    mm <- tryCatch({
-      meta::metagen(TE = dat2$OR, 
-                    seTE = dat2$OR.SE, 
-                    data = dat2, 
-                    sm = "MD", 
-                    fixed = FALSE, 
-                    random = TRUE, 
-                    method.tau = "REML", 
-                    id = dat2$Accession, 
-                    title = tf, 
-                    prediction = TRUE)
+    model <- tryCatch({
+      meta::metagen(
+        TE = tf_data$OR,
+        seTE = tf_data$OR.SE,
+        data = tf_data,
+        sm = "MD",
+        common = FALSE,
+        random = TRUE,
+        method.tau = "REML",
+        cluster = tf_data$Accession,
+        studlab = tf_data$Accession,
+        title = tf,
+        prediction = TRUE
+      )
     }, error = function(e) {
-      # In case of an error, store the dataset ID and return NULL
-      error.tfs <<- c(error.tfs, limma::strsplit2(dat2$Accession[1], '[.]')[,2])
+      error_id <- limma::strsplit2(tf_data$Accession[1], "[.]")[, 2]
+      error_tfs <<- c(error_tfs, error_id)
       return(NULL)
     })
     
-    # If meta-analysis was successful, return relevant results
-    if (!is.null(mm)) {
-      return(data.frame(
+    if (!is.null(model)) {
+      meta_results[[tf]] <<- model
+      
+      tibble::tibble(
         TF = tf,
-        k = mm$k,
-        OR = mm$TE.random,
-        OR.SE = mm$seTE.random,
-        CI95lower = mm$lower.random,
-        CI95upper = mm$upper.random,
-        pval = mm$pval.random
-      ))
+        k = model$k,
+        OR = model$TE.random,
+        OR.SE = model$seTE.random,
+        CI95lower = model$lower.random,
+        CI95upper = model$upper.random,
+        pval = model$pval.random
+      )
     }
-    NULL
   })
   
-  # Combine results for all TF
-  df <- do.call(rbind, res_list)
-  
-  # Adjust p-value
-  df$pval.adj <- p.adjust(df$pval, method = "fdr")
-  
-  # Check if results are valid
-  if (nrow(df) == 0) {
+  if (nrow(result_df) == 0) {
     stop("No valid meta-analysis results were produced.")
   }
   
-  # Reorder the results based on the Odds Ratio
-  df <- df %>%
-    dplyr::arrange(OR)
+  result_df <- result_df %>%
+    dplyr::mutate(
+      pval.adj = stats::p.adjust(pval, method = "fdr"),
+      pval.adj.safe = ifelse(pval.adj == 0, .Machine$double.xmin, pval.adj),
+      rank_score = abs(log2(OR)) * -log10(pval.adj.safe)
+    ) %>%
+    dplyr::arrange(dplyr::desc(rank_score)) %>%
+    dplyr::select(-pval.adj.safe)
   
-  # Message for TF that could not be analyzed
-  if (length(error.tfs) > 0) {
-    message("Meta-analysis could not be performed for the following TFs: ", 
-            paste(error.tfs, collapse = ", "),
+  if (length(error_tfs) > 0) {
+    message("Meta-analysis failed for the following TFs: ",
+            paste(unique(error_tfs), collapse = ", "),
             ". Please check their individual ChIP-seq values.")
   }
   
-  return(df)
+  return(list(summary = result_df, results = meta_results))
+}
+
+
+filter_expressed_TFs <- function(Table, chip_index, TFfilter = NULL, encodeFilter = FALSE) {
+  
+  #' @title Filter Expressed TFs
+  #' @description Filters TFs based on their expression status in the input dataset.
+  #' This function identifies expressed TFs by intersecting the input gene list
+  #' with the `chip_metadata` dataset.
+  #' @param Table A data frame containing gene expression data with a `Genes` column.
+  #' @param chip_index A data frame containing ChIP-Seq dataset accession IDs 
+  #' and associated TFs.
+  #' @param TFfilter (Optional) A character vector of TFs to filter.
+  #' @param encodeFilter (Optional) Logical; if TRUE, applies ENCODE filtering 
+  #' to ChIP-Seq data.
+  #' @return A filtered `chip_index` data frame containing only expressed TFs.
+  #' @export
+  
+  # Load chip_metadata if not already available
+  if (!exists("chip_metadata")) {
+    data("chip_metadata", package = "TFEA.ChIP", envir = environment())
+  }
+  
+  # Identify expressed genes
+  expressed_genes <- intersect(Table$Genes, chip_metadata$EntrezID)
+  
+  # Identify removed genes
+  rm_genes <- setdiff(chip_metadata$EntrezID, Table$Genes)
+  rm_genes_names <- chip_metadata %>%
+    filter(EntrezID %in% rm_genes) %>%
+    pull(tf.name)
+  
+  # Provide informative messages about removed genes
+  if (length(rm_genes_names) > 0) {
+    message("The following TFs were excluded from the analysis because they were not found in the provided dataset and are considered not expressed. To modify this behavior, set `expressed` to FALSE:\n", 
+            paste(rm_genes_names, collapse = ", "))
+  } else {
+    message("No genes were removed from the analysis as all genes were present in the provided dataset.")
+  }
+  
+  # Filter TFs based on expressed genes
+  filtered_tfs <- chip_metadata %>%
+    filter(EntrezID %in% expressed_genes) %>%
+    pull(chip.name)
+  
+  # Apply additional TF filtering if provided
+  if (!is.null(TFfilter)) {
+    filtered_tfs <- intersect(filtered_tfs, TFfilter)
+  }
+  
+  # Update chip index with filtered TFs
+  chip_index <- get_chip_index(TFfilter = filtered_tfs, encodeFilter = encodeFilter)
+  
+  return(chip_index)
 }
 
 analysis_from_table <- function(inputData, mode = "h2h", 
@@ -1868,8 +1861,8 @@ analysis_from_table <- function(inputData, mode = "h2h",
   
   #' @title Analysis from Input Table
   #' @description Performs gene expression analysis, filtering genes and
-  #' transcription factors (TFs) based on specified thresholds. It calculates
-  #' statistics using overrepresentation analysis (ORA) or gene set enrichment analysis (GSEA).
+  #' TFs based on specified thresholds. It calculates statistics using 
+  #' overrepresentation analysis (ORA) or gene set enrichment analysis (GSEA).
   #'
   #' @param inputData A data frame containing gene expression data.
   #' @param mode Character string specifying the mode: 'h2h', 'm2h', 'm2m'.
@@ -1920,32 +1913,7 @@ analysis_from_table <- function(inputData, mode = "h2h",
   # Filter for expressed TFs if required
   if (expressed) {
     cat("Filtering for expressed transcription factors...\n")
-    expressed_genes <- intersect(Table$Genes, chip_metadata$EntrezID)
-    filtered_tfs <- chip_metadata %>%
-      filter(EntrezID %in% expressed_genes) %>%
-      pull(chip.name)
-      
-    # removed genes
-    rm_genes <- chip_metadata %>%
-                   filter(EntrezID %in% setdiff(EntrezID, Table$Genes)) %>%
-                   pull(tf.name)
-                   
-    if (length(rm_genes) != 0) {
-    
-        message("The following genes were excluded from the analysis due to their absence in the provided dataset and have been classified as not expressed: ", paste(rm_genes, collapse = ", "))
-    
-    } else {
-    
-        message("No genes were removed from the analysis as all genes were present in the provided dataset.")
-    
-    }
-
-    
-    if (!is.null(TFfilter)) {
-      filtered_tfs <- intersect(filtered_tfs, TFfilter)
-    }
-    
-    chip_index <- get_chip_index(TFfilter = filtered_tfs, encodeFilter = encodeFilter)
+    chip_index <- filter_expressed_TFs(Table, chip_index, TFfilter, encodeFilter)
   }
   
   # Perform analysis
