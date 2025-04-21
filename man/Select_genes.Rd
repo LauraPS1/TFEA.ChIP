@@ -13,7 +13,7 @@ Select_genes(
 )
 }
 \arguments{
-\item{GeneExpression_df}{A data frame with the folowing fields:
+\item{GeneExpression_df}{A data frame with the following fields:
 'Gene', 'pvalue' or 'pval.adj', 'log2FoldChange'.}
 
 \item{max_pval}{maximum p-value allowed, 0.05 by default.}
@@ -25,7 +25,7 @@ Select_genes(
 \item{min_LFC}{minimum log2(FoldChange) allowed.}
 }
 \value{
-A vector of gene IDs.
+A character vector of gene IDs.
 }
 \description{
 Function to extract Gene IDs from a dataframe according
@@ -33,6 +33,6 @@ to the established limits for log2(FoldChange) and p-value.
 If possible, the function will use the adjusted p-value column.
 }
 \examples{
-data('hypoxia',package='TFEA.ChIP')
+data('hypoxia', package='TFEA.ChIP')
 Select_genes(hypoxia)
 }

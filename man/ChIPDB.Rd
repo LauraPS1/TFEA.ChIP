@@ -3,16 +3,20 @@
 \docType{data}
 \name{ChIPDB}
 \alias{ChIPDB}
-\title{TF-gene binding binary matrix}
+\title{TF-Gene List}
 \format{
-a matrix of 1060 columns and 16797 rows
+A list with two elements:
+Gene Keys, a vector of Entrez IDs
+ChIP Targets, a list containing indices of Entrez IDs associated with peaks from various ChIP-Seq experiments.
 }
 \usage{
 data("ChIPDB")
 }
 \description{
-Its rows correspond to human genes, and its columns, to every ChIP-Seq
-experiment in the database. The values are 1 – if the ChIP-Seq
-has a peak assigned to that gene – or 0 – if it hasn’t –.
+This dataset contains two elements: the first is "Gene Keys," which
+includes all the Entrez IDs, and the second is "ChIP Targets," a list
+containing information from multiple ChIP-Seq experiments. Each entry
+in this list contains the indices of the Entrez IDs from the first
+element that are associated with the peaks of that specific ChIP-Seq.
 }
 \keyword{datasets}

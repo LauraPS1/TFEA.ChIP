@@ -4,28 +4,29 @@
 \alias{contingency_matrix}
 \title{Computes 2x2 contingency matrices}
 \usage{
-contingency_matrix(test_list, control_list, chip_index = get_chip_index())
+contingency_matrix(
+  test_list,
+  control_list = NULL,
+  chip_index = get_chip_index()
+)
 }
 \arguments{
-\item{test_list}{List of gene Entrez IDs}
+\item{test_list}{List of gene Entrez IDs for the test group.}
 
-\item{control_list}{If not provided, all human genes not present in
-test_list will be used as control.}
+\item{control_list}{List of gene Entrez IDs for the control group. If not 
+provided, all human genes not in test_list will be used as control.}
 
-\item{chip_index}{Output of the function “get_chip_index”, a data frame
-containing accession IDs of ChIPs on the database and the TF each one
-tests. If not provided, the whole internal database will be used}
+\item{chip_index}{Data frame containing accession IDs of ChIPs and their
+associated transcription factors. Default is obtained from get_chip_index().}
 }
 \value{
-List of contingency matrices, one CM per element in chip_index
-(i.e. per ChIP-seq dataset).
+A list of contingency matrices, one per element in chip_index.
 }
 \description{
-Function to compute contingency 2x2 matrix by the partition
-of the two gene ID lists according to the presence or absence of the
-terms in these list in a ChIP-Seq binding database.
+Function to compute a 2x2 contingency matrix based on the
+presence or absence of gene IDs in a ChIP-Seq binding database.
 }
 \examples{
-data('Genes.Upreg',package = 'TFEA.ChIP')
+data('Genes.Upreg', package = 'TFEA.ChIP')
 CM_list_UP <- contingency_matrix(Genes.Upreg)
 }

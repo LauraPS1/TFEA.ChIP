@@ -1,8 +1,14 @@
 ---
-title: "TFEA.ChIP: a tool kit for transcription factor enrichment analysis capitalizing on ChIP-seq datasets"
-author: "Laura Puente-Santamaria, Luis del Peso"
+title: "TFEA.ChIP: A Toolkit for Transcription Factor Enrichment Analysis Capitalizing on ChIP-seq Datasets"
+author: "Laura Puente-Santamaria, Yosra Berrouayel, Luis del Peso"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output:
+  html_document:
+    theme: flatly      
+    highlight: tango    
+    toc: true             
+    toc_float: true        
+    number_sections: true 
 vignette: >
   %\VignetteIndexEntry{TFEA.ChIP: a tool kit for transcription factor enrichment}
   %\VignetteEngine{knitr::rmarkdown}
@@ -17,56 +23,71 @@ The package includes a set of tools to customize the ChIP data, perform enrichme
 - Analysis of the association of TFBS and differential expression from 2x2 tables recording the presence of binding sites for a given TF in DE and control genes. The statistical significance of the association for each factor determined by a Fisher's exact test.
 - GSEA analysis, based on the core function of the GSEA algorithm developed by the GSEA team at the Broad Institute of MIT and Harvard^[Subramanian, Tamayo, et al. (2005) PNAS 102, 15545-15550] ^[Mootha, Lindgren, et al. (2003) Nat Genet 34, 267-273]
 
-TFEA.ChIP includes a TF-gene interaction database containing 1060 datasets from ChIP-Seq experiments testing 277 different human transcription factors from the ReMap 2018 repository^[Jeanne Chèneby, Marius Gheorghe, Marie Artufel, Anthony Mathelier, Benoit Ballester; ReMap 2018: an updated atlas of regulatory regions from an integrative analysis of DNA-binding ChIP-seq experiments, Nucleic Acids Research, Volume 46, Issue D1, 4 January 2018, Pages D267–D275, https://doi.org/10.1093/nar/gkx1092]. Due to space limitations, TFEA.ChIPs internal database only includes ChIP-seq experiments from the ENCODE project. All the plots included in this vignette have been generated using the full ReMap 2018 ChIP-seq collection. To download the full ReMap 2018 database, as well as other ready-to-use databases, visit https://github.com/LauraPS1/TFEA.ChIP_downloads . 
+TFEA.ChIP includes a TF-gene interaction database containing 8,103 datasets from ChIP-Seq experiments testing 1,193 different human transcription factors from the ReMap 2022 repository^[Fayrouz Hammal, Pierre De Langen, Aurélie Bergon, Fabrice Lopez, Benoit Ballester; ReMap 2022: a database of Human, Mouse, Drosophila and Arabidopsis regulatory regions from an integrative analysis of DNA-binding sequencing experiments, Nucleic Acids Research, Volume 50, Issue D1, 7 January 2022, https://doi.org/10.1093/nar/gkab996], but you could use other ready-to-use databases, visit https://github.com/LauraPS1/TFEA.ChIP_downloads . 
 
-Although the package is mainly focused towards analyzing expression data generated from human cells, TFEA.ChIP includes the option to use datasets coming from experiments in mice, translating mouse gene names to their equivalent ID on the human genome.
+Although the package is mainly focused towards analyzing expression data generated from human cells, TFEA.ChIP includes the option to use datasets coming from experiments in mice, translating mouse gene names to their equivalent orthologs ID on the human genome.
 
 # Analysis Example
 
-TFEA.ChIP is designed to take the output of a differential expression analysis and identify TFBS enriched in the list of DE genes. In the case of the analysis of association, the only required input is a set of DE genes and, optionally, a set of control genes whose expression is not altered by the experimental conditions under study. For the GSEA analysis a ranked list of genes is required. This is supplied as a dataframe containing a column with gene names and a numerical column with the ranking metric, which typically are log-fold change or p-values for the gene expression changes in the two conditions under evaluation. 
+TFEA.ChIP is designed to take the output of a differential expression analysis and identify TFBS enriched in the list of DE genes. In the case of the Overrepresentation Analysis, the only required input is a set of DE genes and, optionally, a set of control genes whose expression is not altered by the experimental conditions under study. For the GSEA analysis a ranked list of genes is required. This is supplied as a dataframe containing a column with gene names and a numerical column with the ranking metric, which typically are log-fold change or p-values for the gene expression changes in the two conditions under evaluation. 
 For illustration purposes we will derive the input required for both analysis from a table containing the following field columns:
 
 - Gene name (*Genes*). Internally the package uses Entrez IDs, but translating from Gene Symbols and ENSEMBL IDs is available.
 - Log2 Fold Change (*Log2FoldChange*), indicating the difference in expression for each gene in the two experimental conditions being compared.
 - p-value (*pvalue*) or adjusted p-value (*pval.adj*) for the difference in gene expression between the two conditions.
 
-The output of popular packages, such as DESeq2, for detection of differentially expressed genes from the analysis of count data from RNA-seq experiments produce tables with this information. The *hypoxia_DESeq* and *hypoxia* datasets are the output of a differential expression analysis performed on an RNAseq experiment analyzing the response to hypoxia of endothelial cells^[Tiana, M et al. The SIN3A histone deacetylase complex is required for a complete transcriptional response to hypoxia. https://doi.org/10.1101/182691 ] deposited at the NCBI's GEO repository (GSE89831).
+The output of popular packages, such as DESeq2, for detection of differentially expressed genes from the analysis of count data from RNA-seq experiments produce tables with this information, and the output table can be taken by the tool. The *hypoxia_DESeq* and *hypoxia* datasets are the output of a differential expression analysis performed on an RNAseq experiment analyzing the response to hypoxia of endothelial cells^[Tiana, M et al. The SIN3A histone deacetylase complex is required for a complete transcriptional response to hypoxia. https://doi.org/10.1101/182691 ] deposited at the NCBI's GEO repository (GSE89831).
 
-To extract the information from a DESeqResults object or a data frame the function *preprocessInputData* is available. 
+Using the option *from.Mouse = TRUE* will convert mouse gene IDs to their equivalent human gene ID, thus taking advantage of the wider availability of ChIP-seq experiments done on human cells. This strategy relies on the overlap between human and mouse transcription regulatory mechanisms. Nevertheless, we advise to be cautious using this approach, since extrapolating results from one organism to another is not always appropriate.
 
-Using the option *from.Mouse = TRUE* will convert mouse gene IDs to their equivalent human gene ID, thus taking advantage of the wider abailability of ChIP-seq experiments done on human cells. This strategy relies on the overlap between human and mouse transcription regulatory mechanisms. Nevertheless, we advise to be cautious using this approach, since extrapolating results from one organism to another is not always appropiate.
+```{r setup, include=FALSE}
+library(devtools)
+# load package
+load_all('~/Documents/TFEA-ChIP/TFEA.ChIP')
+ChIPDB <- readRDS('~/Documents/TFEA-ChIP/R/out_rdata/encode_re2g_object_hg38.rds')
+```
 
+We can start this example by loading in R the table. This could be in DESeq2 format:
 
 ```{r eval=TRUE,echo=TRUE,message=FALSE}
-library(TFEA.ChIP)
-data( "hypoxia_DESeq", "hypoxia", package="TFEA.ChIP" ) # load example datasets
-hypoxia_table <- preprocessInputData( hypoxia_DESeq )
-head( hypoxia_table )
+library(dplyr)
+library(meta)
 
-head( hypoxia )
-hypoxia_table <- preprocessInputData( hypoxia )
-head( hypoxia_table )
+data( "hypoxia_DESeq", "hypoxia", package="TFEA.ChIP" ) # load example datasets
+hypoxia_df <- preprocessInputData( hypoxia_DESeq )
+# Display the first few rows
+head(hypoxia_df)
+```
+  
+Or a simple data frame with columns indicating gene names (entrez ids, ensembl ids or symbols), Log2FoldChange, and p-values/adjP:
+  
+```{r eval=TRUE,echo=TRUE,message=FALSE}
+# Preview the raw hypoxia dataset
+head(hypoxia)
+hypoxia_df <- preprocessInputData( hypoxia )
+# Display the first few rows
+head(hypoxia_df)
 
 ```
 
 After running *preprocessInputData*, your dataset will be ready to use with the rest of the package; gene names will be in Entrez Gene ID format and the resulting table is sorted by log2(Fold Change). 
 
-## Analysis of the association of TFBS and differential expression.
+## Overrepresentation analysis
 
-1.  Identification of DE genes
+### Identification of DE genes
 
 
-As indicated before, for this analysis, we must provide a list of genes are considered differentially induced and a list of control genes whose expression is not altered in the analyzed experiment. For that we will use the function *Select_genes*:
+As indicated before, for this analysis, we must provide a list of genes are considered differentially induced and a list of control genes whose expression is not altered in the analyzed experiment. For that we will use the function *Select_genes*. With this function, we can select upregulated genes taking those that have a FC over 1 and adjP < 0.05. We would select the control by taking genes modulated from -0.25 LFC to 0.25 and adjP from 0.5 to 1:
 ```{r eval=TRUE,echo=TRUE}
 #extract vector with names of upregulated genes
-Genes.Upreg <- Select_genes( hypoxia_table, min_LFC = 1 )
+Genes.Upreg <- Select_genes( hypoxia_df, min_LFC = 1, max_pval = 0.05 )
 #extract vector with names of non-responsive genes
-Genes.Control <- Select_genes( hypoxia_table,
-    min_pval = 0.5, max_pval = 1,
-    min_LFC = -0.25, max_LFC = 0.25 )
+Genes.Control <- Select_genes( hypoxia_df,
+ min_pval = 0.5, max_pval = 1,
+ min_LFC = -0.25, max_LFC = 0.25 )
 ```
 
-2. Translate the gene IDs to Entrez Gene IDs
+### Translate the gene IDs to Entrez Gene IDs
 
 In case the input dataset cannot be preprocessed or the user is interested in analyzing a particular set of genes that doesn't come from the input dataset, translating the IDs to Entrez Gene ID format is required. To that end its available the function *GeneID2entrez*:
 ```{r eval=TRUE,echo=TRUE,message=FALSE}
@@ -74,10 +95,9 @@ In case the input dataset cannot be preprocessed or the user is interested in an
 GeneID2entrez( gene.IDs = c("EGLN3","NFYA","ALS2","MYC","ARNT" ) )
 # To translate from mouse IDs:
 # GeneID2entrez( gene.IDs = c( "Hmmr", "Tlx3", "Cpeb4" ), mode = "m2h" ) # To get the equivalent human gene IDs
-# GeneID2entrez( gene.IDs = c( "Hmmr", "Tlx3", "Cpeb4" ), mode = "m2m" ) # To get mouse ENTREZ gene IDs
 ```
 
-3.  Association analysis
+###  Overrepresentation test
 
 In this step, we will construct a contingency table for each of the factors stored in the internal database categorizing the DE (DE_yes) and control (DE_no) genes according to the presence or absence of binding sites:
 
@@ -90,67 +110,94 @@ In this step, we will construct a contingency table for each of the factors stor
 Then, we will apply Fisher's exact test to each contingency table to test the null hypothesis that factor binding and differential expression are independent. In addition, to the raw p-values the function also return the FDR-adjusted values to correct for multiple testing.
 
 ```{r eval=TRUE,echo=TRUE}
-CM_list_UP <- contingency_matrix( Genes.Upreg, Genes.Control ) #generates list of contingency tables, one per dataset
-pval_mat_UP <- getCMstats( CM_list_UP ) #generates list of p-values and OR from association test
+CM_list_UP <- contingency_matrix( Genes.Upreg, Genes.Control ) # generates list of contingency tables, one per dataset
+pval_mat_UP <- getCMstats( CM_list_UP ) # generates list of p-values and OR from association test
 head( pval_mat_UP )
 ```
 
-In this example, all 1122 datasets in the internal database were used in the analysis. However, we can restrict the analysis to a specific subset of the database and/or a given set of transcription factors. To this end we can produce and index of the tables of interest with the function *get_chip_index* and pass this index as an additional argument to *contingency_matrix*. 
+In this example, all 8,103 datasets in the internal database were used in the analysis. However, we can restrict the analysis to a specific subset of transcription factors. To this end we can produce and index of the tables of interest with the function *get_chip_index* and pass this index as an additional argument to *contingency_matrix*. 
 Finally, note that the list of control genes is optional. If not supplied, all human genes not present in the test list will be used as control. Thus, we could restrict the analysis to the datasets generated by the ENCODE project and use all non-DE genes as control:
-
-
 ```{r eval=TRUE,echo=TRUE}
-chip_index <- get_chip_index( TFfilter = c( "HIF1A","EPAS1","ARNT" ) ) #restrict the analysis to datasets assaying these factors
-chip_index <- get_chip_index( encodeFilter = TRUE ) # Or select ENCODE datasets only
-CM_list_UPe <- contingency_matrix( Genes.Upreg, Genes.Control, chip_index ) #generates list of contingency tables
-pval_mat_UPe <- getCMstats( CM_list_UPe, chip_index ) #generates list of p-values and ORs
+chip_index <- get_chip_index( TFfilter = c( "HIF1A","EPAS1","ARNT" ) ) # restrict the analysis to datasets assaying these factors
+chip_index <- get_chip_index( encodeFilter = TRUE ) # or select ENCODE datasets only
+CM_list_UPe <- contingency_matrix( Genes.Upreg, Genes.Control, chip_index ) # generates list of contingency tables
+pval_mat_UPe <- getCMstats( CM_list_UPe, chip_index ) # generates list of p-values and ORs
 head( pval_mat_UPe )
 ```
 To know more about the experiments included in TFEA.ChIP's database or the conditions of a particular experiment, load the metadata table included using *data("MetaData", package = "TFEA.ChIP")*.
 
-To summarize the results by transcription factor use *rankTFs*. This function performs Wilcoxon rank-sum test or GSEA to test whether ChIPs belonging to the same TF are, as a group, significantly enriched / depleted in the results of the analysis. Be aware that in the case of transcription factors whose behavior is dependent on cellular context, integrating the results of all the related ChIPs might conceal its enrichment in a particular set of experimental conditions.
+Or even easier, we could do all the above in just one function:
+```{r eval=TRUE,echo=TRUE}
+pval_mat_UPe <- analysis_from_table(hypoxia_df, 
+ method = 'ora', # Overrepresentation Analysis
+ TFfilter = c( "HIF1A","EPAS1","ARNT" ),
+ interest_min_LFC = 0, # min LFC
+ control_min_pval = 0.5, control_max_pval = 1, # control pval limits
+ control_min_LFC = -0.25, control_max_LFC = 0.25) # control LFC limits
 
-```{r eval=TRUE, echo=TRUE, fig.width=8, fig.height=4}
-TF_ranking <- rankTFs( pval_mat_UP, rankMethod = "gsea", makePlot = TRUE )
-TF_ranking[[ "TFranking_plot" ]]
-head( TF_ranking[[ "TF_ranking" ]] )
+head( pval_mat_UPe )
 ```
 
-4. Plot results
+To summarize the results by transcription factor use `rankTFs`. This function performs *Wilcoxon rank-sum test* or *GSEA* to test whether ChIPs belonging to the same TF are, as a group, significantly enriched / depleted in the results of the analysis. *Be aware that in the case of transcription factors whose behavior is dependent on cellular context, integrating the results of all the related ChIPs might conceal its enrichment in a particular set of experimental conditions. The use of non-integrated results is recommended for more accurate interpretation.*
+
+```{r eval=FALSE, echo=TRUE}
+TF_ranking <- rankTFs( pval_mat_UP, rankMethod = "gsea", makePlot = TRUE )
+head( TF_ranking[[ "TF_ranking" ]] )
+TF_ranking[[ "TFranking_plot" ]]
+```
+![Snapshot of a plot generated with rankTFs.](rankTFplot.png)
+
+*Meta-analyses* can also be used to summarize results across multiple ChIP experiments for the same TF, accounting for the standard error of the Odds Ratio. This approach gives greater weight to more precise estimates. However, it may also dilute effects that are context-dependent:
+
+```{r eval=TRUE, echo=TRUE}
+TF_ranking2 <- metaanalysis_fx( pval_mat_UP )
+head( TF_ranking2[['summary']] )
+
+# Get HIF results
+filter(TF_ranking2$summary,
+  TF %in% c("ARNT", "HIF1A", "EPAS1"))
+```
+
+In this analysis, `k` denotes the number of ChIP experiments included. `OR` represents the weighted average Odds Ratio, `OR.SE` is its standard error, and `CI` refers to the corresponding confidence interval. A forest plot can be generated to visualize the results of interest:
+```{r eval=TRUE, echo=TRUE, fig.width=10, fig.height=6}
+# result for ARNT
+forest(TF_ranking2[['results']]$ARNT)
+```
+
+
+### Plot results
 
 The table of results generated by *getCMstats* can be parsed to select candidate TF. The function *plot_CM* uses the package *plotly* to generate an interactive plot representing the p-value against the odd-ratio that is very helpful to explore the results.
 
-```{r eval=FALSE,echo=TRUE}
-plot_CM( pval_mat_UP ) #plot p-values against ORs
+```{r eval=FALSE, echo=TRUE}
+plot_CM( pval_mat_UP ) # plot p-values against ORs
 ```
 ![Snapshot of a plot generated with plot_CM.](CMplot1.png)
 
 In fact, the exploration of this graph shows a strong enrichment for several HIF datasets, as expected for the *hypoxia* dataset. This can be clearly shown by highlighting the datasets of interest:
 
 
-```{r eval=FALSE,echo=TRUE}
+```{r eval=FALSE, echo=TRUE}
 HIFs <- c( "EPAS1","HIF1A","ARNT" )
-names(HIFs) <- c( "EPAS1","HIF1A","ARNT" )
-col <- c( "red","blue","green" )
-plot_CM( pval_mat_UP, specialTF = HIFs, TF_colors = col ) #plot p-values against ORs highlighting indicated TFs
+plot_CM( pval_mat_UP, specialTF = HIFs ) # plot p-values against ORs highlighting indicated TFs
 ```
 ![Snapshot of a plot generated with plot_CM.](CMplot2.png)
 
-## Gene Set Enrichment Analysis.
+## Gene Set Enrichment Analysis
     
-1. Generate a sorted list of ENTREZ IDs
+### Generate a sorted list of ENTREZ IDs
 
-The GSEA analysis implemented in the TFEA.ChIP package requires as input a sorted list of genes. By default, the function *preprocessInputData* will sort genes according to log fold change in descending order. However, they could be sorted by any numerical parameter including p-value. If you want to generate your custom gene list with other parameters, remember to make sure the gene IDs are in Entrez Gene ID format or translate them with *GeneID2Entrez*
+The GSEA analysis implemented in the TFEA.ChIP package requires as input a sorted list of genes. By default, the function *preprocessInputData* will sort genes according to log fold change in descending order. However, they could be sorted by any numerical parameter including p-value. If you want to generate your custom gene list with other parameters, remember to make sure the gene IDs are in Entrez Gene ID format or translate them with *GeneID2Entrez*.
 
-2. Select the ChIP-Seq datasets to analyze
+### Select the ChIP-Seq datasets to analyze
 
 By default, the analysis will include all the ChIP-Seq experiments available in the database. However, this analysis might take several minutes to run. To restrict the analysis to a subset of the database we can generate an index variable and pass it to the function *GSEA_run*. This will limit the analysis to the ChIP-Seq datasets of the user's choosing. This index variable can be generated using the function *get_chip_index* and allows the user to select the whole database, the set of ChIP-Seq experiments produced by the ENCODE project ("encode") or a specific subset of transcription factors (as a vector containing the TF names).
 
 ```{r eval=TRUE,echo=TRUE}
-chip_index <- get_chip_index( TFfilter = c( "HIF1A","EPAS1","ARNT" ) ) #restrict the analysis to datasets assaying these factors
+chip_index <- get_chip_index( TFfilter = c( "HIF1A","EPAS1","ARNT" ) ) # restrict the analysis to datasets assaying these factors
 ```
 
-3. Run the GSEA analysis
+### Run the GSEA analysis
 
 The function *GSEA_run* will perform a GSEA-based analysis on the input gene list. This function is based on the R-GSEA R script bundle written by the GSEA team at the Broad Institute of MIT and Harvard ^[Subramanian, Tamayo, et al. (2005) PNAS 102, 15545-15550] ^[Mootha, Lindgren, et al. (2003) Nat Genet 34, 267-273]. The output of the analysis depends on the variable *get.RES*: 
 
@@ -159,17 +206,25 @@ The function *GSEA_run* will perform a GSEA-based analysis on the input gene lis
 * When **True**, the function returns a list of three elements. The first element (*Enrichment.table*) is the enrichment data frame previously mentioned. The second element (*RES*) is a list of vectors containing the *Running Enrichment Scores* values (see GSEA documentation, http://software.broadinstitute.org/gsea/doc/GSEAUserGuideTEXT.htm#_Interpreting_GSEA_Results) for each of the sorted genes tested against each one of the analyzed ChIP datasets. The third element (*indicators*) is a list of vectors indicating if the sorted genes were bound by the factor analyzed in each ChIP dataset. 
 
 ```{r eval=TRUE,echo=TRUE,results='hide'}
-GSEA.result <- GSEA_run( hypoxia_table$Genes, hypoxia_table$log2FoldChange, chip_index, get.RES = TRUE) #run GSEA analysis
-```
-```{r eval=TRUE,echo=TRUE}
-head(GSEA.result[["Enrichment.table"]])
-head(GSEA.result[["RES"]][["GSM2390642"]])
-head(GSEA.result[["indicators"]][["GSM2390642"]])
+# run GSEA analysis
+GSEA.result <- GSEA_run( hypoxia_df$Genes, hypoxia_df$log2FoldChange, chip_index, get.RES = TRUE) 
 ```
 
+Or even easier, we could do all the above in just one function:
+```{r eval=TRUE,echo=TRUE}
+GSEA.result <- analysis_from_table(hypoxia_df,
+                                   TFfilter = c('ARNT', 'HIF1A', 'EPAS1'),
+                                   method = 'gsea') # Gene Set Enrichment Analysis
+```
+
+```{r eval=TRUE,echo=TRUE}
+head(GSEA.result[["result"]][["Enrichment.table"]])
+head(GSEA.result[["result"]][["RES"]][["GSE86092.HIF1A.ccRCC"]])
+head(GSEA.result[["result"]][["indicators"]][["GSE86092.HIF1A.ccRCC"]])
+```
 The list of results can be restricted to a given set of transcription factors by setting the variable *RES.filter*.
 
-4. Plotting the results
+### Plotting the results
 
 TFEA.ChIP includes two functions that use the package *plotly* to generate interactive html plots of your GSEA results: *plot_ES* and *plot_RES*.
 
@@ -177,27 +232,21 @@ TFEA.ChIP includes two functions that use the package *plotly* to generate inter
   
   We can choose to highlight ChIP-Seq from specific transcription factors plotting them in a particular color.
 
-```{r eval=FALSE,echo=TRUE}
+```{r eval=FALSE, echo=TRUE}
 TF.hightlight <- c( "EPAS1","ARNT","HIF1A" )
-names( TF.hightlight ) <- c( "EPAS1","ARNT","HIF1A" )
-col <- c( "red","blue","green" )
-plot_ES( GSEA.result, LFC = hypoxia_table$log2FoldChange, specialTF = TF.hightlight, TF_colors = col)
+plot_ES( GSEA.result$result, LFC = GSEA.result$processed_table$log2FoldChange, specialTF = TF.hightlight)
 ```
-![Snapshot of a plot generated with plot_ES.](GSEAplot1.png)
+![Snapshot of a plot generated with plot_ES](GSEAplot1.png)
 
-
-  ii) Plot Runing Enrichment Scores with *plot_RES*. 
+  ii) Plot Running Enrichment Scores with *plot_RES*. 
   This function will plot **all** the RES stored in the *GSEA_run* output. It is only recommended to restrict output to specific TF and/or datasets by setting the parameters *TF* and/or *Accession* respectively:
     
 ```{r eval=FALSE, echo=TRUE}
 plot_RES( 
-    GSEA_result = GSEA.result, LFC = hypoxia_table$log2FoldChange,
-    TF = c( "ARNT", "EPAS1" ), Accession = c(
-        "GSE89836.ARNT.HUVEC-C",
-        "GSE89836.EPAS1.HUVEC-C" ) )
+ GSEA_result = GSEA.result$result, LFC = hypoxia_df$log2FoldChange,
+ Accession = c("GSE89836.ARNT.HUVEC-C", "GSE89836.EPAS1.HUVEC-C" ) )
 ```
-![Snapshot of a plot generatd with plot_RES.](GSEAplot2.png)
-
+![Snapshot of a plot generated with plot_RES](GSEAplot2.png)
 
 
 # Building a TF-gene binding database
@@ -209,7 +258,7 @@ If the user wants to generate their own database of ChIPseq datasets, the functi
 - A folder containing ChIP-Seq peak data, either in ".narrowpeak" format or the MACS output files "_peaks.bed" -a format that stores "chr", "start", "end", "name", and "Q-value" of every peak-.
 
 
-1. Filter peaks from source and store them as a GRanges object
+## Filter peaks from source and store them as a GRanges object
 
 Specify the folder where the ChIP-Seq files are stored, create an array with the names of the ChIP-Seq files, and choose a format.
 Set a *for* loop to convert all your files to GenomicRanges objects using *txt2GR*. Please note that, by default, only peaks with an associated p-value of 0.05 (for narrow peaks files) or 1e-5 (for MACS files) will be kept. The user can modify the default values by setting the alpha argument to the desired threshold p-value.
@@ -220,20 +269,20 @@ File.list<-dir( folder )
 format <- "macs"
 
 gr.list <- lapply(
-    seq_along( File.list ),
-    function( File.list, myMetaData, format ){
-        
-        tmp<-read.table( File.list[i], ..., stringsAsFactors = FALSE )
-        
-        file.metadata <- myMetaData[ myMetaData$Name == File.list[i], ]
-        
-        ChIP.dataset.gr<-txt2GR(tmp, format, file.metadata)
-        
-        return(ChIP.dataset.gr)
-    },
-    File.list = File.list,
-    myMetadata = myMetadata,
-    format = format
+ seq_along( File.list ),
+ function( File.list, myMetaData, format ){
+ 
+ tmp<-read.table( File.list[i], ..., stringsAsFactors = FALSE )
+ 
+ file.metadata <- myMetaData[ myMetaData$Name == File.list[i], ]
+ 
+ ChIP.dataset.gr<-txt2GR(tmp, format, file.metadata)
+ 
+ return(ChIP.dataset.gr)
+ },
+ File.list = File.list,
+ myMetadata = myMetadata,
+ format = format
 )
 ```
 ```{r eval=TRUE,echo=TRUE}
@@ -243,7 +292,7 @@ ARNT.gr <- txt2GR( ARNT.peaks.bed, "macs1.4", ARNT.metadata )
 head( ARNT.gr, n=2 )
 ```
 
-2. [Optional] Dnase Hypersensitive Sites
+## [Optional] Dnase Hypersensitive Sites
 
 By default (see step 3), TFEA.ChIP filters the ChIPseq peaks in each dataset to select those overlapping or near to (by default max. distance 10 nucleotides) regions in a reference associated to a gene. This reference can have any number of sources, such as gene coordinates, transcription starting sites, or regulatory regions defined in projects such as GeneHancer. 
 
@@ -253,12 +302,12 @@ As an example, we will build a reference with Dnase hypersensitive sites associa
     
 ```{r eval=FALSE,echo=TRUE}
 dnaseClusters<-read.table(
-    file="~/path.to.file.txt",
-    header = TRUE, sep="\t", stringsAsFactors = FALSE )
+ file="~/path.to.file.txt",
+ header = TRUE, sep="\t", stringsAsFactors = FALSE )
 dnaseClusters<-makeGRangesFromDataFrame(
-    dnaseClusters, ignore.strand=TRUE,
-    seqnames.field="chrom", start.field="chromStart",
-    end.field="chromEnd" )
+ dnaseClusters, ignore.strand=TRUE,
+ seqnames.field="chrom", start.field="chromStart",
+ end.field="chromEnd" )
 ```
 
   ii) Select the Dnase hypersensitive sites that are 1Kb or closer to a gene and assign a gene ID to every Dnase HS that remains.
@@ -281,7 +330,7 @@ mcols(DHS.database)$gene_id <- gene_ids
 
 These steps can be modified to generate a new GRanges object containing custom sites.
 
-3. Assign TFBS peaks from ChIP dataset to specific genes
+## Assign TFBS peaks from ChIP dataset to specific genes
 
 The function *makeChIPGeneDB* assigns the TFBS peaks in the ChIP datasets stored in *gr.list* to a gene. To this end, a ChIP peak overlaping a regulatory region region receive the gene label associated to said region. By default the function also assigns the gene name when the ChIP peak does not overlap a regulatory region but maps at less than 10 nucleotides from it. This behaviour can be modified by setting the argument *distanceMargin* to the desired value (by default distanceMargin = 10 bases).
 
@@ -305,9 +354,9 @@ TF.gene.binding.db <- makeChIPGeneDB( Genes, gr.list, distanceMargin = 0 )
 str( TF.gene.binding.db )
 ```
 
-In this case the information about Dnase hypersensitivity is disregarded and peaks are asigned to overlapping genes (or genes closer than *distanceMargin* residues).
+In this case the information about Dnase hypersensitivity is disregarded and peaks are assigned to overlapping genes (or genes closer than *distanceMargin* residues).
 
-4. Sustitute the default database by a custom generated table.
+## Substitute the default database by a custom generated table.
 
 At the beginning of a session, use the function *set_user_data* to use your TFBS binary matrix and metadata table with the rest of the package.
 

@@ -8,7 +8,7 @@ get_LFC_bar(LFC)
 }
 \arguments{
 \item{LFC}{Vector of log2(fold change) values arranged from higher
-to lower. Use ony the values of genes that have an Entrez ID.}
+to lower. Use only the values of genes that have an Entrez ID.}
 }
 \value{
 Plotly heatmap plot -log2(fold change) bar-.
@@ -16,4 +16,7 @@ Plotly heatmap plot -log2(fold change) bar-.
 \description{
 Function to plot a color bar from log2(Fold Change)
 values from an expression experiment.
+}
+\examples{
+get_LFC_bar(arranged.log2FC.array)
 }
