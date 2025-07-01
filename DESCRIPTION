@@ -11,7 +11,7 @@ Encoding: UTF-8
 LazyData: false
 RoxygenNote: 7.3.2
 Imports: GenomicRanges, IRanges, biomaRt, GenomicFeatures, grDevices,
-        dplyr, stats, utils, R.utils, methods, org.Hs.eg.db
+        dplyr, stats, utils, R.utils, methods, org.Hs.eg.db, org.Mm.eg.db
 Suggests: 
     knitr,
     rmarkdown,
