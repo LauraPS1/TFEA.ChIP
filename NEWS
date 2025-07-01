@@ -24,5 +24,7 @@ experiments. Specifically, we selected 926 experiments performed in the ENCODE P
 Common Cell Types, prioritizing broadly representative and high-quality datasets.
 
 To download the full database, as well as other ready-to-use databases generated for 
-TFEA.ChIP, visit: https://github.com/LauraPS1/TFEA.ChIP_downloads
+TFEA.ChIP, visit:
+    https://github.com/yberda/ChIPDBData
+    https://github.com/LauraPS1/TFEA.ChIP_downloads
 
