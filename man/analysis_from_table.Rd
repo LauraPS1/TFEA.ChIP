@@ -58,3 +58,7 @@ Performs gene expression analysis, filtering genes and
 TFs based on specified thresholds. It calculates statistics using 
 overrepresentation analysis (ORA) or gene set enrichment analysis (GSEA).
 }
+\examples{
+data('hypoxia_DESeq',package='TFEA.ChIP')
+res <- analysis_from_table(hypoxia_DESeq, interest_min_LFC = 1)
+}
