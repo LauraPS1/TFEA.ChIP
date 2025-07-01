@@ -1726,6 +1726,13 @@ metaanalysis_fx <- function(dat) {
   #'   - results: a named list of raw meta-analysis objects from the 
   #'    `meta` package
   #' @export
+  #' @examples
+  #' df <- data.frame(TF = c('A', 'A', 'A', 'B', 'B'),
+  #'                  OR = c(1, 1.2, 1.23, 4, 4.5),
+  #'                  OR.SE = c(1e-5, 5e-4, 2e-4, 1e-3, 1e-2),
+  #'                  Accession = c('Chip1', 'Chip2', 'Chip3', 'Chip4', 'Chip5'),
+  #'                  adj.pval = c(1e-5, 5e-4, 2e-4, 1e-3, 1e-2))
+  #' res <- metaanalysis_fx(df)
   
   error_tfs <- character()
   tf_list <- unique(dat$TF)
@@ -1880,6 +1887,9 @@ analysis_from_table <- function(inputData, mode = "h2h",
   #' @param method Analysis method: 'ora' (overrepresentation) or 'gsea' (gene set enrichment).
   #' @return A matrix with calculated statistics (e.g., p-values, odds ratios).
   #' @export
+  #' @examples
+  #' data('hypoxia_DESeq',package='TFEA.ChIP')
+  #' res <- analysis_from_table(hypoxia_DESeq, interest_min_LFC = 1)
   
   # Validate mode
   if (!mode %in% c("h2h", "m2h", "m2m")) {

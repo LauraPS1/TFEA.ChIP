@@ -19,3 +19,11 @@ A list with:
 Conducts a random-effects meta-analysis of odds ratios (OR) 
 and standard errors (OR.SE) for each TF using the `meta` package.
 }
+\examples{
+df <- data.frame(TF = c('A', 'A', 'A', 'B', 'B'),
+                 OR = c(1, 1.2, 1.23, 4, 4.5),
+                 OR.SE = c(1e-5, 5e-4, 2e-4, 1e-3, 1e-2),
+                 Accession = c('Chip1', 'Chip2', 'Chip3', 'Chip4', 'Chip5'),
+                 adj.pval = c(1e-5, 5e-4, 2e-4, 1e-3, 1e-2))
+res <- metaanalysis_fx(df)
+}

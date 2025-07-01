@@ -2,10 +2,11 @@ Package: TFEA.ChIP
 Type: Package
 Title: Analyze Transcription Factor Enrichment
 Version: 1.19.2
-Author: Laura Puente Santamaría, Yosra Berrouayel, Luis del Peso
-Maintainer: Yosra Berrouayel <yosraberrouayel@gmail.com>
+Authors@R: c(person("Laura", "PUente", "Santamaria", email = "laura.puentes@estudiante.uam.es", role = c("aut")),
+	     person("Yosra", "Berrouayel", email = "yosraberrouayel@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-0768-5933")),
+	     person("Luis", "del Peso", email = "lpeso@iib.uam.es", role = c("aut"), comment = c(ORCID = "0000-0003-4014-5688")))
 Description: Package to analyze transcription factor enrichment in a gene set using data from ChIP-Seq experiments.
-Depends: R (>= 3.5)
+Depends: R (>= 4.5.0)
 License: Artistic-2.0
 Encoding: UTF-8
 LazyData: false
@@ -29,6 +30,9 @@ Suggests:
     testthat (>= 3.0.0)
 VignetteBuilder: knitr
 biocViews: Transcription, GeneRegulation, GeneSetEnrichment,
-        Transcriptomics, Sequencing, ChIPSeq, RNASeq, ImmunoOncology
+        Transcriptomics, Sequencing, ChIPSeq, RNASeq, ImmunoOncology, 
+        GeneExpression, ChipOnChip
+URL: https://github.com/LauraPS1/TFEA.ChIP
+BugReports: https://github.com/LauraPS1/TFEA.ChIP/issues
 NeedsCompilation: no
 Config/testthat/edition: 3
