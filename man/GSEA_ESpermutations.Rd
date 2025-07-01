@@ -21,16 +21,19 @@ experiment's peaks.}
 \item{weighted.score.type}{Type of score: weight:
 0 (unweighted = Kolmogorov-Smirnov), 1 (weighted), and 2 (over-weighted)}
 
-\item{correl.vector}{A vector with the coorelations (such as signal to
+\item{correl.vector}{A vector with the correlations (such as signal to
 noise scores) corresponding to the genes in the gene list}
 
 \item{perms}{Number of permutations}
 }
 \value{
 Vector of Enrichment Scores for a permutation test.
-gene.set=c('2034','112399','405'), perms=10)
 }
 \description{
-Function to calculate enrichment scores over a randomly ordered
-gene list.
+Function to calculate enrichment scores over a randomly 
+ordered gene list.
+}
+\examples{
+GSEA_ESpermutations(gene.list=c('3091','2034','405','55818'),
+gene.set=c('2034','112399','405'), perms=10)
 }

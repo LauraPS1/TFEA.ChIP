@@ -2,33 +2,29 @@
 % Please edit documentation in R/All-functions.R
 \name{getCMstats}
 \alias{getCMstats}
-\title{Generate statistical parameters from a contingency_matrix output}
+\title{Generate statistical parameters from contingency matrices}
 \usage{
 getCMstats(CM_list, chip_index = get_chip_index())
 }
 \arguments{
-\item{CM_list}{Output of “contingency_matrix”, a list of
-contingency matrices.}
+\item{CM_list}{A list of contingency matrices, typically from `contingency_matrix`.}
 
-\item{chip_index}{Output of the function “get_chip_index”, a data frame
-containing accession IDs of ChIPs on the database and the TF each one
-tests. If not provided, the whole internal database will be used}
+\item{chip_index}{A data frame with ChIP accession IDs and TFs from 
+the `get_chip_index` function.
+If not provided, the entire internal database is used.}
 }
 \value{
-Data frame containing accession ID of a ChIP-Seq experiment and
-its experimental conditions, the TF tested in that experiment, raw and
-adjusted p-values, odds-ratio, and euclidean distance.
-and FDR-adjusted p-values (-10*log10 adj.pvalue).
+A data frame with the ChIP experiment ID, TF, p-value, odds-ratio, 
+and other derived statistics.
 }
 \description{
-From a list of contingency matrices, such as the output
-from “contingency_matrix”, this function computes a fisher's exact test
-for each matrix and generates a data frame that stores accession ID of a
-ChIP-Seq experiment, the TF tested in that experiment, the p-value and
-the odds ratio resulting from the test.
+This function computes Fisher's exact test for each matrix
+in a list of contingency matrices (e.g., output from `contingency_matrix`).
+It returns a data frame containing ChIP-Seq experiment accession IDs,
+tested transcription factors, p-values, odds ratios, and adjusted values.
 }
 \examples{
-data('Genes.Upreg',package = 'TFEA.ChIP')
-CM_list_UP <- contingency_matrix( Genes.Upreg )
-stats_mat_UP <- getCMstats( CM_list_UP )
+data('Genes.Upreg', package = 'TFEA.ChIP')
+CM_list_UP <- contingency_matrix(Genes.Upreg)
+stats_mat_UP <- getCMstats(CM_list_UP)
 }

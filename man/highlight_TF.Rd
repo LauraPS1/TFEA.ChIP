@@ -2,30 +2,24 @@
 % Please edit documentation in R/All-functions.R
 \name{highlight_TF}
 \alias{highlight_TF}
-\title{Highlight certain transcription factors in a plotly graph.}
+\title{Highlight special TFs in enrichment table.}
 \usage{
-highlight_TF(table, column, specialTF, markerColors)
+highlight_TF(enrichTab, column, specialTF)
 }
 \arguments{
-\item{table}{Enrichment matrix/data.frame.}
+\item{enrichTab}{Data frame containing the enrichment results.}
 
-\item{column}{Column # that stores the TF name in the matrix/df.}
+\item{column}{The column index or name of the enrichment table used 
+for matching TFs.}
 
-\item{specialTF}{Named vector containing TF names as they appear in the
-enrichment matrix/df and nicknames for their color group.
-Example:
-          specialTF<-c('HIF1A','EPAS1','ARNT','SIN3A')
-          names(specialTF)<-c('HIF','HIF','HIF','SIN3A')}
-
-\item{markerColors}{Vector specifying the shade for every color group.}
+\item{specialTF}{A named vector of transcription factors to highlight
+in the plot.}
 }
 \value{
-List of two objects:
-A vector to attach to the enrichment matrix/df pointing out the color
-group of every row.
-A named vector connecting each color group to the chosen color.
+A list containing the updated highlight column and the color 
+mapping for each TF.
 }
 \description{
-Function to highlight certain transcription factors using
-different colors in a plotly graph.
+Function to assign special TFs to specific colors and 
+highlight them in the enrichment table.
 }

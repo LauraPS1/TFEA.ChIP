@@ -2,35 +2,28 @@
 % Please edit documentation in R/All-functions.R
 \name{plot_CM}
 \alias{plot_CM}
-\title{Makes an interactive html plot from an enrichment table.}
+\title{Interactive HTML Plot for Transcription Factor Enrichment}
 \usage{
 plot_CM(CM.statMatrix, plot_title = NULL, specialTF = NULL, TF_colors = NULL)
 }
 \arguments{
-\item{CM.statMatrix}{Output of the function 'getCMstats'.
-A data frame storing: Accession ID of every ChIP-Seq tested,
-Transcription Factor,Odds Ratio, p-value and adjusted p-value.}
+\item{CM.statMatrix}{Output of the function 'getCMstats', a data frame 
+containing Accession ID, Transcription Factor, Odds Ratio, p-value, and 
+adjusted p-value.}
 
-\item{plot_title}{The title for the plot.}
+\item{plot_title}{The title for the plot (default: "Transcription Factor 
+Enrichment").}
 
-\item{specialTF}{(Optional) Named vector of TF symbols -as written in
-the enrichment table- to be highlighted in the plot. The name of each
-element of the vector specifies its color group, i.e.: naming elements
-HIF1A and HIF1B as 'HIF' to represent them with the same color.}
+\item{specialTF}{(Optional) Named vector of TF symbols to be highlighted 
+in the plot, allowing for grouped color representation.}
 
-\item{TF_colors}{(Optional) Nolors to highlight TFs chosen in specialTF.}
+\item{TF_colors}{(Optional) Colors to highlight TFs specified in 
+specialTF.}
 }
 \value{
-plotly scatter plot.
+A plotly scatter plot.
 }
 \description{
-Function to generate an interactive html plot from a
-transcription factor enrichment table, output of the function
-'getCMstats'.
-}
-\examples{
-data('Genes.Upreg',package = 'TFEA.ChIP')
-CM_list_UP <- contingency_matrix( Genes.Upreg )
-stats_mat_UP <- getCMstats( CM_list_UP )
-plot_CM( stats_mat_UP )
+Generates an interactive HTML plot from a transcription 
+factor enrichment table, output of the function 'getCMstats'.
 }

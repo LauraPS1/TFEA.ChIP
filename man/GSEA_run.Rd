@@ -16,36 +16,37 @@ GSEA_run(
 \arguments{
 \item{gene.list}{List of Entrez IDs ordered by their fold change.}
 
-\item{LFC}{Vector of log2( Fold Change ) values.}
+\item{LFC}{Vector of log2(Fold Change) values.}
 
-\item{chip_index}{Output of the function “get_chip_index”, a data frame
-containing accession IDs of ChIPs on the database and the TF each one
-tests. If not provided, the whole internal database will be used}
+\item{chip_index}{Data frame containing accession IDs of ChIPs and the 
+tested TFs.
+If not provided, the entire internal database will be used.}
 
-\item{get.RES}{(Optional) boolean. If TRUE, the function stores Running
-Enrichment Scores of all/some TF.}
+\item{get.RES}{(Optional) boolean. If TRUE, stores Running Enrichment 
+Scores for selected TFs.}
 
-\item{RES.filter}{(Optional) chr vector. When get.RES==TRUE, allows to
-choose which TF's Running Enrichment Score to store.}
+\item{RES.filter}{(Optional) character vector. When get.RES == TRUE, 
+specifies which TF's RES to store.}
 
-\item{perms}{(Optional) integer. Number of permutations for the enrichment test.}
+\item{perms}{(Optional) integer. Number of permutations for the 
+enrichment test.}
 }
 \value{
-a list of:
-Enrichment.table: data frame containing accession ID, Cell type, ChIP-Seq
-treatment, transcription factor tested, enrichment score, adjusted p-value,
-and argument of every ChIP-Seq experiment.
-RES (optional): list of running sums of every ChIP-Seq
-indicators (optional): list of 0/1 vectors that stores the matches (1)
-and mismatches (0) between the gene list and the gene set.
+A list containing:
+- Enrichment.table: Data frame with enrichment scores and p-values for 
+each ChIP-Seq experiment.
+- RES (optional): List of running sums for each ChIP-Seq.
+- indicators (optional): List of binary vectors indicating matches between
+the gene list and gene sets.
 }
 \description{
-Function to run a GSEA to analyze the distribution of TFBS
-across a sorted list of genes.
+Analyzes the distribution of TFBS across a sorted list 
+of genes.
 }
 \examples{
-data( 'hypoxia', package = 'TFEA.ChIP' )
-hypoxia <- preprocessInputData( hypoxia )
-chip_index <- get_chip_index( TFfilter = c('HIF1A','EPAS1','ARNT' ) )
-GSEA.result <- GSEA_run( hypoxia$Genes, hypoxia$log2FoldChange, chip_index, get.RES = TRUE)
+data('hypoxia', package = 'TFEA.ChIP')
+hypoxia <- preprocessInputData(hypoxia)
+chip_index <- get_chip_index(TFfilter = c('HIF1A', 'EPAS1', 'ARNT'))
+GSEA.result <- GSEA_run(hypoxia$Genes, hypoxia$log2FoldChange, chip_index,
+get.RES = TRUE)
 }

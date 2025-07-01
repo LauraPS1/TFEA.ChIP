@@ -9,43 +9,31 @@ plot_ES(
   LFC,
   plot_title = NULL,
   specialTF = NULL,
-  TF_colors = NULL,
   Accession = NULL,
   TF = NULL
 )
 }
 \arguments{
-\item{GSEA_result}{Returned by GSEA_run}
+\item{GSEA_result}{Returned by GSEA_run.}
 
-\item{LFC}{Vector with log2(Fold Change) of every gene that has an
-Entrez ID. Arranged from higher to lower.}
+\item{LFC}{Vector with log2(Fold Change) of every gene with an Entrez ID, 
+ordered from highest to lowest.}
 
-\item{plot_title}{(Optional) Title for the plot}
+\item{plot_title}{(Optional) Title for the plot.}
 
-\item{specialTF}{(Optional) Named vector of TF symbols -as written in
-the enrichment table- to be highlighted in the plot. The name of each
-element specifies its color group, i.e.: naming elements HIF1A and HIF1B
-as 'HIF' to represent them with the same color.}
+\item{specialTF}{(Optional) Named vector of transcription factors (TF)
+to highlight in the plot.}
 
-\item{TF_colors}{(Optional) Colors to highlight TFs chosen in specialTF.}
+\item{Accession}{(Optional) Vector of dataset IDs to restrict the plot to.}
 
-\item{Accession}{(Optional) restricts plot to the indicated list dataset
-IDs.}
-
-\item{TF}{(Optional) restricts plot to the indicated list transcription
-factor names.}
+\item{TF}{(Optional) Vector of transcription factor names to restrict 
+the plot to.}
 }
 \value{
-Plotly object with a scatter plot -Enrichment scores- and a
-heatmap -log2(fold change) bar-.
+Plotly object combining scatter plot of enrichment scores and a 
+log2(fold change) heatmap.
 }
 \description{
 Function to plot the Enrichment Score of every member of
 the ChIPseq binding database.
-}
-\examples{
-data('GSEA.result','log2.FC',package = 'TFEA.ChIP')
-TF.hightlight <- c('E2F1' = 'E2F1')
-col <- c('red')
-plot_ES( GSEA.result, log2.FC, "Example", TF.hightlight, col )
 }

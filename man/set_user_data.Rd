@@ -26,7 +26,7 @@ as default to the rest of the functions.
 }
 \examples{
 data( 'MetaData', 'ChIPDB', package='TFEA.ChIP' )
-# For this example, we will usethe variables already included in the
+# For this example, we will use the variables already included in the
 # package.
 set_user_data( MetaData, ChIPDB )
 }

@@ -16,26 +16,25 @@ rankTFs(
 
 \item{rankMethod}{"wilcoxon" or "gsea".}
 
-\item{makePlot}{(Optional) For rankMethod="gsea". If TRUE, generates a plot for
-TFs with a p-value < 0.05.}
+\item{makePlot}{(Optional) For rankMethod="gsea". If TRUE, generates 
+a plot for TFs with a p-value < 0.05.}
 
 \item{plotTitle}{(Optional) Title for the plot.}
 }
 \value{
 data frame containing:
-\itemize{
-  \item For Wilcoxon rank-sum test: rank, TF name, test statistic
-  ('wilc_W), p-value, Freeman's theta, epsilon-squared anf effect size
-  \item For GSEA-like ranking: TF name, enrichment score, argument,
-  p-value, number of ChIPs}
+For Wilcoxon rank-sum test: rank, TF name, test statistic
+('wilc_W), p-value, Freeman's theta, epsilon-squared, and effect size
+For GSEA-like ranking: TF name, enrichment score, argument,
+  p-value, number of ChIPs
 }
 \description{
 Rank the TFs in the output from 'getCMstats' using
 Wilcoxon rank-sum test or a GSEA-like approach.
 }
 \examples{
-data('Genes.Upreg',package = 'TFEA.ChIP')
+data('Genes.Upreg', package = 'TFEA.ChIP')
 CM_list_UP <- contingency_matrix(Genes.Upreg)
 stats_mat_UP <- getCMstats(CM_list_UP)
-rankTFs( stats_mat_UP )
+rankTFs(stats_mat_UP)
 }

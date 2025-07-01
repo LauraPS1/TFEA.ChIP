@@ -1,32 +1,30 @@
-CHANGES IN VERSION 1.15.2
+CHANGES IN VERSION 1.19.2
 ------------------------
 
-New ChIP-Gene databases available:
+## New Features
+- Added a **meta-analysis function** to combine results across datasets.
+- Introduced a new **wrapper function** that performs the full enrichment workflow
+in one step, reducing manual intervention.
 
-    * Using ReMap2022 collections for human and mouse.
-    * Adding cell specific regulatory regions predicted with 
-    ABC-Enhancer-Gene-Prediction (doi:10.1038/s41588-019-0538-0).
+## Enhancements
+- Refactored and optimized several core functions for improved performance.
+- Improved plotting functions for clearer and more customizable visualizations.
 
-New Features:
+## Data Updates
+- Updated the ChIPDB object using newly available regulatory region-to-gene annotations 
+from the ENCODE rE2G method and CREdb, enhancing the biological relevance and accuracy 
+of TF-gene associations.
+- Integrated new datasets from **ReMap**.
 
-	* New database format (older databases are still compatible). The format
-	consist of a list containing two elements:
-      - Gene Keys: vector of gene IDs
-      - ChIP Targets: list of vectors, one per ChIP-seq experiment, 
-        containing the putative targets assigned. Each target is coded as
-        its position in the vector 'Gene Keys'.
-    * Database generation has been streamlined by joining together the
-      functions GR2tfbs_db() and makeTFBSmatrix() into one, makeChIPGeneDB().
+## New default database:
+- The TF-gene database bundled with TFEA.ChIP was built using the ReMap 2022 ChIP-seq 
+collection and regulatory links from the ENCODE rE2G method. Due to memory constraints, 
+the internal database includes only a subset of the 8,000+ available ChIP-seq 
+experiments. Specifically, we selected 926 experiments performed in the ENCODE Project’s
+Common Cell Types, prioritizing broadly representative and high-quality datasets.
 
-New default database:
-	* The TF-Gene database included with TFEA.ChIP was built using ReMap's
-	  ChIP-seq collection (v. 2022) and GeneHancer's Double Elite regulatory
-	  regions (v. 4.8). Because of memory limits, the internal database included
-	  in TFEA.ChIP can only store a fraction of the 8000+ ChIP-seq experiments in
-	  the colection. We selected the 926 ChIP-seq experiments done in ENCODE
-	  Project's Common Cell Types.
-	  	 
-	  To download the full database, as well as other ready-to-use databases
-	  generated for TFEA.ChIP, visit:
-	  https://github.com/LauraPS1/TFEA.ChIP_downloads
+To download the full database, as well as other ready-to-use databases generated for 
+TFEA.ChIP, visit:
+    https://github.com/yberda/ChIPDBData
+    https://github.com/LauraPS1/TFEA.ChIP_downloads
 

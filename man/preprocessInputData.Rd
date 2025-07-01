@@ -16,16 +16,16 @@ must include gene IDs. Data frame inputs should include 'pvalue' and
 IDs from a mouse input.}
 }
 \value{
-A table containing Entrez Gene IDs, LogFoldChange and p-val
-values (both raw p-value and fdr adjusted p-value), sorted by
+A table containing Entrez Gene IDs, Gene Symbols, LogFoldChange 
+and p-val values (both raw p-value and fdr adjusted p-value), sorted by
 log2FoldChange.
 }
 \description{
 Function to extract Gene IDs, logFoldChange, and p-val
 values from a DESeqResults object or data frame. Gene IDs are
 translated to ENTREZ IDs, if possible, and the resultant data frame
-is sorted accordint to decreasing log2(Fold Change). Translating
-gene IDs from mouse to their equivalent human genes is avaible
+is sorted according to decreasing log2(Fold Change). Translating
+gene IDs from mouse to their equivalent human genes is available
 using the variable "mode".
 }
 \examples{

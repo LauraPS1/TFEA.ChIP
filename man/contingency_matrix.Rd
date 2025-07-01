@@ -2,30 +2,40 @@
 % Please edit documentation in R/All-functions.R
 \name{contingency_matrix}
 \alias{contingency_matrix}
-\title{Computes 2x2 contingency matrices}
+\title{Compute 2x2 Contingency Matrices for ChIP-Seq Enrichment}
 \usage{
-contingency_matrix(test_list, control_list, chip_index = get_chip_index())
+contingency_matrix(
+  test_list,
+  control_list = NULL,
+  chip_index = get_chip_index()
+)
 }
 \arguments{
-\item{test_list}{List of gene Entrez IDs}
+\item{test_list}{A vector of Entrez gene IDs representing the test group 
+(e.g., differentially expressed genes).}
 
-\item{control_list}{If not provided, all human genes not present in
-test_list will be used as control.}
+\item{control_list}{A vector of Entrez gene IDs to be used as the control group. 
+If NULL (default), all genes in the ChIP database not present in `test_list` are used.}
 
-\item{chip_index}{Output of the function “get_chip_index”, a data frame
-containing accession IDs of ChIPs on the database and the TF each one
-tests. If not provided, the whole internal database will be used}
+\item{chip_index}{A data frame containing metadata for ChIP experiments. Must contain 
+  an `Accession` column matching entries in the ChIP database. Defaults to 
+the result of `get_chip_index()`.
+  `test_list` and `control_list` to simulate a null distribution.}
 }
 \value{
-List of contingency matrices, one CM per element in chip_index
-(i.e. per ChIP-seq dataset).
+A named list of 2x2 contingency matrices, one per ChIP experiment. 
+  Each matrix has:
+  - Rows: Test group, Control group
+  - Columns: Number of genes bound (Positive), and not bound (Negative) by the TF
 }
 \description{
-Function to compute contingency 2x2 matrix by the partition
-of the two gene ID lists according to the presence or absence of the
-terms in these list in a ChIP-Seq binding database.
+This function computes 2x2 contingency matrices to assess the overlap between 
+a test set of genes and TF binding targets derived from a ChIP-Seq database. 
+The matrices are constructed for each ChIP experiment listed in the 
+provided index, comparing the number of test and control genes 
+that are bound (or not bound) by each transcription factor.
 }
 \examples{
-data('Genes.Upreg',package = 'TFEA.ChIP')
-CM_list_UP <- contingency_matrix(Genes.Upreg)
+data('Genes.Upreg', package = 'TFEA.ChIP')
+cm_list <- contingency_matrix(Genes.Upreg)
 }

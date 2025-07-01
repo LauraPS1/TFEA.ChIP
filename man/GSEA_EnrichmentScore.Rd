@@ -20,7 +20,7 @@ experiment's peaks.}
 \item{weighted.score.type}{Type of score: weight:
 0 (unweighted = Kolmogorov-Smirnov), 1 (weighted), and 2 (over-weighted)}
 
-\item{correl.vector}{A vector with the coorelations (such as signal to
+\item{correl.vector}{A vector with the correlations (such as signal to
 noise scores) corresponding to the genes in the gene list}
 }
 \value{

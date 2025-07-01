@@ -1,3 +1,7 @@
+# Load the required package
+library(RUnit)
+library(TFEA.ChIP)
+
 # Testing units for the TFEA.ChIP package
 
 test_GeneID2Entrez<-function(){
@@ -150,7 +154,7 @@ test_txt2GR<-function(){
 test_makeChIPGeneDB<-function(){
     data("DnaseHS_db","gr.list", package="TFEA.ChIP")
     # Using this toy datasets, the expected result is a
-    # list of one gene set with only two gene IDs: 2782 and 23261
+    # list of one gene set with 54 gene IDs
     
     ChIPDB <- makeChIPGeneDB( DnaseHS_db, gr.list )
     
@@ -186,19 +190,73 @@ test_GSEA_run<-function(){
 
 
 
+test_get_LFC_bar <- function() {
+    # Test with normal data
+    logFC <- c(0.5, -0.2, 1.5, -0.5, 0.0)
+    RUnit::checkTrue(is(plotly::plotly_build(get_LFC_bar(logFC)), "plotly"))
+    
+    # Test with all positive values
+    logFC_pos <- c(1, 2, 3)
+    RUnit::checkTrue(is(plotly::plotly_build(get_LFC_bar(logFC_pos)), "plotly"))
+    
+    # Test with all negative values
+    logFC_neg <- c(-1, -2, -3)
+    RUnit::checkTrue(is(plotly::plotly_build(get_LFC_bar(logFC_neg)), "plotly"))
+
+    # Test with mixed values
+    logFC_mixed <- c(-1, 0, 1, 2)
+    RUnit::checkTrue(is(plotly::plotly_build(get_LFC_bar(logFC_mixed)), "plotly"))
+
+    # Test with empty input
+    RUnit::checkException(get_LFC_bar(c()))
+
+    # Test with invalid input (non-numeric)
+    RUnit::checkException(get_LFC_bar(c("a", "b", "c")))
+}
 
 
+test_meta_analysis_fx <- function() {
+    # Test with valid data
+    data <- data.frame(
+        TF = c('TF1', 'TF1', 'TF2', 'TF2'),
+        OR = c(1.5, 1.2, 0.9, 1.1),
+        OR.SE = c(0.2, 0.3, 0.1, 0.25),
+        Accession = c('D1', 'D2', 'D3', 'D4'),
+        adj.pval = c(0.01, 0.02, 0.05, 0.03)
+    )
+    result <- metaanalysis_fx(data)
+    RUnit::checkEquals(nrow(result), 2)
 
+    # Test with edge case: no datasets
+    empty_data <- data.frame(TF = character(0), OR = numeric(0), OR.SE = numeric(0), Accession = character(0), adj.pval = numeric(0))
+    RUnit::checkException(metaanalysis_fx(empty_data))
 
+    # Test with invalid data (non-numeric in OR or OR.SE)
+    invalid_data <- data.frame(
+        TF = c('TF1', 'TF1'),
+        OR = c('a', 'b'),
+        OR.SE = c(0.2, 0.3),
+        Accession = c('D1', 'D2'),
+        adj.pval = c(0.01, 0.02)
+    )
+    RUnit::checkException(metaanalysis_fx(invalid_data))
 
+    # Test for results with no valid OR
+    no_valid_or_data <- data.frame(
+        TF = c('TF1', 'TF1', 'TF2', 'TF2'),
+        OR = c(1, 1, 1, 1),
+        OR.SE = c(0, 0, 0, 0),
+        Accession = c('D1', 'D2', 'D3', 'D4'),
+        adj.pval = c(1, 1, 1, 1)
+    )
+    result_no_valid <- metaanalysis_fx(no_valid_or_data)
+    RUnit::checkTrue(nrow(result_no_valid) == 0)
+}
 
+# Run all the tests
+testsuite <- defineTestSuite("TFEA.ChIP Tests", dirs = ".", testFileRegexp = "^test_.*\\.R$")
+testResults <- runTestSuite(testsuite)
 
-
-
-
-
-
-
-
-
+# Print the results
+printTextProtocol(testResults)
 

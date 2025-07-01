@@ -2,7 +2,7 @@
 % Please edit documentation in R/All-functions.R
 \name{plot_RES}
 \alias{plot_RES}
-\title{Plots all the RES stored in a GSEA_run output.}
+\title{Plot Running Enrichment Scores (RES) and Log2 Fold Change (LFC)}
 \usage{
 plot_RES(
   GSEA_result,
@@ -15,34 +15,42 @@ plot_RES(
 )
 }
 \arguments{
-\item{GSEA_result}{Returned by GSEA_run}
+\item{GSEA_result}{List returned by GSEA_run, containing the enrichment 
+table and RES.}
 
-\item{LFC}{Vector with log2(Fold Change) of every gene that has an
-Entrez ID. Arranged from higher to lower.}
+\item{LFC}{Numeric vector containing the log2(Fold Change) of every gene 
+with an Entrez ID, ordered from highest to lowest.}
 
-\item{plot_title}{(Optional) Title for the plot.}
+\item{plot_title}{(Optional) String specifying the title for the plot.
+Default is "Transcription Factor Enrichment".}
 
-\item{line.colors}{(Optional) Vector of colors for each line.}
+\item{line.colors}{(Optional) Character vector specifying colors for each 
+line in the RES plot. If NULL, default colors will be used.}
 
-\item{line.styles}{(Optional) Vector of line styles for each line
-('solid'/'dash'/'longdash').}
+\item{line.styles}{(Optional) Character vector specifying line styles for 
+each RES line. Possible values are 'solid', 'dash', or 'longdash'.}
 
-\item{Accession}{(Optional) restricts plot to the indicated list dataset
-IDs.}
+\item{Accession}{(Optional) Character vector specifying accession IDs to
+restrict the plot to. If NULL, all accession IDs will be plotted.}
 
-\item{TF}{(Optional) restricts plot to the indicated list transcription
-factor names.}
+\item{TF}{(Optional) Character vector specifying TF names to restrict 
+the plot to. If NULL, all transcription factors will be plotted.}
 }
 \value{
-Plotly object with a line plot -running sums- and a
-heatmap -log2(fold change) bar-.
+A Plotly object containing two subplots: the top one showing the 
+running enrichment scores (RES) for the filtered accession IDs or 
+TFs, and the bottom one displaying the log2 fold
+change (LFC) as a bar plot.
 }
 \description{
-Function to plot all the RES stored in a GSEA_run output.
+This function plots the running enrichment scores (RES) from 
+a GSEA result, with an additional bar plot showing the log2 fold change 
+(LFC) of genes. The RES plot can be filtered by TFs or accession IDs.
 }
 \examples{
-data('GSEA.result','log2.FC',package = 'TFEA.ChIP')
-plot_RES(GSEA.result, log2.FC, TF = c('E2F4',"E2F1"),
-    Accession=c('ENCSR000DYY.E2F4.GM12878',
-    'ENCSR000EVJ.E2F1.HeLa-S3'))
+data('GSEA_result', 'log2.FC', package = 'TFEA.ChIP')
+plot_RES(GSEA_result, log2.FC, 
+         TF = c('E2F4', 'E2F1'),
+         Accession = c('ENCSR000DYY.E2F4.GM12878', 
+                       'ENCSR000EVJ.E2F1.HeLa-S3'))
 }
