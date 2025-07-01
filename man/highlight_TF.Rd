@@ -2,19 +2,22 @@
 % Please edit documentation in R/All-functions.R
 \name{highlight_TF}
 \alias{highlight_TF}
-\title{Highlight Special Transcription Factors (TFs) in Enrichment Table.}
+\title{Highlight special TFs in enrichment table.}
 \usage{
 highlight_TF(enrichTab, column, specialTF)
 }
 \arguments{
 \item{enrichTab}{Data frame containing the enrichment results.}
 
-\item{column}{The column index or name of the enrichment table used for matching TFs.}
+\item{column}{The column index or name of the enrichment table used 
+for matching TFs.}
 
-\item{specialTF}{A named vector of transcription factors to highlight in the plot.}
+\item{specialTF}{A named vector of transcription factors to highlight
+in the plot.}
 }
 \value{
-A list containing the updated highlight column and the color mapping for each TF.
+A list containing the updated highlight column and the color 
+mapping for each TF.
 }
 \description{
 Function to assign special TFs to specific colors and 

@@ -778,7 +778,7 @@ get_chip_index <- function(encodeFilter = FALSE, TFfilter = NULL) {
 
 #### Run TFEA ####
 
-contingency_matrix <- function(test_list, control_list = NULL,                   # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+contingency_matrix <- function(test_list, control_list = NULL,
                                chip_index = get_chip_index()) {
   
   #' @title Compute 2x2 Contingency Matrices for ChIP-Seq Enrichment
@@ -1824,7 +1824,7 @@ filter_expressed_TFs <- function(Table, chip_index, TFfilter = NULL, encodeFilte
   # Provide informative messages about removed genes
   if (length(rm_genes_names) > 0) {
     message("The following TFs were excluded from the analysis because they were not found in the provided dataset and are considered not expressed. To modify this behavior, set `expressed` to FALSE:\n", 
-            paste(rm_genes_names, collapse = ", "))
+            paste(sort(unique(rm_genes_names)), collapse = ", "))
   } else {
     message("No genes were removed from the analysis as all genes were present in the provided dataset.")
   }

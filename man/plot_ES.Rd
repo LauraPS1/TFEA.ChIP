@@ -16,18 +16,22 @@ plot_ES(
 \arguments{
 \item{GSEA_result}{Returned by GSEA_run.}
 
-\item{LFC}{Vector with log2(Fold Change) of every gene with an Entrez ID, ordered from highest to lowest.}
+\item{LFC}{Vector with log2(Fold Change) of every gene with an Entrez ID, 
+ordered from highest to lowest.}
 
 \item{plot_title}{(Optional) Title for the plot.}
 
-\item{specialTF}{(Optional) Named vector of transcription factors (TF) to highlight in the plot.}
+\item{specialTF}{(Optional) Named vector of transcription factors (TF)
+to highlight in the plot.}
 
 \item{Accession}{(Optional) Vector of dataset IDs to restrict the plot to.}
 
-\item{TF}{(Optional) Vector of transcription factor names to restrict the plot to.}
+\item{TF}{(Optional) Vector of transcription factor names to restrict 
+the plot to.}
 }
 \value{
-Plotly object combining scatter plot of enrichment scores and a log2(fold change) heatmap.
+Plotly object combining scatter plot of enrichment scores and a 
+log2(fold change) heatmap.
 }
 \description{
 Function to plot the Enrichment Score of every member of

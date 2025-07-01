@@ -9,7 +9,8 @@ getCMstats(CM_list, chip_index = get_chip_index())
 \arguments{
 \item{CM_list}{A list of contingency matrices, typically from `contingency_matrix`.}
 
-\item{chip_index}{A data frame with ChIP accession IDs and TFs from the `get_chip_index` function.
+\item{chip_index}{A data frame with ChIP accession IDs and TFs from 
+the `get_chip_index` function.
 If not provided, the entire internal database is used.}
 }
 \value{

@@ -55,6 +55,6 @@ A matrix with calculated statistics (e.g., p-values, odds ratios).
 }
 \description{
 Performs gene expression analysis, filtering genes and
-transcription factors (TFs) based on specified thresholds. It calculates
-statistics using overrepresentation analysis (ORA) or gene set enrichment analysis (GSEA).
+TFs based on specified thresholds. It calculates statistics using 
+overrepresentation analysis (ORA) or gene set enrichment analysis (GSEA).
 }

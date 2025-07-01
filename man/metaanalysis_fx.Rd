@@ -2,45 +2,20 @@
 % Please edit documentation in R/All-functions.R
 \name{metaanalysis_fx}
 \alias{metaanalysis_fx}
-\title{Perform Meta-Analysis for Each Database}
+\title{Perform Meta-analysis for each TF}
 \usage{
 metaanalysis_fx(dat)
 }
 \arguments{
-\item{dat}{A data frame containing the following columns: TF 
-(Transcription Factor names), OR (Odds Ratio), 
-OR.SE (Standard Error of the Odds Ratio), Accession (Dataset identifiers), 
-and adj.pval (adjusted p-value).}
+\item{dat}{A data frame with columns: TF, OR, OR.SE, Accession, adj.pval.}
 }
 \value{
-A data frame containing the meta-analysis results for each 
-transcription factor, including:
-TF, Transcription Factor name.
-k, Number of datasets (k) included in the meta-analysis.
-OR, Estimated random effects Odds Ratio (OR).
-OR.SE, Standard error of the random effects Odds Ratio (OR.SE).
-CI95lower, Lower bound of the 95% confidence interval for the random 
-effects OR.
-CI95upper, Upper bound of the 95% confidence interval for the random 
-effects OR.
-pval, P-value for the random effects model.
-distance, A computed distance metric based on OR and adjusted p-value.
+A list with:
+  - summary: a data frame of ranked meta-analysis results per TF
+  - results: a named list of raw meta-analysis objects from the 
+   `meta` package
 }
 \description{
-This function performs a meta-analysis on odds ratios (OR) 
-and their standard errors (OR.SE)
-for transcription factors (TF) across different datasets, using a 
-random-effects model. The results are
-ordered by a computed distance metric based on OR and adjusted p-value 
-(adj.pval).
-}
-\examples{
-data <- data.frame(
-  TF = c('TF1', 'TF1', 'TF2', 'TF2'),
-  OR = c(1.5, 1.2, 0.9, 1.1),
-  OR.SE = c(0.2, 0.3, 0.1, 0.25),
-  Accession = c('D1', 'D2', 'D3', 'D4'),
-  adj.pval = c(0.01, 0.02, 0.05, 0.03)
-)
-metaanalysis_fx(data)
+Conducts a random-effects meta-analysis of odds ratios (OR) 
+and standard errors (OR.SE) for each TF using the `meta` package.
 }

@@ -3,7 +3,7 @@ Type: Package
 Title: Analyze Transcription Factor Enrichment
 Version: 1.19.2
 Author: Laura Puente Santamaría, Yosra Berrouayel, Luis del Peso
-Maintainer: Yosra Berrouayel <yberrouayel@iib.uam.es>
+Maintainer: Yosra Berrouayel <yosraberrouayel@gmail.com>
 Description: Package to analyze transcription factor enrichment in a gene set using data from ChIP-Seq experiments.
 Depends: R (>= 3.5)
 License: Artistic-2.0

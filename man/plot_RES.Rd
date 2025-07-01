@@ -19,8 +19,7 @@ plot_RES(
 table and RES.}
 
 \item{LFC}{Numeric vector containing the log2(Fold Change) of every gene 
-with an Entrez ID, ordered
-from highest to lowest.}
+with an Entrez ID, ordered from highest to lowest.}
 
 \item{plot_title}{(Optional) String specifying the title for the plot.
 Default is "Transcription Factor Enrichment".}
@@ -34,21 +33,19 @@ each RES line. Possible values are 'solid', 'dash', or 'longdash'.}
 \item{Accession}{(Optional) Character vector specifying accession IDs to
 restrict the plot to. If NULL, all accession IDs will be plotted.}
 
-\item{TF}{(Optional) Character vector specifying transcription factor 
-names to restrict the plot to. If NULL, all transcription factors will 
-be plotted.}
+\item{TF}{(Optional) Character vector specifying TF names to restrict 
+the plot to. If NULL, all transcription factors will be plotted.}
 }
 \value{
 A Plotly object containing two subplots: the top one showing the 
 running enrichment scores (RES) for the filtered accession IDs or 
-transcription factors, and the bottom one displaying the log2 fold
+TFs, and the bottom one displaying the log2 fold
 change (LFC) as a bar plot.
 }
 \description{
 This function plots the running enrichment scores (RES) from 
 a GSEA result, with an additional bar plot showing the log2 fold change 
-(LFC) of genes. The RES plot can be filtered by transcription factors (TF) 
-or accession IDs.
+(LFC) of genes. The RES plot can be filtered by TFs or accession IDs.
 }
 \examples{
 data('GSEA_result', 'log2.FC', package = 'TFEA.ChIP')

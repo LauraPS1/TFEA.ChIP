@@ -30,8 +30,8 @@ noise scores) corresponding to the genes in the gene list}
 Vector of Enrichment Scores for a permutation test.
 }
 \description{
-Function to calculate enrichment scores over a randomly ordered
-gene list.
+Function to calculate enrichment scores over a randomly 
+ordered gene list.
 }
 \examples{
 GSEA_ESpermutations(gene.list=c('3091','2034','405','55818'),
